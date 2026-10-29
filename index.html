@@ -387,23 +387,35 @@ body.popup .preview-wrap { margin-top: 8px; }
     <main class="center-panel">
       <div class="center-status"><div class="status-left"><span class="status-indicator" id="roomStatusDot"></span><span id="roomStatusText">Sala pronta</span></div><span class="online-count"><span></span><b id="count">0</b> assistindo</span></div>
 
+      <p id="homeMsg" class="notice global-notice" role="status"></p>
+
       <section id="home" class="main-state home-state">
         <div class="empty-illustration" aria-hidden="true"><div class="screen-outline"><span></span><i></i></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="spark spark-one">✦</div><div class="spark spark-two">✧</div></div>
         <div class="eyebrow"><span class="eyebrow-dot"></span> COMPARTILHAMENTO PRIVADO</div>
-        <h1>Ninguém está transmitindo ainda.</h1>
-        <p class="state-description">Compartilhe sua tela para mostrar o que está fazendo, jogar junto ou ajudar alguém a resolver um problema.</p>
+        <h1>Crie sua sala no Lock.</h1>
+        <p class="state-description">Crie uma sala primeiro. Depois, compartilhe sua tela quando estiver pronto ou envie o convite para alguém entrar.</p>
         <div class="primary-actions">
-          <button id="startShare" class="btn primary action-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M8 21h8m-4-4v4"/></svg>Compartilhar tela</button>
-          <button id="startCamera" class="btn action-btn secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3z"/></svg>Compartilhar câmera</button>
+          <button id="createRoomBtn" class="btn primary action-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/><rect x="3" y="3" width="18" height="18" rx="4"/></svg>Criar sala</button>
+          <button id="lockProfileFromHome" class="btn action-btn secondary" type="button">Editar perfil</button>
         </div>
+        <div class="home-footer"><span class="footer-lock">▣</span><span>Compartilhar a tela é opcional e não começa automaticamente.</span><button id="copyInviteHome" class="text-button">Como convidar?</button></div>
+      </section>
+
+      <section id="lobby" class="main-state lobby-state" hidden>
+        <div class="state-topline"><div><span class="live-pill waiting-pill"><i></i> SALA CRIADA</span><h1>Sua sala está pronta</h1><p class="state-description">Envie o convite agora ou inicie o compartilhamento quando quiser.</p></div><button id="backHomeFromLobby" class="btn danger-outline">Sair da sala</button></div>
+        <div class="lobby-placeholder"><div class="screen-outline"><span></span><i></i></div><div><h2>Aguardando compartilhamento</h2><p>Você continua conectado à sala. Criar a sala não liga sua tela nem pede permissão para capturar nada.</p></div></div>
+        <div class="lobby-actions"><button id="startShare" class="btn primary action-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M8 21h8m-4-4v4"/></svg>Compartilhar tela</button><button id="startCamera" class="btn action-btn secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3z"/></svg>Compartilhar câmera</button><button id="lobbyInviteBtn" class="btn action-btn secondary">Compartilhar convite</button></div>
         <label class="check"><input type="checkbox" id="withAudio" checked> Incluir áudio quando disponível</label>
         <p id="noShare" class="note" hidden>Este navegador não consegue capturar a tela. Abra o Lock em um computador para transmitir; pelo celular você pode assistir.</p>
-        <p id="homeMsg" class="notice" role="status"></p>
-        <div class="home-footer"><span class="footer-lock">▣</span><span>Seu código aparece quando a transmissão começar.</span><button id="copyInviteHome" class="text-button">Como convidar?</button></div>
+        <div class="layout-toolbar"><span>Ajustar telas</span><button type="button" class="btn compact selected" data-screen-layout="grid">Grade</button><button type="button" class="btn compact" data-screen-layout="focus">Foco</button></div>
+        <div id="lobbyRemoteGrid" class="remote-share-grid" hidden></div>
+        <div class="share-info-card lobby-share-info"><div class="share-info-heading"><div><span class="field-label">CÓDIGO DA SALA</span><div id="lobbyCodeOut" class="code">------</div></div><button id="lobbyCopyCode" class="btn compact">Copiar código</button></div>
+          <div id="lobbyLinkArea" class="linkbox"><label for="lobbyLinkOut" class="field-label">LINK PARA ENTRAR</label><div class="link-row"><input id="lobbyLinkOut" class="field" readonly aria-label="Link da sala"><button id="lobbyCopyLink" class="btn compact">Copiar link</button></div></div>
+        </div>
       </section>
 
       <section id="sharing" class="main-state sharing-state" hidden>
-        <div class="state-topline"><div><span class="live-pill"><i></i> AO VIVO</span><h1>Sua transmissão está no ar</h1><p class="state-description">Quem tiver seu convite poderá acompanhar esta tela.</p></div><button id="stopBtn" class="btn danger-outline">Encerrar</button></div>
+        <div class="state-topline"><div><span class="live-pill"><i></i> AO VIVO</span><h1>Sua transmissão está no ar</h1><p class="state-description">Quem tiver seu convite poderá acompanhar esta tela.</p></div><button id="stopBtn" class="btn danger-outline">Parar transmissão</button></div><div class="layout-toolbar"><span>Ajustar telas</span><button type="button" class="btn compact selected" data-screen-layout="grid">Grade</button><button type="button" class="btn compact" data-screen-layout="focus">Foco</button></div>
         <div class="preview-wrap"><video id="preview" muted autoplay playsinline></video><div class="preview-badge"><span class="red-dot"></span><span id="previewLabel">Sua tela</span></div></div><div id="hostRemoteGrid" class="remote-share-grid" hidden></div>
         <div class="share-info-card">
           <div class="share-info-heading"><div><span class="field-label">CÓDIGO DA SALA</span><div id="codeOut" class="code">------</div></div><button id="copyCode" class="btn compact">Copiar código</button></div>
@@ -414,7 +426,7 @@ body.popup .preview-wrap { margin-top: 8px; }
       </section>
 
       <section id="watching" class="main-state watching-state" hidden>
-        <div class="state-topline"><div><span class="live-pill waiting-pill"><i></i> SALA REMOTA</span><h1>Assistindo à transmissão</h1><p class="state-description">A tela compartilhada aparecerá abaixo.</p></div><button id="leaveBtn" class="btn danger-outline">Sair da sala</button></div>
+        <div class="state-topline"><div><span class="live-pill waiting-pill"><i></i> SALA REMOTA</span><h1>Assistindo à transmissão</h1><p class="state-description">A tela compartilhada aparecerá abaixo.</p></div><button id="leaveBtn" class="btn danger-outline">Sair da sala</button></div><div class="layout-toolbar"><span>Ajustar telas</span><button type="button" class="btn compact selected" data-screen-layout="grid">Grade</button><button type="button" class="btn compact" data-screen-layout="focus">Foco</button></div>
         <div id="stage" class="stage"><video id="remote" autoplay muted playsinline></video><div id="info" class="info" role="status">Conectando…</div><span class="stage-corner-label">LOCK · LIVE</span></div>
         <div id="remoteGrid" class="remote-share-grid" hidden></div><div class="viewer-controls"><button id="muteBtn" class="btn compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6"/></svg>Ativar som</button><button id="fsBtn" class="btn compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>Tela cheia</button></div>
       </section>
@@ -2780,7 +2792,7 @@ const store = {
   set: (key, value) => { try { localStorage.setItem(key, value); } catch {} }
 };
 
-const show = name => ['home', 'sharing', 'watching'].forEach(view => { $(view).hidden = view !== name; });
+const show = name => ['home', 'lobby', 'sharing', 'watching'].forEach(view => { if ($(view)) $(view).hidden = view !== name; });
 const say = (id, message) => { const el = $(id); if (el) el.textContent = message || ''; };
 const clean = value => String(value || '').split('#').pop().replace(/[^a-z0-9]/gi, '').toUpperCase();
 const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), byte => ABC[byte % ABC.length]).join('');
@@ -2887,12 +2899,17 @@ function refreshCount() {
   renderParticipants();
 }
 
-function participantRow(initial, name, role, stateClass = 'green-dot') {
+function participantRow(initial, name, role, stateClass = 'green-dot', photo = '') {
   const row = document.createElement('div');
   row.className = 'participant-row';
   const avatar = document.createElement('span');
   avatar.className = `avatar ${initial === 'V' ? 'avatar-blue' : 'avatar-green'}`;
-  avatar.textContent = initial;
+  if (photo) {
+    const image = document.createElement('img');
+    image.src = photo; image.alt = ''; image.loading = 'lazy';
+    image.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+    avatar.replaceChildren(image);
+  } else avatar.textContent = initial;
   const label = document.createElement('span');
   label.className = 'participant-name';
   label.append(document.createTextNode(name));
@@ -2909,8 +2926,12 @@ function renderParticipants() {
   const list = $('participantsList');
   if (!list) return;
   list.replaceChildren();
+  let profile = {};
+  try { profile = typeof window.getLockLocalProfile === 'function' ? window.getLockLocalProfile() : {}; } catch {}
+  const ownName = String(profile.name || 'Você').slice(0, 32);
+  const ownPhoto = String(profile.photo || '');
   if (peer && !peer.destroyed) {
-    list.append(participantRow('V', 'Você', stream ? 'anfitrião · transmitindo' : 'anfitrião'));
+    list.append(participantRow((ownName || 'V').slice(0, 1).toUpperCase(), ownName, stream ? 'anfitrião · transmitindo' : (shareCode ? 'anfitrião · sala pronta' : 'anfitrião'), 'green-dot', ownPhoto));
     let index = 1;
     for (const conn of connections.values()) {
       const sharing = incomingShares.has(conn.peer) && !!incomingShares.get(conn.peer).stream;
@@ -2918,9 +2939,9 @@ function renderParticipants() {
     }
   } else if (vpeer) {
     list.append(participantRow('A', 'Anfitrião', 'na sala'));
-    list.append(participantRow('V', 'Você', stream ? 'compartilhando tela' : 'assistindo'));
+    list.append(participantRow((ownName || 'V').slice(0, 1).toUpperCase(), ownName, stream ? 'compartilhando tela' : 'assistindo', 'green-dot', ownPhoto));
   } else {
-    list.append(participantRow('V', 'Você', 'disponível'));
+    list.append(participantRow((ownName || 'V').slice(0, 1).toUpperCase(), ownName, 'disponível', 'green-dot', ownPhoto));
   }
   $('participantCount').textContent = String(list.children.length);
 }
@@ -2939,8 +2960,8 @@ function refreshTools() {
   $('toolAudio').title = audioTracks.length && audioTracks.some(track => track.enabled) ? 'Desativar áudio compartilhado' : 'Ativar áudio compartilhado';
   $('toolMute').disabled = !vpeer;
   $('toolMute').classList.toggle('tool-red', !!$('remote').muted);
-  $('toolScreen').disabled = !canCapture || !!stream;
-  $('toolCamera').disabled = !canUseCamera || !!stream;
+  $('toolScreen').disabled = !canCapture || !!stream || !(peer && !peer.destroyed);
+  $('toolCamera').disabled = !canUseCamera || !!stream || !(peer && !peer.destroyed);
   $('startShare').disabled = !canCapture || !!stream;
   $('startCamera').disabled = !canUseCamera || !!stream;
   $('toolExit').disabled = !(stream || vpeer || peer);
@@ -3044,6 +3065,33 @@ function activateStream(nextStream, mode) {
   openPeer();
 }
 
+function createRoom() {
+  if (vpeer) leaveWatch();
+  if (peer && !peer.destroyed) {
+    shareCode = localStorage.getItem('lock-fixed-room-code') || shareCode || newCode();
+    show(stream ? 'sharing' : 'lobby');
+    renderShare(); refreshTools(); refreshCount();
+    setRoomStatus(stream ? 'Transmitindo ao vivo' : 'Sala criada · pronta para compartilhar', !!stream);
+    return;
+  }
+  say('homeMsg', 'Criando sua sala…');
+  openPeer();
+}
+
+function leaveHostRoom() {
+  if (stream) { const active = stream; stream = null; active.getTracks().forEach(track => track.stop()); }
+  calls.forEach(call => { try { call.close(); } catch {} }); calls.clear();
+  connections.forEach(conn => { try { conn.close(); } catch {} }); connections.clear();
+  relayCalls.forEach(call => { try { call.close(); } catch {} }); relayCalls.clear();
+  incomingShares.forEach(item => { try { item.call?.close(); } catch {} }); incomingShares.clear();
+  if (peer) { try { peer.destroy(); } catch {} }
+  peer = null; opened = false;
+  $('preview').srcObject = null;
+  remoteShareTiles.forEach(({video,tile})=>{try{video.srcObject=null;tile.remove()}catch{}}); remoteShareTiles.clear();
+  shareCode = ''; renderShare(); refreshTools(); refreshCount(); show('home');
+  setRoomStatus('Sala pronta', false); say('homeMsg','');
+}
+
 function openPeer(tries = 0) {
   const code = localStorage.getItem('lock-fixed-room-code') || newCode();
   try { localStorage.setItem('lock-fixed-room-code', code); } catch {}
@@ -3052,11 +3100,11 @@ function openPeer(tries = 0) {
   if (peer && !peer.destroyed) {
     shareCode = code;
     if (peer.open) {
-      show('sharing');
+      show(stream ? 'sharing' : 'lobby');
       renderShare();
       refreshTools();
       refreshCount();
-      setRoomStatus('Transmitindo ao vivo', true);
+      setRoomStatus(stream ? 'Transmitindo ao vivo' : 'Sala criada · pronta para compartilhar', !!stream);
       connections.forEach(conn => sendPrimaryTo(conn));
       refreshRemoteTileLayout();
     }
@@ -3072,12 +3120,12 @@ function openPeer(tries = 0) {
     opened = true;
     shareCode = code;
     viewerCode = '';
-    show('sharing');
+    show(stream ? 'sharing' : 'lobby');
     renderShare();
     refreshTools();
     refreshCount();
-    setRoomStatus('Transmitindo ao vivo', true);
-    say('homeMsg', '');
+    setRoomStatus(stream ? 'Transmitindo ao vivo' : 'Sala criada · aguardando compartilhamento', !!stream);
+    say('homeMsg', stream ? '' : 'Sua sala está pronta. Compartilhe a tela quando quiser.');
     if (!chatHistory.length) say('chatSubtitle', 'A sala está pronta para conversar');
     connections.forEach(conn => sendPrimaryTo(conn));
     refreshRemoteTileLayout();
@@ -3203,7 +3251,7 @@ function removeParticipantShare(owner, call) {
     $('stage').hidden = true;
     refreshRemoteTileLayout();
   } else if (!stream && peer && !vpeer && incomingShares.size === 0) {
-    show('home');
+    show('lobby');
     $('stage').hidden = false;
     setRoomStatus('Sala pronta · link mantido', false);
   }
@@ -3241,13 +3289,14 @@ function removeRemoteShareTile(owner) {
 function refreshRemoteTileLayout() {
   const hostTarget = $('hostRemoteGrid');
   const viewerTarget = $('remoteGrid');
+  const lobbyTarget = $('lobbyRemoteGrid');
   const isHost = !!peer && !vpeer;
-  const target = isHost ? (stream ? hostTarget : viewerTarget) : viewerTarget;
+  const target = isHost ? (stream ? hostTarget : (lobbyTarget || viewerTarget)) : viewerTarget;
   remoteShareTiles.forEach(({ tile }) => { if (target && tile.parentElement !== target) target.append(tile); });
   if (hostTarget) hostTarget.hidden = !stream || hostTarget.children.length === 0;
   if (viewerTarget) viewerTarget.hidden = viewerTarget.children.length === 0;
   if (isHost && !stream && incomingShares.size) {
-    show('watching');
+    show('lobby');
     if ($('stage')) $('stage').hidden = true;
   } else if (isHost && stream) {
     if ($('stage')) $('stage').hidden = false;
@@ -3284,6 +3333,11 @@ function renderShare() {
   $('baseIn').value = saved;
   $('linkOut').value = link;
   $('modalLinkOut').value = link;
+  if ($('lobbyCodeOut')) $('lobbyCodeOut').textContent = shareCode || '------';
+  if ($('lobbyLinkOut')) $('lobbyLinkOut').value = link;
+  if ($('lobbyLinkArea')) $('lobbyLinkArea').hidden = !link;
+  if ($('lobbyCopyCode')) $('lobbyCopyCode').disabled = !active;
+  if ($('lobbyCopyLink')) $('lobbyCopyLink').disabled = !link;
   $('modalLinkArea').hidden = !link;
   $('shareNative').hidden = !navigator.share;
   $('baseStatus').textContent = saved
@@ -3329,7 +3383,10 @@ function stopShare(message = '') {
   $('preview').srcObject = null;
   refreshRemoteTileLayout();
   refreshCount();
-  if (incomingShares.size) {
+  if (peer && !peer.destroyed) {
+    show('lobby');
+    $('stage').hidden = incomingShares.size > 0;
+  } else if (incomingShares.size) {
     show('watching');
     $('stage').hidden = true;
   } else {
@@ -3566,7 +3623,7 @@ function openInviteModal() {
   renderShare();
   $('inviteStatus').textContent = shareCode
     ? (getShareLink() ? 'O convite inclui o link clicável do site e o código da sala.' : 'O código já existe, mas falta configurar o endereço público do site. Configure uma vez para gerar links que abrem para outras pessoas.')
-    : 'Inicie uma transmissão de tela ou câmera para gerar seu código e convite.';
+    : 'Crie uma sala para gerar seu código e link. O compartilhamento de tela é opcional e começa depois.';
   $('configureInviteLink').hidden = !isExt || !!getShareLink();
   $('inviteOverlay').hidden = false;
   $('closeInvite').focus();
@@ -3700,6 +3757,15 @@ $('startShare').disabled = !canCapture;
 $('toolScreen').disabled = !canCapture;
 $('startCamera').disabled = !canUseCamera;
 $('toolCamera').disabled = !canUseCamera;
+$('createRoomBtn')?.addEventListener('click', createRoom);
+$('backHomeFromLobby')?.addEventListener('click', leaveHostRoom);
+$('lobbyInviteBtn')?.addEventListener('click', openInviteModal);
+$('lobbyCopyCode')?.addEventListener('click', event => copy(shareCode, event.currentTarget));
+$('lobbyCopyLink')?.addEventListener('click', event => copy(getShareLink(), event.currentTarget));
+document.querySelectorAll('[data-screen-layout]').forEach(button => button.addEventListener('click', () => {
+  document.body.dataset.screenLayout = button.dataset.screenLayout;
+  document.querySelectorAll('[data-screen-layout]').forEach(item => item.classList.toggle('selected', item.dataset.screenLayout === button.dataset.screenLayout));
+}));
 $('noShare').hidden = canCapture;
 $('startShare').addEventListener('click', startShare);
 $('startCamera').addEventListener('click', startCamera);
@@ -3708,7 +3774,7 @@ $('toolScreen').addEventListener('click', startShare);
 $('toolCamera').addEventListener('click', startCamera);
 $('toolAudio').addEventListener('click', toggleSharedAudio);
 $('toolMute').addEventListener('click', toggleRemoteAudio);
-$('toolSettings').addEventListener('click', configurePublicLink);
+$('toolSettings').addEventListener('click', () => { if (typeof window.openLockProfile === 'function') window.openLockProfile(); else configurePublicLink(); });
 $('topLink').addEventListener('click', handleTopLink);
 $('configureInviteLink').addEventListener('click', () => { closeInviteModal(); configurePublicLink(); });
 $('toolInvite').addEventListener('click', openInviteModal);
@@ -3729,7 +3795,7 @@ $('whatsAppShare').addEventListener('click', shareToWhatsApp);
 $('telegramShare').addEventListener('click', shareToTelegram);
 $('shareNative').addEventListener('click', shareNative);
 $('saveBase').addEventListener('click', saveBase);
-$('manageRoom').addEventListener('click', () => { if (isExt) configurePublicLink(); else document.getElementById('lockProfileBtn')?.click(); });
+$('manageRoom').addEventListener('click', () => { if (typeof window.openLockProfile === 'function') window.openLockProfile(); else configurePublicLink(); });
 $('themeToggle').addEventListener('click', toggleTheme);
 $('rightTheme').addEventListener('click', toggleTheme);
 $('closeInvite').addEventListener('click', closeInviteModal);
@@ -3755,16 +3821,18 @@ $('toolExit').addEventListener('click', () => {
   if (peer && stream) stopShare('Transmissão encerrada.');
   else if (vpeer && viewerShareCall) stopViewerShare('Você parou de compartilhar a tela.');
   else if (vpeer) leaveWatch();
+  else if (peer) leaveHostRoom();
   else openInviteModal();
 });
 $('footerExit').addEventListener('click', () => {
-  if (peer && stream) stopShare('Transmissão encerrada.');
+  if (peer) leaveHostRoom();
   else if (vpeer && viewerShareCall) stopViewerShare('Você parou de compartilhar a tela.');
   else if (vpeer) leaveWatch();
   else show('home');
 });
 $('homeBtn').addEventListener('click', () => {
   if (peer && stream) show('sharing');
+  else if (peer && !peer.destroyed) show('lobby');
   else if (vpeer || (peer && incomingShares.size)) show('watching');
   else show('home');
 });
@@ -3794,6 +3862,25 @@ route();
 </script>
 
 <style>
+.global-notice{margin:0 20px 0;padding:0 4px}.lobby-state{padding:22px clamp(14px,2.3vw,28px);display:flex;flex-direction:column;gap:14px}
+.lobby-placeholder{display:flex;align-items:center;gap:24px;min-height:175px;padding:24px;border:1px dashed #3a3c48;border-radius:12px;background:linear-gradient(135deg,#171920,#101116)}
+.lobby-placeholder h2{font-size:17px;margin:0 0 7px}.lobby-placeholder p{color:#969caf;font-size:12px;line-height:1.6;max-width:430px}
+.lobby-actions{display:flex;flex-wrap:wrap;gap:8px}.layout-toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:5px 0}.layout-toolbar>span{font-size:11px;color:#8b91a2;font-weight:700;margin-right:4px}.layout-toolbar .selected{border-color:#00b58a;background:#103c31;color:#d9fff2}
+.lobby-share-info{margin-top:0}.lobby-share-info .linkbox{margin-top:12px}
+.remote-share-grid:not([hidden]){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;margin-top:12px}
+.remote-share-tile{position:relative;overflow:hidden;min-height:170px;background:#08090d;border:1px solid #343744;border-radius:12px;resize:vertical}
+.remote-share-tile video{display:block;width:100%;height:100%;min-height:170px;max-height:360px;object-fit:contain;background:#000}
+.remote-share-label{position:absolute;left:9px;bottom:8px;padding:5px 8px;border-radius:6px;background:rgba(0,0,0,.72);color:#fff;font-size:11px}
+body[data-screen-layout="focus"] .remote-share-grid:not([hidden]){grid-template-columns:1fr}
+body[data-screen-layout="focus"] .remote-share-tile video{max-height:68vh}
+body[data-screen-layout="focus"] .preview-wrap,body[data-screen-layout="focus"] .stage{aspect-ratio:auto;min-height:50vh;max-height:72vh}
+body[data-screen-layout="focus"] .preview-wrap video,body[data-screen-layout="focus"] #stage #remote{object-fit:contain}
+body[data-screen-layout="grid"] .remote-share-grid:not([hidden]){grid-template-columns:repeat(2,minmax(0,1fr))}
+.participant-row .avatar{overflow:hidden}
+@media(max-width:560px){.remote-share-grid:not([hidden]){grid-template-columns:1fr}.remote-share-tile,.remote-share-tile video{min-height:150px}.lobby-placeholder{flex-direction:column;text-align:center;align-items:center;padding:20px}.lobby-actions>*{flex:1 1 100%}.layout-toolbar{justify-content:center}}
+</style>
+
+<style>
 #lockProfileOverlay{position:fixed;inset:0;z-index:10000;background:#05060bcc;display:grid;place-items:center;padding:16px}#lockProfileOverlay[hidden]{display:none!important}.lock-profile-card{width:min(440px,100%);max-height:90vh;overflow:auto;background:#191b23;border:1px solid #383b49;border-radius:16px;padding:22px;color:#eef0f7;box-shadow:0 25px 90px #0009}.lock-profile-card h2{margin:0 0 7px;font-size:21px}.lock-profile-card p{color:#9ba2b5;font-size:13px;line-height:1.5}.lock-profile-card label{display:block;font-size:12px;color:#bfc4d3;margin:14px 0 6px}.lock-profile-card input[type=text]{width:100%;height:42px;padding:10px 12px;border:1px solid #3b3e4b;border-radius:9px;background:#101117;color:#fff}.lock-profile-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.lock-profile-actions button,.lock-profile-card button{border:1px solid #3d4050;background:#282b36;color:#fff;padding:10px 12px;border-radius:9px;cursor:pointer}.lock-profile-actions .save{background:#009b75;border-color:#009b75}.lock-profile-row{display:flex;align-items:center;gap:12px}.lock-profile-avatar{width:58px;height:58px;object-fit:cover;border-radius:50%;background:#2d6be7;display:grid;place-items:center;color:white;font-weight:800;font-size:22px}.lock-profile-hint{font-size:11px!important}.lock-setting-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:15px;padding-top:14px;border-top:1px solid #343744}.lock-discord-note{padding:10px;border:1px solid #4c4169;border-radius:9px;background:#28213b;color:#d6c8ff!important}.lock-home-actions{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin:14px 0}.lock-home-actions button{border:1px solid #3d4050;background:#22242d;color:#f5f6fb;border-radius:9px;padding:11px 15px;cursor:pointer}.lock-home-actions button:first-child{background:#009b75;border-color:#009b75}.lock-profile-chip{display:flex;align-items:center;gap:8px}.lock-profile-chip img{width:26px;height:26px;object-fit:cover;border-radius:50%}
 </style>
 <style>
@@ -3818,12 +3905,13 @@ route();
    byId('lockProfileName').value=profile.name||'';
    byId('lockProfileInitial').textContent=(profile.name||'L').slice(0,1).toUpperCase();
    const img=byId('lockProfilePreview');img.hidden=!profile.photo;img.src=profile.photo||'';byId('lockProfileInitial').hidden=!!profile.photo;
-   // The local footer is the only place where the private profile is rendered.
+   // Keep this profile local to this browser: show it in the local participant row and footer only.
    document.querySelectorAll('.user-mini strong').forEach(el=>el.textContent=profile.name||'Lock · Você');
    document.querySelectorAll('.user-mini .avatar').forEach(el=>{
      if(profile.photo){el.replaceChildren();const im=document.createElement('img');im.src=profile.photo;im.alt='';im.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%';el.append(im)}
      else el.textContent=(profile.name||'V').slice(0,1).toUpperCase();
    });
+   try { if (typeof renderParticipants === 'function') renderParticipants(); } catch {}
  }
  function open(){draw();overlay.hidden=false;setTimeout(()=>byId('lockProfileName').focus(),0)}
  function close(){if(!profile.name){byId('lockProfileName').focus();return}overlay.hidden=true}
@@ -3850,14 +3938,10 @@ route();
    catch(e){alert('Não foi possível salvar. Tente escolher uma foto menor.');return}
    overlay.hidden=true;byId('lockProfileClose').disabled=false;byId('lockProfileClose').textContent='Fechar';draw();
  });
- const home=byId('home');
- if(home){
-   const actions=document.createElement('div');actions.className='lock-home-actions';
-   actions.innerHTML='<button type="button" id="lockCreateRoom">＋ Criar sala</button><button type="button" id="lockProfileFromHome">Editar perfil</button>';
-   const primary=home.querySelector('.primary-actions');if(primary)primary.insertAdjacentElement('afterend',actions);
-   byId('lockCreateRoom').addEventListener('click',()=>byId('startShare').click());
-   byId('lockProfileFromHome').addEventListener('click',open);
- }
+ window.getLockLocalProfile = () => ({ name: profile.name || '', photo: profile.photo || '' });
+ window.openLockProfile = open;
+ byId('lockProfileFromHome')?.addEventListener('click', open);
+
  // Audio notifications are on by default, but Web Audio starts only after a user gesture.
  let audioCtx=null;
  function tone(kind='message'){
@@ -3881,8 +3965,9 @@ route();
  setInterval(()=>{const sharing=share&&!share.hidden&&!!byId('preview').srcObject,watching=watch&&!watch.hidden&&!!byId('remote').srcObject;
    if(sharing&&!lastSharing)tone('share');if(!sharing&&lastSharing)tone('end');if(watching&&!lastWatching)tone('share');if(!watching&&lastWatching)tone('end');lastSharing=sharing;lastWatching=watching;
  },500);
- try{if(!localStorage.getItem('lock-fixed-room-code')){const existing=(location.hash||'').replace(/[^a-z0-9]/gi,'').toUpperCase();if(existing)localStorage.setItem('lock-fixed-room-code',existing)}}catch{}
+
  draw();
+ try { if (typeof renderParticipants === 'function') renderParticipants(); } catch {}
  // First visit only: if no local name has been saved, the setup form is required.
  if(!profile.name){overlay.hidden=false;byId('lockProfileClose').textContent='Definir depois';byId('lockProfileClose').disabled=true;byId('lockProfileName').focus()}
 })();

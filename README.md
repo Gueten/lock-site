@@ -1,23 +1,9 @@
-# Lock — site público (v1.5)
+# Lock — GitHub Pages
 
-Esta é a página web do Lock, preparada para publicar no repositório `Gueten/lock-site` usando GitHub Pages.
+1. Envie `index.html`, `.nojekyll` e `README.md` para a raiz do repositório GitHub Pages.
+2. Configure GitHub Pages para publicar a branch `main`, pasta `/(root)`.
+3. URL base: https://gueten.github.io/lock-site/
 
-## Atualizar o site
+A tela inicial apenas cria uma sala. A captura de tela só começa quando o usuário clica em **Compartilhar tela**. O perfil de nome/foto é armazenado apenas no localStorage deste navegador e não é enviado a outros participantes. A visualização de compartilhamentos oferece os modos Grade e Foco.
 
-1. Extraia este ZIP.
-2. Envie `index.html` e `.nojekyll` para a raiz do repositório `Gueten/lock-site`, substituindo o arquivo antigo.
-3. Mantenha o GitHub Pages ativado em **Settings → Pages**, branch `main`, pasta `/(root)`.
-4. O endereço base dos convites é fixo: `https://gueten.github.io/lock-site/`. Os links da sala acrescentam `#CODIGO` no final.
-
-## O que mudou
-
-- Na primeira visita, pede um nome e, opcionalmente, uma foto. O perfil e a foto ficam no `localStorage` do próprio navegador e não são enviados aos outros participantes. Para outras pessoas, o chat usa rótulos genéricos.
-- A sala mantém o mesmo código/link ao parar e voltar a compartilhar tela, enquanto a aba do anfitrião continua aberta.
-- Permite até duas transmissões simultâneas: a tela do anfitrião mais uma tela de participante, ou duas telas de participantes quando o anfitrião não está transmitindo.
-- O anfitrião retransmite a segunda tela aos demais participantes por WebRTC/PeerJS.
-
-## Limitações conhecidas
-
-- O perfil é local; não é uma conta sincronizada entre dispositivos.
-- O site é estático. O transporte de mídia depende do PeerJS e de WebRTC; firewalls, navegadores e redes podem impedir conexões ou causar baixa qualidade.
-- O envio da tela para vários participantes passa pelo navegador anfitrião. A qualidade cai conforme a largura de banda e o número de pessoas aumentam.
+Observação: a transmissão em tempo real usa PeerJS/WebRTC. GitHub Pages hospeda o frontend, não um servidor de mídia.
