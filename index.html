@@ -443,7 +443,7 @@ body.popup .preview-wrap { margin-top: 8px; }
       <section id="watching" class="main-state watching-state" hidden>
         <div class="state-topline"><div><span class="live-pill waiting-pill"><i></i> SALA REMOTA</span><h1>Assistindo à transmissão</h1><p class="state-description">A tela compartilhada aparecerá abaixo.</p></div><button id="leaveBtn" class="btn danger-outline">Sair da sala</button></div><div class="layout-toolbar"><span>Ajustar telas</span><button type="button" class="btn compact selected" data-screen-layout="grid">Grade</button><button type="button" class="btn compact" data-screen-layout="focus">Foco</button></div>
         <div id="stage" class="stage screen-tile"><video id="remote" autoplay playsinline></video><div id="info" class="info" role="status">Conectando…</div><button class="tile-fullscreen" type="button" aria-label="Tela cheia da transmissão" title="Tela cheia">⛶</button><span class="stage-corner-label">LOCK · LIVE</span></div>
-        <div id="watchPeopleGrid" class="call-people-grid"></div><div id="remoteGrid" class="remote-share-grid" hidden></div><div class="viewer-controls"><button id="muteBtn" class="btn compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6"/></svg>Ativar som</button><button id="fsBtn" class="btn compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>Tela cheia</button></div>
+        <div id="watchPeopleGrid" class="call-people-grid"></div><div id="remoteGrid" class="remote-share-grid" hidden><div id="selfSharePreviewTile" class="remote-share-tile screen-tile self-share-preview" hidden><video id="selfSharePreview" muted autoplay playsinline></video><button class="tile-fullscreen" type="button" aria-label="Tela cheia da sua transmissão" title="Tela cheia">⛶</button><span class="remote-share-label" id="selfSharePreviewLabel">Você · sua tela</span></div></div><div class="viewer-controls"><button id="muteBtn" class="btn compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6"/></svg>Ativar som</button><button id="fsBtn" class="btn compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>Tela cheia</button></div>
       </section>
     </main>
 
@@ -460,7 +460,7 @@ body.popup .preview-wrap { margin-top: 8px; }
         <div class="setting-fields"><input id="baseIn" class="field" placeholder="https://seu-site.netlify.app/" aria-label="Endereço do site"><button id="saveBase" class="btn primary compact">Salvar</button></div>
         <p id="baseStatus" class="setting-status"></p>
       </details>
-      <div class="chat-heading"><div><h2>Chat</h2><span id="chatSubtitle">Mensagens da sala</span></div><div class="chat-heading-actions"><button class="mini-icon" id="clearChat" title="Limpar chat local" aria-label="Limpar chat local"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button><button class="mini-icon" id="toggleChat" title="Recolher chat" aria-label="Recolher chat">›</button></div></div>
+      <div class="chat-heading"><div><h2>Chat</h2><span id="chatSubtitle">Mensagens da sala</span></div><div class="chat-heading-actions"><button class="mini-icon" id="toggleChat" title="Recolher chat" aria-label="Recolher chat">›</button></div></div>
       <div id="chatMessages" class="chat-messages" aria-live="polite"><div class="chat-empty"><span class="chat-bubble-icon">✦</span><strong>Nenhuma mensagem ainda.</strong><span>As mensagens enviadas aqui aparecem para quem está na sala.</span></div></div>
       <div id="chatReplyBar" class="chat-reply-bar" hidden><span id="chatReplyLabel"></span><button type="button" id="cancelChatReply" aria-label="Cancelar resposta" title="Cancelar resposta">×</button></div>
       <div id="chatExtras" class="chat-extras" hidden>
@@ -2943,11 +2943,21 @@ function refreshCount() {
   renderParticipants();
 }
 
+function nameHue(name) {
+  const value = String(name || 'Participante').trim().toLocaleLowerCase();
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i++) { hash ^= value.charCodeAt(i); hash = Math.imul(hash, 16777619); }
+  return (hash >>> 0) % 360;
+}
+function nameColor(name) { return `hsl(${nameHue(name)} 76% 70%)`; }
+function nameGradient(name) { const hue = nameHue(name); return `linear-gradient(145deg, hsl(${hue} 78% 66%), hsl(${(hue + 35) % 360} 72% 45%))`; }
+
 function participantRow(initial, name, role, stateClass = 'green-dot', photo = '') {
   const row = document.createElement('div');
   row.className = 'participant-row';
   const avatar = document.createElement('span');
   avatar.className = `avatar ${initial === 'V' ? 'avatar-blue' : 'avatar-green'}`;
+  avatar.style.background = nameGradient(name);
   if (photo) {
     const image = document.createElement('img');
     image.src = photo; image.alt = ''; image.loading = 'lazy';
@@ -2956,6 +2966,7 @@ function participantRow(initial, name, role, stateClass = 'green-dot', photo = '
   } else avatar.textContent = initial;
   const label = document.createElement('span');
   label.className = 'participant-name';
+  label.style.color = nameColor(name);
   label.append(document.createTextNode(name));
   const detail = document.createElement('small');
   detail.textContent = ` · ${role}`;
@@ -3076,11 +3087,12 @@ function renderPeopleGrids() {
     people.forEach(person => {
       const card = document.createElement('div'); card.className = 'call-person-card';
       if (person.self) card.classList.add('is-self');
-      const avatar = document.createElement('div'); avatar.className = 'call-person-avatar';
+      const hue = nameHue(person.name);
+      const avatar = document.createElement('div'); avatar.className = 'call-person-avatar'; avatar.style.background = nameGradient(person.name); avatar.style.borderColor = nameColor(person.name);
       if (person.photo) { const img = document.createElement('img'); img.src = person.photo; img.alt = ''; avatar.append(img); }
       else avatar.textContent = (person.name || 'L').slice(0,1).toUpperCase();
       const badge = document.createElement('div'); badge.className = 'call-person-name';
-      const strong = document.createElement('strong'); strong.textContent = person.name || 'Participante';
+      const strong = document.createElement('strong'); strong.textContent = person.name || 'Participante'; strong.style.color = nameColor(person.name);
       const small = document.createElement('small'); small.textContent = person.role || 'Na sala';
       badge.append(strong, small); card.append(avatar, badge); target.append(card);
     });
@@ -3208,8 +3220,12 @@ function activateViewerStream(nextStream, mode = 'screen') {
     viewerShareCall.on('error', () => { if (stream === nextStream) stopViewerShare('A transmissão foi desconectada.', false); });
     $('preview').srcObject = stream;
     $('previewLabel').textContent = mode === 'camera' ? 'Sua câmera' : 'Sua tela';
-    say('info', mode === 'camera' ? 'Sua câmera está ativa na sala.' : 'Sua tela está sendo compartilhada com a sala.');
+    const selfTile = $('selfSharePreviewTile');
+    const selfVideo = $('selfSharePreview');
+    if (selfTile && selfVideo && vpeer) { selfTile.hidden = false; selfVideo.srcObject = stream; selfVideo.play().catch(() => {}); $('selfSharePreviewLabel').textContent = mode === 'camera' ? 'Você · sua câmera' : 'Você · sua tela'; }
+    say('info', mode === 'camera' ? 'Sua câmera está ativa na sala; a prévia aparece na grade.' : 'Sua tela está sendo compartilhada com a sala; a prévia aparece na grade.');
     say('homeMsg', mode === 'camera' ? 'Sua câmera está ativa na sala.' : 'Sua tela está sendo compartilhada com a sala.');
+    refreshRemoteTileLayout();
     refreshTools();
     renderParticipants();
   } catch (error) {
@@ -3224,7 +3240,10 @@ function stopViewerShare(message = '', closeCall = true) {
   viewerShareCall = null;
   if (currentStream) currentStream.getTracks().forEach(track => track.stop());
   if ($('preview')) $('preview').srcObject = null;
+  if ($('selfSharePreview')) $('selfSharePreview').srcObject = null;
+  if ($('selfSharePreviewTile')) $('selfSharePreviewTile').hidden = true;
   if (closeCall && currentCall) { try { currentCall.close(); } catch {} }
+  refreshRemoteTileLayout();
   refreshTools();
   if (message) say('info', message);
 }
@@ -3253,7 +3272,10 @@ function createRoom() {
     setRoomStatus(stream ? 'Transmitindo ao vivo' : 'Sala criada · pronta para compartilhar', !!stream);
     return;
   }
-  // Each room gets a different random code and therefore a different invitation URL.
+  // Each room starts with a fresh in-memory chat history and a different invitation URL.
+  chatHistory = [];
+  resetChatDisplay();
+  say('chatSubtitle', 'Mensagens desta sala');
   shareCode = newCode();
   try { localStorage.removeItem('lock-fixed-room-code'); } catch {}
   history.replaceState(null, '', location.pathname + location.search);
@@ -3562,7 +3584,7 @@ function refreshRemoteTileLayout() {
   const target = isHost ? (stream ? hostTarget : (lobbyTarget || viewerTarget)) : viewerTarget;
   remoteShareTiles.forEach(({ tile }) => { if (target && tile.parentElement !== target) target.append(tile); });
   if (hostTarget) hostTarget.hidden = !stream || hostTarget.children.length === 0;
-  if (viewerTarget) viewerTarget.hidden = viewerTarget.children.length === 0;
+  if (viewerTarget) viewerTarget.hidden = !Array.from(viewerTarget.children).some(child => !child.hidden);
   refreshTools();
   if (isHost && !stream && incomingShares.size) {
     show('lobby');
@@ -3790,6 +3812,8 @@ function leaveWatch() {
   if (currentPeer) currentPeer.destroy();
   if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
   $('remote').srcObject = null;
+  if ($('selfSharePreview')) $('selfSharePreview').srcObject = null;
+  if ($('selfSharePreviewTile')) $('selfSharePreviewTile').hidden = true;
   $('remote').muted = false;
   $('stage').hidden = false;
   history.replaceState(null, '', location.pathname + location.search);
@@ -3860,6 +3884,7 @@ function addChatMessage(message, displayName = null, persist = true) {
   row.dataset.messageId = normalized.id;
   const avatar = document.createElement('span');
   avatar.className = 'avatar avatar-blue chat-message-avatar';
+  avatar.style.background = nameGradient(normalized.name);
   avatar.textContent = normalized.name.slice(0, 1).toUpperCase();
   if (/^(data:image\/|https:\/\/)/i.test(normalized.photo)) {
     const image = document.createElement('img');
@@ -3873,6 +3898,7 @@ function addChatMessage(message, displayName = null, persist = true) {
   meta.className = 'chat-message-meta';
   const name = document.createElement('strong');
   name.textContent = normalized.name;
+  name.style.color = nameColor(normalized.name);
   const time = document.createElement('time');
   time.textContent = normalized.time;
   meta.append(name, time);
@@ -4131,6 +4157,7 @@ let roomSoundMuted = false;
 function applyRoomSoundState() {
   const muted = !!roomSoundMuted;
   const mainVideo = $('remote'); if (mainVideo) mainVideo.muted = muted;
+  const selfPreview = $('selfSharePreview'); if (selfPreview) selfPreview.muted = true;
   document.querySelectorAll('audio[data-lock-remote-voice]').forEach(audio => { audio.muted = muted; });
   remoteShareTiles.forEach(entry => { if (entry.video) entry.video.muted = muted; });
   if ($('toolMute')) {
@@ -4357,11 +4384,6 @@ $('toggleChat').addEventListener('click', () => {
   $('toggleChat').setAttribute('aria-label', $('toggleChat').title);
   try { localStorage.setItem('lock-chat-collapsed', collapsed ? 'true' : 'false'); } catch {}
 });
-$('clearChat').addEventListener('click', () => {
-  chatHistory = [];
-  resetChatDisplay();
-  say('chatSubtitle', 'Histórico local limpo');
-});
 $('muteBtn').addEventListener('click', toggleRemoteAudio);
 $('fsBtn').addEventListener('click', () => {
   const stage = $('stage');
@@ -4456,6 +4478,8 @@ body[data-screen-layout="grid"] .remote-share-grid:not([hidden]){grid-template-c
 .remote-share-tile{position:relative;overflow:hidden;min-height:170px;background:#08090d;border:1px solid #343744;border-radius:12px;}
 .remote-share-tile video{display:block;width:100%;height:100%;min-height:170px;max-height:360px;object-fit:contain;background:#000;}
 .remote-share-label{position:absolute;left:9px;bottom:8px;padding:5px 8px;border-radius:6px;background:rgba(0,0,0,.72);color:#fff;font-size:11px;}
+.self-share-preview{border-color:#2e9d7c;box-shadow:inset 0 0 0 1px #2e9d7c55;}
+.self-share-preview video{transform:none;}
 @media(max-width:560px){.remote-share-grid:not([hidden]){grid-template-columns:1fr}.remote-share-tile,.remote-share-tile video{min-height:150px}}
 
 /* Lock call stage: participant cards inspired by a compact voice-room grid. */
@@ -4604,7 +4628,7 @@ body[data-screen-layout="focus"] .call-person-avatar{width:90px;height:90px;}
 .app-shell.chat-collapsed:not([data-current-view="home"]) .workspace{grid-template-columns:minmax(205px,22.2%) minmax(0,1fr) 42px!important}
 .app-shell.chat-collapsed .right-panel{width:42px;min-width:42px;padding:0;overflow:hidden}
 .app-shell.chat-collapsed .chat-heading{min-height:46px;justify-content:center;padding:5px 0;border-bottom:1px solid #292a32}
-.app-shell.chat-collapsed .chat-heading>div,.app-shell.chat-collapsed #clearChat,.app-shell.chat-collapsed .chat-messages,.app-shell.chat-collapsed .chat-composer{display:none!important}
+.app-shell.chat-collapsed .chat-heading>div,.app-shell.chat-collapsed .chat-messages,.app-shell.chat-collapsed .chat-composer{display:none!important}
 .app-shell.chat-collapsed .chat-heading-actions{display:flex;flex-direction:column;gap:0}
 .app-shell.chat-collapsed #toggleChat{width:30px;height:32px;font-size:20px}
 body.light-theme .app-shell:not([data-current-view="home"]) .topbar .top-tools{background:#e4e6ed;border-color:#c7cbd6;box-shadow:0 8px 28px #20243635}
@@ -4651,7 +4675,7 @@ body:has(.app-shell[data-current-view="home"]) .home-profile-top { display:flex;
 .app-shell.chat-collapsed:not([data-current-view="home"]) .workspace { grid-template-columns:minmax(205px,22.2%) minmax(0,1fr) 42px !important; }
 .app-shell.chat-collapsed .right-panel { width:42px !important; min-width:42px !important; padding:0 !important; overflow:hidden !important; }
 .app-shell.chat-collapsed .chat-heading { min-height:48px; justify-content:center; padding:4px 0; }
-.app-shell.chat-collapsed .chat-heading>div, .app-shell.chat-collapsed #clearChat, .app-shell.chat-collapsed .chat-messages, .app-shell.chat-collapsed .chat-reply-bar, .app-shell.chat-collapsed .chat-extras, .app-shell.chat-collapsed .chat-composer { display:none !important; }
+.app-shell.chat-collapsed .chat-heading>div, .app-shell.chat-collapsed .chat-messages, .app-shell.chat-collapsed .chat-reply-bar, .app-shell.chat-collapsed .chat-extras, .app-shell.chat-collapsed .chat-composer { display:none !important; }
 .app-shell.chat-collapsed .chat-heading-actions { display:flex; flex-direction:column; gap:0; }
 .app-shell.chat-collapsed #toggleChat { display:grid !important; place-items:center; width:32px; height:36px; font-size:20px; cursor:pointer; }
 .reopen-chat { position:fixed; z-index:120; right:7px; top:50%; transform:translateY(-50%); width:33px; height:66px; padding:0; border:1px solid #393b47; border-radius:11px 0 0 11px; color:#e9ebf3; background:#252630; font-size:11px; font-weight:800; writing-mode:vertical-rl; cursor:pointer; box-shadow:0 4px 18px #0005; }
