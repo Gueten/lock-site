@@ -359,7 +359,7 @@ body.popup .preview-wrap { margin-top: 8px; }
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14.5a2 2 0 0 1 0-4l2.2-.8a16 16 0 0 1 11.6 0l2.2.8a2 2 0 0 1 0 4l-2.6 1.1-3-2.4h-4.8l-3 2.4z"/></svg>
       </button>
     </div>
-    <div class="top-actions">
+    <div class="top-actions"><button class="icon-btn" id="lockProfileBtn" title="Perfil e configurações" aria-label="Perfil e configurações">👤</button>
       <button class="icon-btn" id="quickCopy" title="Copiar convite" aria-label="Copiar convite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg></button>
       <button class="icon-btn selected" id="themeToggle" title="Alternar tema" aria-label="Alternar tema"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9c0-.6-.5-1-1.1-1H16a2 2 0 0 1-2-2c0-.6.3-1.2.8-1.6.5-.4.7-.9.7-1.4A3 3 0 0 0 12 3Z"/><path d="M7.5 12h.01M9 7.5h.01M14.5 15h.01"/></svg></button>
       <button class="icon-btn" id="moreBtn" title="Mais opções" aria-label="Mais opções"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
@@ -2975,7 +2975,8 @@ function activateStream(nextStream, mode) {
 
 function openPeer(tries = 0) {
   opened = false;
-  const code = newCode();
+  const code = localStorage.getItem("lock-fixed-room-code") || newCode();
+  try { localStorage.setItem("lock-fixed-room-code", code); } catch {}
   const currentPeer = new Peer(PREFIX + code);
   peer = currentPeer;
 
@@ -3005,6 +3006,7 @@ function openPeer(tries = 0) {
     if (peer !== currentPeer) return;
     if (error.type === 'unavailable-id' && tries < 5) {
       currentPeer.destroy();
+      try { localStorage.setItem('lock-fixed-room-code', newCode()); } catch {}
       return openPeer(tries + 1);
     }
     if (error.type !== 'peer-unavailable' && !opened) {
@@ -3264,7 +3266,7 @@ function addChatMessage(message, displayName = null, persist = true) {
 function receiveFromViewer(data, sourceConn) {
   if (!data || typeof data !== 'object') return;
   if (data.type !== 'chat' || typeof data.text !== 'string') return;
-  const packet = { type: 'chat', text: data.text.slice(0, 500), name: 'Participante', time: data.time || clock() };
+  const packet = { type: 'chat', text: data.text.slice(0, 500), name: String(data.name || 'Participante').slice(0, 32), time: data.time || clock() };
   if (!packet.text.trim()) return;
   addChatMessage(packet);
   connections.forEach(conn => {
@@ -3283,7 +3285,7 @@ function receiveFromHost(data) {
     return;
   }
   if (data.type === 'chat' && typeof data.text === 'string') {
-    addChatMessage({ type: 'chat', text: data.text.slice(0, 500), name: data.name === 'Anfitrião' ? 'Anfitrião' : 'Participante', time: data.time || clock() });
+    addChatMessage({ type: 'chat', text: data.text.slice(0, 500), name: String(data.name || 'Participante').slice(0, 32), time: data.time || clock() });
   }
 }
 
@@ -3294,11 +3296,11 @@ function sendChat(event) {
   if (!text) return;
   const packet = { type: 'chat', text, time: clock() };
   if (peer && stream) {
-    packet.name = 'Anfitrião';
+    packet.name = (function(){try{return JSON.parse(localStorage.getItem('lock-profile-v1')||'{}').name||'Anfitrião'}catch{return 'Anfitrião'}})();
     addChatMessage(packet, 'Você');
     connections.forEach(conn => { if (conn.open) { try { conn.send(packet); } catch {} } });
   } else if (vpeer && vconn && vconn.open) {
-    packet.name = 'Participante';
+    packet.name = (function(){try{return JSON.parse(localStorage.getItem('lock-profile-v1')||'{}').name||'Participante'}catch{return 'Participante'}})();
     addChatMessage(packet, 'Você');
     try { vconn.send(packet); } catch { say('chatSubtitle', 'Não foi possível enviar. Verifique a conexão.'); }
   } else {
@@ -3550,5 +3552,35 @@ renderParticipants();
 route();
 
 </script>
+
+<style>
+#lockProfileOverlay{position:fixed;inset:0;z-index:10000;background:#05060bcc;display:grid;place-items:center;padding:16px}#lockProfileOverlay[hidden]{display:none!important}.lock-profile-card{width:min(440px,100%);max-height:90vh;overflow:auto;background:#191b23;border:1px solid #383b49;border-radius:16px;padding:22px;color:#eef0f7;box-shadow:0 25px 90px #0009}.lock-profile-card h2{margin:0 0 7px;font-size:21px}.lock-profile-card p{color:#9ba2b5;font-size:13px;line-height:1.5}.lock-profile-card label{display:block;font-size:12px;color:#bfc4d3;margin:14px 0 6px}.lock-profile-card input[type=text]{width:100%;height:42px;padding:10px 12px;border:1px solid #3b3e4b;border-radius:9px;background:#101117;color:#fff}.lock-profile-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.lock-profile-actions button,.lock-profile-card button{border:1px solid #3d4050;background:#282b36;color:#fff;padding:10px 12px;border-radius:9px;cursor:pointer}.lock-profile-actions .save{background:#009b75;border-color:#009b75}.lock-profile-row{display:flex;align-items:center;gap:12px}.lock-profile-avatar{width:58px;height:58px;object-fit:cover;border-radius:50%;background:#2d6be7;display:grid;place-items:center;color:white;font-weight:800;font-size:22px}.lock-profile-hint{font-size:11px!important}.lock-setting-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:15px;padding-top:14px;border-top:1px solid #343744}.lock-discord-note{padding:10px;border:1px solid #4c4169;border-radius:9px;background:#28213b;color:#d6c8ff!important}.lock-home-actions{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin:14px 0}.lock-home-actions button{border:1px solid #3d4050;background:#22242d;color:#f5f6fb;border-radius:9px;padding:11px 15px;cursor:pointer}.lock-home-actions button:first-child{background:#009b75;border-color:#009b75}.lock-profile-chip{display:flex;align-items:center;gap:8px}.lock-profile-chip img{width:26px;height:26px;object-fit:cover;border-radius:50%}
+</style>
+<div id="lockProfileOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="lockProfileTitle"><section class="lock-profile-card"><div class="lock-profile-row"><img id="lockProfilePreview" class="lock-profile-avatar" alt="Foto de perfil" hidden><div id="lockProfileInitial" class="lock-profile-avatar">L</div><div><h2 id="lockProfileTitle">Seu perfil Lock</h2><p style="margin:4px 0 0">Escolha o nome que aparece no chat e na sala.</p></div></div><label for="lockProfileName">Nome de exibição</label><input id="lockProfileName" type="text" maxlength="32" placeholder="Seu nome" autocomplete="nickname"><label for="lockProfilePhoto">Foto de perfil</label><input id="lockProfilePhoto" type="file" accept="image/*"><div class="lock-setting-line"><span>Notificações sonoras</span><label style="margin:0;display:flex;align-items:center;gap:8px"><input id="lockSoundsEnabled" type="checkbox" checked> Ativadas</label></div><p class="lock-profile-hint">O perfil e a preferência de som ficam salvos neste navegador. Isto ainda não é uma conta sincronizada entre dispositivos.</p><p class="lock-discord-note">Integração Discord: para mostrar amigos e convidá-los diretamente, é necessário registrar um aplicativo Discord e configurar OAuth/backend. Não é seguro guardar segredo OAuth dentro de um site público.</p><div class="lock-profile-actions"><button id="lockProfileSave" class="save">Salvar perfil</button><button id="lockDiscordConnect">Conectar Discord</button><button id="lockProfileClose">Fechar</button></div></section></div>
+<script>
+(()=>{
+ const byId=id=>document.getElementById(id); const KEY='lock-profile-v1'; const SOUND='lock-sounds-enabled';
+ let profile={name:'',photo:''}; try{profile=Object.assign(profile,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{}
+ const overlay=byId('lockProfileOverlay'); const sounds=localStorage.getItem(SOUND)!=='false'; byId('lockSoundsEnabled').checked=sounds;
+ const safeName=()=>((byId('lockProfileName').value||profile.name||'Você').trim().slice(0,32)||'Você');
+ function draw(){byId('lockProfileName').value=profile.name||'';byId('lockProfileInitial').textContent=(profile.name||'L').slice(0,1).toUpperCase();const img=byId('lockProfilePreview');img.hidden=!profile.photo;img.src=profile.photo||'';byId('lockProfileInitial').hidden=!!profile.photo;document.querySelectorAll('.user-mini strong').forEach(el=>el.textContent=profile.name||'Lock · Você');document.querySelectorAll('.user-mini .avatar').forEach(el=>{if(profile.photo){el.innerHTML='';const im=document.createElement('img');im.src=profile.photo;im.alt='';im.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%';el.append(im)}else el.textContent=(profile.name||'V').slice(0,1).toUpperCase()})}
+ function open(){draw();overlay.hidden=false}
+ byId('lockProfileBtn')?.addEventListener('click',open);byId('lockProfileClose').addEventListener('click',()=>overlay.hidden=true);overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.hidden=true});
+ byId('lockProfilePhoto').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith('image/'))return alert('Escolha uma imagem.');const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement('canvas');const scale=Math.min(1,256/Math.max(img.width,img.height));canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);profile.photo=canvas.toDataURL('image/jpeg',.78);draw()};img.src=reader.result};reader.readAsDataURL(file)});
+ byId('lockProfileSave').addEventListener('click',()=>{profile.name=safeName();try{localStorage.setItem(KEY,JSON.stringify(profile));localStorage.setItem(SOUND,byId('lockSoundsEnabled').checked?'true':'false')}catch(e){alert('Não foi possível salvar. Tente uma foto menor.')}overlay.hidden=true;draw();});
+ byId('lockDiscordConnect').addEventListener('click',()=>alert('A conexão real com o Discord ainda precisa ser configurada com um Client ID e um backend OAuth. O site público não deve armazenar segredos de autenticação.'));
+ // Add a clearer home dashboard action while preserving existing share controls.
+ const home=byId('home');if(home){const actions=document.createElement('div');actions.className='lock-home-actions';actions.innerHTML='<button type="button" id="lockCreateRoom">＋ Criar sala</button><button type="button" id="lockProfileFromHome">Editar perfil</button>';const primary=home.querySelector('.primary-actions');if(primary)primary.insertAdjacentElement('afterend',actions);byId('lockCreateRoom').addEventListener('click',()=>byId('startShare').click());byId('lockProfileFromHome').addEventListener('click',open)}
+ // Small notification tones, enabled by default. Audio starts after the user's first gesture.
+ let audioCtx=null;function tone(kind='message'){if(localStorage.getItem(SOUND)==='false')return;try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.connect(gain);gain.connect(audioCtx.destination);osc.type='sine';const now=audioCtx.currentTime;osc.frequency.setValueAtTime(kind==='mention'?1046:kind==='share'?784:kind==='end'?440:660,now);gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.09,now+.015);gain.gain.exponentialRampToValueAtTime(.0001,now+.20);osc.start(now);osc.stop(now+.22)}catch{}}
+ document.addEventListener('pointerdown',()=>{if(!audioCtx&&localStorage.getItem(SOUND)!=='false'){try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();audioCtx.resume()}catch{}}},{once:true});
+ let previousChatCount=0;const chat=byId('chatMessages');if(chat){const observer=new MutationObserver(records=>{const rows=chat.querySelectorAll('.chat-message');if(rows.length<=previousChatCount){previousChatCount=rows.length;return}const added=Array.from(rows).slice(previousChatCount);previousChatCount=rows.length;added.forEach(row=>{const sender=row.querySelector('.chat-message-meta strong')?.textContent||'';if(sender==='Você')return;const text=row.querySelector('.chat-message-text')?.textContent||'';const name=(profile.name||'').toLowerCase();tone(name&&text.toLowerCase().includes('@'+name)?'mention':'message')})});observer.observe(chat,{childList:true});}
+ let lastSharing=false,lastWatching=false;const share=byId('sharing'),watch=byId('watching');setInterval(()=>{const sharing=share&&!share.hidden,watching=watch&&!watch.hidden;if(sharing&&!lastSharing)tone('share');if(!sharing&&lastSharing)tone('end');if(watching&&!lastWatching)tone('share');if(!watching&&lastWatching)tone('end');lastSharing=sharing;lastWatching=watching},500);
+ // Keep room code stable on this browser and make the site base explicit for generated invites.
+ try{if(!localStorage.getItem('lock-fixed-room-code')){const existing=(location.hash||'').replace(/[^a-z0-9]/gi,'').toUpperCase();if(existing)localStorage.setItem('lock-fixed-room-code',existing)}}catch{}
+ draw();
+})();
+</script>
+
 </body>
 </html>
