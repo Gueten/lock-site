@@ -376,15 +376,6 @@ body.popup .preview-wrap { margin-top: 8px; }
         <div class="participant-row"><span class="avatar avatar-blue">V</span><span class="participant-name">Você <small>· anfitrião</small></span><span class="participant-state green-dot"></span></div>
       </div>
       <div class="sidebar-spacer"></div>
-      <div class="join-card">
-        <div class="join-title"><span class="tiny-link">↳</span><h3>Entrar em uma sala</h3></div>
-        <p>Digite o código que recebeu para assistir à transmissão.</p>
-        <div class="join-fields">
-          <input id="codeIn" class="field code-in" placeholder="K7P2QM" maxlength="80" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Código da transmissão">
-          <button id="watchBtn" class="btn primary join-btn">Entrar</button>
-        </div>
-        <p class="sidebar-hint">Não precisa de conta. Só do código certo.</p>
-      </div>
     </aside>
 
     <main class="center-panel">
@@ -401,6 +392,15 @@ body.popup .preview-wrap { margin-top: 8px; }
           <button id="createRoomBtn" class="btn primary action-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/><rect x="3" y="3" width="18" height="18" rx="4"/></svg>Criar sala</button>
           <button id="lockProfileFromHome" class="btn action-btn secondary" type="button">Editar perfil</button>
         </div>
+      <div class="join-card home-join-card">
+        <div class="join-title"><span class="tiny-link">↳</span><h3>Entrar em uma sala</h3></div>
+        <p>Digite o código que recebeu para assistir à transmissão.</p>
+        <div class="join-fields">
+          <input id="codeIn" class="field code-in" placeholder="K7P2QM" maxlength="80" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Código da transmissão">
+          <button id="watchBtn" class="btn primary join-btn">Entrar</button>
+        </div>
+        <p class="sidebar-hint">Não precisa de conta. Só do código certo.</p>
+      </div>
         <div class="home-footer"><span class="footer-lock">▣</span><span>Compartilhar a tela é opcional e não começa automaticamente.</span><button id="copyInviteHome" class="text-button">Como convidar?</button></div>
       </section>
 
@@ -447,7 +447,7 @@ body.popup .preview-wrap { margin-top: 8px; }
         <div class="setting-fields"><input id="baseIn" class="field" placeholder="https://seu-site.netlify.app/" aria-label="Endereço do site"><button id="saveBase" class="btn primary compact">Salvar</button></div>
         <p id="baseStatus" class="setting-status"></p>
       </details>
-      <div class="chat-heading"><div><h2>Chat</h2><span id="chatSubtitle">Mensagens da sala</span></div><button class="mini-icon" id="clearChat" title="Limpar chat local" aria-label="Limpar chat local"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></div>
+      <div class="chat-heading"><div><h2>Chat</h2><span id="chatSubtitle">Mensagens da sala</span></div><div class="chat-heading-actions"><button class="mini-icon" id="clearChat" title="Limpar chat local" aria-label="Limpar chat local"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button><button class="mini-icon" id="toggleChat" title="Recolher chat" aria-label="Recolher chat">›</button></div></div>
       <div id="chatMessages" class="chat-messages" aria-live="polite"><div class="chat-empty"><span class="chat-bubble-icon">✦</span><strong>Nenhuma mensagem ainda.</strong><span>As mensagens enviadas aqui aparecem para quem está na sala.</span></div></div>
       <form id="chatForm" class="chat-composer"><button type="button" id="chatPlus" class="composer-plus" title="Informações do chat" aria-label="Informações do chat">+</button><input id="chatInput" class="field chat-input" placeholder="Digite uma mensagem..." maxlength="500" autocomplete="off" aria-label="Mensagem do chat"><button type="submit" class="send-btn" title="Enviar mensagem" aria-label="Enviar mensagem"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 20 18-8L3 4l2 7 9 1-9 1z"/></svg></button></form>
       <div class="user-footer"><div class="user-mini"><span class="avatar avatar-blue">V</span><div><strong>Lock · Você</strong><small id="footerStatus">Conectado localmente</small></div></div><div class="user-footer-actions"><button id="footerInvite" title="Copiar convite" aria-label="Copiar convite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg></button><button id="footerExit" title="Sair ou encerrar" aria-label="Sair ou encerrar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3m10-8h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/></svg></button></div></div>
@@ -2857,6 +2857,20 @@ let vconn = null;
 let viewerCode = '';
 let chatHistory = [];
 let roomStarted = false;
+let closingHostRoom = false;
+const ACTIVE_HOST_ROOM_KEY = 'lock-active-host-room-v1';
+const LOCK_CLIENT_ID = (() => {
+  try {
+    let id = localStorage.getItem('lock-browser-client-id-v1');
+    if (!id) {
+      id = (crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), x => x.toString(16).padStart(2,'0')).join(''));
+      localStorage.setItem('lock-browser-client-id-v1', id);
+    }
+    return id;
+  } catch {
+    return crypto.randomUUID ? crypto.randomUUID() : newCode() + newCode();
+  }
+})();
 
 let autoCorrectedRepoUrl = false;
 
@@ -3063,17 +3077,18 @@ function refreshTools() {
   $('toolMute').disabled = !vpeer;
   $('toolMute').classList.toggle('tool-red', !!$('remote').muted);
   refreshMicControl();
-  $('toolScreen').disabled = !canCapture || !!stream || !(peer && !peer.destroyed);
-  $('toolCamera').disabled = !canUseCamera || !!stream || !(peer && !peer.destroyed);
-  $('startShare').disabled = !canCapture || !!stream;
-  $('startCamera').disabled = !canUseCamera || !!stream;
+  const roomShareLimitReached = !!(peer && !peer.destroyed && !vpeer && incomingShares.size >= 3);
+  $('toolScreen').disabled = !canCapture || !!stream || !(peer && !peer.destroyed) || roomShareLimitReached;
+  $('toolCamera').disabled = !canUseCamera || !!stream || !(peer && !peer.destroyed) || roomShareLimitReached;
+  $('startShare').disabled = !canCapture || !!stream || roomShareLimitReached;
+  $('startCamera').disabled = !canUseCamera || !!stream || roomShareLimitReached;
   $('toolExit').disabled = !(stream || vpeer || peer);
 }
 
 /* ---------- captura e compartilhamento ---------- */
 async function startShare() {
   if (stream) return;
-  if (peer && !vpeer && incomingShares.size >= 2) return say('homeMsg', 'Já existem duas telas compartilhadas nesta sala. Espere uma delas terminar.');
+  if (peer && !vpeer && incomingShares.size >= 3) return say('homeMsg', 'A sala já atingiu o limite de três transmissões simultâneas. Espere uma terminar.');
   if (!canCapture) return say('homeMsg', 'Este navegador não permite compartilhar a tela. Abra o Lock em um computador compatível.');
   say('homeMsg', '');
   try {
@@ -3093,7 +3108,7 @@ async function startShare() {
 
 async function startCamera() {
   if (stream) return;
-  if (peer && !vpeer && incomingShares.size >= 2) return say('homeMsg', 'Já existem duas transmissões nesta sala. Espere uma delas terminar.');
+  if (peer && !vpeer && incomingShares.size >= 3) return say('homeMsg', 'A sala já atingiu o limite de três transmissões simultâneas. Espere uma terminar.');
   if (!canUseCamera) return say('homeMsg', 'Este navegador não permite acessar a câmera.');
   say('homeMsg', '');
   try {
@@ -3186,18 +3201,32 @@ function createRoom() {
 }
 
 function leaveHostRoom() {
-  stopLocalVoice();
-  if (stream) { const active = stream; stream = null; active.getTracks().forEach(track => track.stop()); }
-  calls.forEach(call => { try { call.close(); } catch {} }); calls.clear();
-  connections.forEach(conn => { try { conn.close(); } catch {} }); connections.clear();
-  relayCalls.forEach(call => { try { call.close(); } catch {} }); relayCalls.clear();
-  incomingShares.forEach(item => { try { item.call?.close(); } catch {} }); incomingShares.clear();
-  if (peer) { try { peer.destroy(); } catch {} }
-  peer = null; opened = false;
-  $('preview').srcObject = null;
-  remoteShareTiles.forEach(({video,tile})=>{try{video.srcObject=null;tile.remove()}catch{}}); remoteShareTiles.clear();
-  shareCode = ''; participantProfiles.clear(); remoteRoster.clear(); renderShare(); refreshTools(); refreshCount(); show('home');
-  setRoomStatus('Sala pronta', false); say('homeMsg','');
+  if (closingHostRoom) return;
+  closingHostRoom = true;
+  connections.forEach(conn => {
+    if (conn.open) { try { conn.send({ type: 'room-closed', code: shareCode }); } catch {} }
+  });
+  // Give the reliable data channel a moment to deliver the closure event before destroying the host peer.
+  window.setTimeout(() => {
+    const closedCode = shareCode;
+    stopLocalVoice();
+    if (stream) { const active = stream; stream = null; active.getTracks().forEach(track => track.stop()); }
+    calls.forEach(call => { try { call.close(); } catch {} }); calls.clear();
+    connections.forEach(conn => { try { conn.close(); } catch {} }); connections.clear();
+    relayCalls.forEach(call => { try { call.close(); } catch {} }); relayCalls.clear();
+    incomingShares.forEach(item => { try { item.call?.close(); } catch {} }); incomingShares.clear();
+    incomingVoiceStreams.forEach(item => { try { item.call?.close(); } catch {} }); incomingVoiceStreams.clear();
+    voiceRelayCalls.forEach(call => { try { call.close(); } catch {} }); voiceRelayCalls.clear();
+    voiceOutgoingCalls.forEach(call => { try { call.close(); } catch {} }); voiceOutgoingCalls.clear();
+    if (peer) { try { peer.destroy(); } catch {} }
+    peer = null; opened = false;
+    try { if (localStorage.getItem(ACTIVE_HOST_ROOM_KEY) === closedCode) localStorage.removeItem(ACTIVE_HOST_ROOM_KEY); } catch {}
+    $('preview').srcObject = null;
+    remoteShareTiles.forEach(({video,tile})=>{try{video.srcObject=null;tile.remove()}catch{}}); remoteShareTiles.clear();
+    shareCode = ''; participantProfiles.clear(); remoteRoster.clear(); renderShare(); refreshTools(); refreshCount(); show('home');
+    setRoomStatus('Sala pronta', false); say('homeMsg','');
+    closingHostRoom = false;
+  }, 300);
 }
 
 function openPeer(tries = 0) {
@@ -3228,6 +3257,7 @@ function openPeer(tries = 0) {
     if (peer !== currentPeer) return;
     opened = true;
     shareCode = code;
+    try { localStorage.setItem(ACTIVE_HOST_ROOM_KEY, code); } catch {}
     viewerCode = '';
     show(stream ? 'sharing' : 'lobby');
     renderShare();
@@ -3284,8 +3314,19 @@ function sendPrimaryTo(conn) {
 
 function serve(conn) {
   if (!peer || connections.has(conn.peer)) return;
+  const incomingClientId = String(conn.metadata && conn.metadata.lockClientId || '');
+  const duplicateClient = incomingClientId && (
+    incomingClientId === LOCK_CLIENT_ID ||
+    Array.from(connections.values()).some(existing => existing.open && String(existing.metadata && existing.metadata.lockClientId || '') === incomingClientId)
+  );
+  if (duplicateClient) {
+    if (conn.open) { try { conn.send({ type: 'duplicate-session', message: 'Esta conta do navegador já está conectada à sala.' }); } catch {} }
+    window.setTimeout(() => { try { conn.close(); } catch {} }, 450);
+    return;
+  }
   connections.set(conn.peer, conn);
-  participantProfiles.set(conn.peer, safeProfileForNetwork(conn.metadata || { name: 'Participante', photo: '' }));
+  const metaProfile = conn.metadata && conn.metadata.profile ? conn.metadata.profile : (conn.metadata || { name: 'Participante', photo: '' });
+  participantProfiles.set(conn.peer, safeProfileForNetwork(metaProfile));
   conn.on('data', data => receiveFromViewer(data, conn));
   const drop = () => {
     connections.delete(conn.peer);
@@ -3326,14 +3367,25 @@ function serve(conn) {
 function acceptParticipantShare(call) {
   if (!call || !peer) return;
   const owner = call.peer;
+  // If this participant stopped and immediately started again, replace the old call instead
+  // of counting the same person twice or rejecting the restarted screen share.
+  const previousRecord = incomingShares.get(owner);
+  if (previousRecord && previousRecord.call !== call) {
+    incomingShares.delete(owner);
+    for (const [key, relay] of relayCalls) {
+      if (key.startsWith(owner + '->')) { try { relay.close(); } catch {} relayCalls.delete(key); }
+    }
+    removeRemoteShareTile(owner);
+    try { previousRecord.call?.close(); } catch {}
+  }
   const activeCount = (stream ? 1 : 0) + incomingShares.size;
-  if (activeCount >= 2 || incomingShares.has(owner)) {
+  if (activeCount >= 3) {
     const conn = connections.get(owner);
-    if (conn && conn.open) { try { conn.send({ type: 'share-limit', message: 'A sala permite no máximo duas transmissões de tela ao mesmo tempo.' }); } catch {} }
+    if (conn && conn.open) { try { conn.send({ type: 'share-limit', message: 'A sala permite no máximo três transmissões de tela ao mesmo tempo.' }); } catch {} }
     try { call.close(); } catch {}
     return;
   }
-  // Reserve a slot immediately so two nearly simultaneous requests cannot exceed the limit.
+  // Reserve a slot immediately so nearly simultaneous incoming shares cannot exceed the limit.
   incomingShares.set(owner, { call, stream: null });
   call.answer();
   call.on('stream', incomingStream => {
@@ -3562,9 +3614,18 @@ const setInfo = (message, live) => {
 
 function startWatch(code) {
   if (peer && !peer.destroyed) {
-    say('homeMsg', 'Esta aba está mantendo a sala aberta. Use outro navegador ou dispositivo para entrar como participante.');
+    if (shareCode === code) say('homeMsg', 'Você já é o anfitrião desta sala nesta aba. Envie o convite para outra pessoa.');
+    else say('homeMsg', 'Esta aba já está mantendo uma sala aberta. Use outro navegador ou dispositivo para entrar em outra sala.');
     return;
   }
+  try {
+    if (localStorage.getItem(ACTIVE_HOST_ROOM_KEY) === code) {
+      history.replaceState(null, '', location.pathname + location.search);
+      show('home');
+      say('homeMsg', 'Esta sala já está aberta como anfitrião em outra aba deste navegador. Você não foi adicionado novamente.');
+      return;
+    }
+  } catch {}
   if (viewerCode === code && vpeer) return;
   if (vpeer) vpeer.destroy();
   viewerCode = code;
@@ -3584,7 +3645,10 @@ function startWatch(code) {
 
   currentPeer.on('open', () => {
     if (vpeer !== currentPeer) return;
-    const conn = vconn = currentPeer.connect(PREFIX + code, { reliable: true });
+    const conn = vconn = currentPeer.connect(PREFIX + code, {
+      reliable: true,
+      metadata: { lockClientId: LOCK_CLIENT_ID }
+    });
     conn.on('open', () => {
       if (vconn !== conn) return;
       const identity = safeProfileForNetwork(localProfileSnapshot());
@@ -3594,7 +3658,11 @@ function startWatch(code) {
       refreshCount();
     });
     conn.on('data', data => receiveFromHost(data));
-    conn.on('close', () => setInfo('A transmissão terminou ou o anfitrião saiu.'));
+    conn.on('close', () => {
+      if (vconn !== conn) return;
+      setInfo('A conexão com a sala foi encerrada.');
+      window.setTimeout(() => { if (vconn === conn) leaveWatch(); }, 900);
+    });
     conn.on('error', () => setInfo('A conexão caiu. Tente entrar novamente com o código.'));
   });
   currentPeer.on('call', call => {
@@ -3710,9 +3778,6 @@ function addChatMessage(message, displayName = null, persist = true) {
   if (empty) empty.remove();
   const row = document.createElement('div');
   row.className = 'chat-message';
-  const avatar = document.createElement('span');
-  avatar.className = `avatar ${displayName === 'Você' ? 'avatar-blue' : 'avatar-green'}`;
-  avatar.textContent = (displayName || normalized.name).slice(0, 1).toUpperCase();
   const body = document.createElement('div');
   body.className = 'chat-message-body';
   const meta = document.createElement('div');
@@ -3726,7 +3791,7 @@ function addChatMessage(message, displayName = null, persist = true) {
   text.className = 'chat-message-text';
   text.textContent = normalized.text;
   body.append(meta, text);
-  row.append(avatar, body);
+  row.append(body);
   container.append(row);
   container.scrollTop = container.scrollHeight;
 }
@@ -3753,8 +3818,18 @@ function receiveFromViewer(data, sourceConn) {
 
 function receiveFromHost(data) {
   if (!data || typeof data !== 'object') return;
+  if (data.type === 'room-closed') {
+    say('info', 'O anfitrião encerrou a sala. Você será desconectado.');
+    window.setTimeout(() => { if (vpeer) leaveWatch(); }, 350);
+    return;
+  }
+  if (data.type === 'duplicate-session') {
+    say('info', 'Este navegador já está conectado à sala em outra aba. Fechando a entrada duplicada…');
+    window.setTimeout(() => { if (vpeer) leaveWatch(); }, 550);
+    return;
+  }
   if (data.type === 'roster') { applyRemoteRoster(data); return; }
-  if (data.type === 'share-limit') { stopViewerShare(data.message || 'A sala permite no máximo duas transmissões simultâneas.'); return; }
+  if (data.type === 'share-limit') { stopViewerShare(data.message || 'A sala permite no máximo três transmissões simultâneas.'); return; }
   if (data.type === 'host-share-ended') { if (!$('remote').srcObject && !remoteShareTiles.size) setInfo('A transmissão principal foi pausada. Aguarde ela voltar ou veja outra tela compartilhada.'); return; }
   if (data.type === 'history' && Array.isArray(data.messages)) {
     data.messages.slice(-30).forEach(message => {
@@ -4131,6 +4206,14 @@ $('chatForm').addEventListener('submit', sendChat);
 $('chatPlus').addEventListener('click', () => {
   say('chatSubtitle', 'O chat aceita mensagens de até 500 caracteres e funciona entre as pessoas conectadas à sala.');
 });
+$('toggleChat').addEventListener('click', () => {
+  const shell = document.querySelector('.app-shell');
+  const collapsed = shell.classList.toggle('chat-collapsed');
+  $('toggleChat').textContent = collapsed ? '‹' : '›';
+  $('toggleChat').title = collapsed ? 'Expandir chat' : 'Recolher chat';
+  $('toggleChat').setAttribute('aria-label', $('toggleChat').title);
+  try { localStorage.setItem('lock-chat-collapsed', collapsed ? 'true' : 'false'); } catch {}
+});
 $('clearChat').addEventListener('click', () => {
   chatHistory = [];
   resetChatDisplay();
@@ -4154,15 +4237,12 @@ document.addEventListener('click', event => {
 });
 $('leaveBtn').addEventListener('click', leaveWatch);
 $('toolExit').addEventListener('click', () => {
-  if (peer && stream) stopShare('Transmissão encerrada.');
-  else if (vpeer && viewerShareCall) stopViewerShare('Você parou de compartilhar a tela.');
+  if (peer && !peer.destroyed) leaveHostRoom();
   else if (vpeer) leaveWatch();
-  else if (peer) leaveHostRoom();
   else openInviteModal();
 });
 $('footerExit').addEventListener('click', () => {
   if (peer) leaveHostRoom();
-  else if (vpeer && viewerShareCall) stopViewerShare('Você parou de compartilhar a tela.');
   else if (vpeer) leaveWatch();
   else show('home');
 });
@@ -4183,6 +4263,7 @@ $('codeIn').addEventListener('keydown', event => { if (event.key === 'Enter') $(
 $('baseIn').addEventListener('keydown', event => { if (event.key === 'Enter') saveBase(); });
 $('chatInput').addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); $('chatForm').requestSubmit(); } });
 addEventListener('pagehide', () => {
+  try { if (peer && shareCode && localStorage.getItem(ACTIVE_HOST_ROOM_KEY) === shareCode) localStorage.removeItem(ACTIVE_HOST_ROOM_KEY); } catch {}
   if (micStream) micStream.getTracks().forEach(track => track.stop());
   if (peer) peer.destroy();
   if (vpeer) vpeer.destroy();
@@ -4194,6 +4275,13 @@ addEventListener('hashchange', route);
 renderShare();
 refreshTools();
 renderParticipants();
+try {
+  const chatCollapsed = localStorage.getItem('lock-chat-collapsed') === 'true';
+  document.querySelector('.app-shell').classList.toggle('chat-collapsed', chatCollapsed);
+  $('toggleChat').textContent = chatCollapsed ? '‹' : '›';
+  $('toggleChat').title = chatCollapsed ? 'Expandir chat' : 'Recolher chat';
+  $('toggleChat').setAttribute('aria-label', $('toggleChat').title);
+} catch {}
 route();
 
 </script>
@@ -4347,6 +4435,45 @@ body[data-screen-layout="focus"] .call-person-avatar{width:90px;height:90px;}
 .screen-tile:fullscreen video,.screen-tile:-webkit-full-screen video{width:100%;height:100%;max-height:none;object-fit:contain}
 .screen-tile:fullscreen .tile-fullscreen,.screen-tile:-webkit-full-screen .tile-fullscreen{opacity:1;pointer-events:auto}
 @media(hover:none){.tile-fullscreen{opacity:1;pointer-events:auto;transform:none}}
+</style>
+
+
+<style id="lock-v1-9-layout">
+/* Landing: keep join-by-code on the initial page, never in the participant sidebar. */
+.home-join-card{display:block;width:min(100%,390px);margin:22px auto 0;text-align:left;padding:13px 10px 11px}
+.app-shell[data-current-view="home"] .home-join-card{display:block}
+.participants-panel>.join-card,.participants-panel>.sidebar-spacer{display:none!important}
+/* A room's left column is only the roster; right column is only the collapsible chat. */
+.right-panel .room-actions,.right-panel #hostBox,.right-panel .user-footer{display:none!important}
+.right-panel{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.chat-heading-actions{display:flex;align-items:center;gap:5px}
+.chat-message{display:block;min-width:0}
+.chat-message-body{width:100%}
+.chat-heading-actions #toggleChat{font-size:18px;line-height:1}
+.app-shell:not([data-current-view="home"]) .workspace{padding-bottom:86px!important;grid-template-columns:minmax(205px,22.2%) minmax(0,1fr) minmax(260px,25.6%)}
+.app-shell:not([data-current-view="home"]) .topbar .top-tools{position:fixed;z-index:60;left:50%;top:auto;bottom:12px;transform:translateX(-50%);gap:3px;padding:5px;border:1px solid #383a45;background:#24252c;box-shadow:0 8px 28px #0008}
+.app-shell:not([data-current-view="home"]) .tool-btn{width:39px;height:37px}
+.app-shell.chat-collapsed:not([data-current-view="home"]) .workspace{grid-template-columns:minmax(205px,22.2%) minmax(0,1fr) 42px!important}
+.app-shell.chat-collapsed .right-panel{width:42px;min-width:42px;padding:0;overflow:hidden}
+.app-shell.chat-collapsed .chat-heading{min-height:46px;justify-content:center;padding:5px 0;border-bottom:1px solid #292a32}
+.app-shell.chat-collapsed .chat-heading>div,.app-shell.chat-collapsed #clearChat,.app-shell.chat-collapsed .chat-messages,.app-shell.chat-collapsed .chat-composer{display:none!important}
+.app-shell.chat-collapsed .chat-heading-actions{display:flex;flex-direction:column;gap:0}
+.app-shell.chat-collapsed #toggleChat{width:30px;height:32px;font-size:20px}
+body.light-theme .app-shell:not([data-current-view="home"]) .topbar .top-tools{background:#e4e6ed;border-color:#c7cbd6;box-shadow:0 8px 28px #20243635}
+@media(max-width:850px){
+  .app-shell:not([data-current-view="home"]) .topbar .top-tools{position:fixed;top:auto;bottom:10px;left:50%;transform:translateX(-50%);width:auto;max-width:calc(100vw - 12px);flex-wrap:nowrap;overflow-x:auto}
+  .app-shell:not([data-current-view="home"]) .workspace{padding-bottom:82px!important}
+  .app-shell.chat-collapsed:not([data-current-view="home"]) .workspace{grid-template-columns:minmax(0,1fr) 42px!important;grid-template-rows:minmax(440px,auto) minmax(220px,auto)}
+  .app-shell.chat-collapsed .participants-panel{grid-column:1;grid-row:2}
+  .app-shell.chat-collapsed .center-panel{grid-column:1 / -1;grid-row:1}
+  .app-shell.chat-collapsed .right-panel{grid-column:2;grid-row:2;min-height:120px}
+}
+@media(max-width:560px){
+  .home-join-card{margin-top:18px}
+  .home-join-card .join-fields{align-items:stretch}
+  .app-shell:not([data-current-view="home"]) .topbar .top-tools .tool-btn{width:33px;min-width:33px}
+  .app-shell:not([data-current-view="home"]) .workspace{padding-bottom:82px!important}
+}
 </style>
 
 </body>
