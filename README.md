@@ -1,11 +1,14 @@
-# Lock v1.9 · GitHub Pages
+# LockCall · GitHub Pages
 
-Site estático do Lock. Para atualizar, envie `index.html` e `.nojekyll` para a raiz do repositório `Gueten/lock-site` e mantenha GitHub Pages apontando para `main` / root.
+Este pacote contém a versão web do LockCall para publicar no GitHub Pages.
 
-- A entrada por código fica na tela inicial.
-- Cada sala criada recebe um código aleatório e link `https://gueten.github.io/lock-site/#CODIGO`.
-- Até três transmissões simultâneas por sala.
-- O anfitrião encerra a sala para todos; entradas duplicadas do mesmo navegador são bloqueadas.
-- Chat lateral recolhível, sem fotos nas mensagens; barra de controles na parte inferior.
+## Atualização
+1. Extraia o ZIP.
+2. Envie `index.html`, `.nojekyll`, `robots.txt` e `sitemap.xml` para a raiz do repositório `Gueten/lock-site`.
+3. Mantenha o GitHub Pages em `main` / `/(root)`.
 
-Observação: o site é estático; chamada de voz e compartilhamento dependem de PeerJS/WebRTC, das permissões do navegador e da conectividade de rede.
+## Domínio personalizado `lockcall.gg`
+O domínio precisa ser registrado por você primeiro. Depois de confirmar que tem controle do domínio, adicione `lockcall.gg` em Settings → Pages → Custom domain e configure no registrador os registros DNS indicados pelo GitHub. **Não configure o domínio antes de registrá-lo.** Depois de a URL funcionar, altere a URL canônica/OG e `sitemap.xml` para `https://lockcall.gg/`, envie o sitemap ao Google Search Console e solicite indexação. O Google não garante posição nem indexação imediata.
+
+## Chat
+O chat tem avatar, resposta, menções, emojis e permite inserir links públicos de GIF. O botão de pesquisa abre o Tenor em outra aba; para que um GIF apareça como imagem inline, cole seu URL direto (terminando em `.gif`).

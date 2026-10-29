@@ -4,7 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#17181d">
-<title>Lock · Sala privada</title>
+<title>LockCall · Salas de voz e compartilhamento de tela</title>
+<meta name="description" content="LockCall é uma forma simples de criar salas privadas, conversar por voz, compartilhar tela e convidar amigos pelo navegador.">
+<meta name="keywords" content="LockCall, Lock, chamada de voz, sala privada, compartilhar tela, call online, conversar pelo navegador">
+<meta name="application-name" content="LockCall">
+<meta property="og:type" content="website">
+<meta property="og:title" content="LockCall · Salas de voz e compartilhamento de tela">
+<meta property="og:description" content="Crie uma sala privada, converse por voz e compartilhe sua tela direto do navegador.">
+<meta property="og:url" content="https://gueten.github.io/lock-site/">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://gueten.github.io/lock-site/">
 <style>
 :root {
   color-scheme: dark;
@@ -324,6 +333,9 @@ body.popup .preview-wrap { margin-top: 8px; }
 </style>
 </head>
 <body>
+<button id="homeProfileTop" class="home-profile-top" type="button" aria-label="Editar perfil" title="Editar perfil">
+  <span class="home-profile-top-avatar">☺</span><span>Editar perfil</span>
+</button>
 <div class="app-shell">
   <header class="topbar">
     <div class="top-left">
@@ -339,8 +351,8 @@ body.popup .preview-wrap { margin-top: 8px; }
       <button class="tool-btn tool-red" id="toolMic" title="Entrar na voz" aria-label="Entrar na voz" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/><path class="slash" d="m4 4 16 16"/></svg>
       </button>
-      <button class="tool-btn tool-red" id="toolAudio" title="Ativar ou desativar áudio compartilhado" aria-label="Áudio compartilhado" disabled>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4Z"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4m-4 0h8"/><path class="slash" d="m4 4 16 16"/></svg>
+      <button class="tool-btn" id="toolAudio" title="Ativar ou desativar o áudio da tela compartilhada" aria-label="Áudio da tela" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9z"/><path d="M16 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/><path class="slash" d="m4 4 16 16"/></svg>
       </button>
       <button class="tool-btn" id="toolMute" title="Ativar ou desativar som" aria-label="Som" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/></svg>
@@ -386,8 +398,8 @@ body.popup .preview-wrap { margin-top: 8px; }
       <section id="home" class="main-state home-state">
         <div class="empty-illustration" aria-hidden="true"><div class="screen-outline"><span></span><i></i></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="spark spark-one">✦</div><div class="spark spark-two">✧</div></div>
         <div class="eyebrow"><span class="eyebrow-dot"></span> COMPARTILHAMENTO PRIVADO</div>
-        <h1>Crie sua sala no Lock.</h1>
-        <p class="state-description">Crie uma sala primeiro. Depois, compartilhe sua tela quando estiver pronto ou envie o convite para alguém entrar.</p>
+        <h1>Crie sua sala no LockCall.</h1>
+        <p class="state-description">Crie uma sala privada para conversar por voz, compartilhar sua tela e convidar amigos pelo navegador.</p>
         <div class="primary-actions">
           <button id="createRoomBtn" class="btn primary action-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/><rect x="3" y="3" width="18" height="18" rx="4"/></svg>Criar sala</button>
           <button id="lockProfileFromHome" class="btn action-btn secondary" type="button">Editar perfil</button>
@@ -430,12 +442,13 @@ body.popup .preview-wrap { margin-top: 8px; }
 
       <section id="watching" class="main-state watching-state" hidden>
         <div class="state-topline"><div><span class="live-pill waiting-pill"><i></i> SALA REMOTA</span><h1>Assistindo à transmissão</h1><p class="state-description">A tela compartilhada aparecerá abaixo.</p></div><button id="leaveBtn" class="btn danger-outline">Sair da sala</button></div><div class="layout-toolbar"><span>Ajustar telas</span><button type="button" class="btn compact selected" data-screen-layout="grid">Grade</button><button type="button" class="btn compact" data-screen-layout="focus">Foco</button></div>
-        <div id="stage" class="stage screen-tile"><video id="remote" autoplay muted playsinline></video><div id="info" class="info" role="status">Conectando…</div><button class="tile-fullscreen" type="button" aria-label="Tela cheia da transmissão" title="Tela cheia">⛶</button><span class="stage-corner-label">LOCK · LIVE</span></div>
+        <div id="stage" class="stage screen-tile"><video id="remote" autoplay playsinline></video><div id="info" class="info" role="status">Conectando…</div><button class="tile-fullscreen" type="button" aria-label="Tela cheia da transmissão" title="Tela cheia">⛶</button><span class="stage-corner-label">LOCK · LIVE</span></div>
         <div id="watchPeopleGrid" class="call-people-grid"></div><div id="remoteGrid" class="remote-share-grid" hidden></div><div class="viewer-controls"><button id="muteBtn" class="btn compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6"/></svg>Ativar som</button><button id="fsBtn" class="btn compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>Tela cheia</button></div>
       </section>
     </main>
 
-    <aside class="panel right-panel" aria-label="Chat e controles da sala">
+    <button id="reopenChat" class="reopen-chat" type="button" aria-label="Abrir chat" title="Abrir chat" hidden>Chat</button>
+    <aside class="panel right-panel" aria-label="Chat da sala">
       <div class="room-actions">
         <button id="inviteBtn" class="room-action invite-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg><span>Convidar</span></button>
         <button id="rightTheme" class="room-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9c0-.6-.5-1-1.1-1H16a2 2 0 0 1-2-2c0-.6.3-1.2.8-1.6.5-.4.7-.9.7-1.4A3 3 0 0 0 12 3Z"/></svg><span>Tema da sala</span></button>
@@ -449,7 +462,18 @@ body.popup .preview-wrap { margin-top: 8px; }
       </details>
       <div class="chat-heading"><div><h2>Chat</h2><span id="chatSubtitle">Mensagens da sala</span></div><div class="chat-heading-actions"><button class="mini-icon" id="clearChat" title="Limpar chat local" aria-label="Limpar chat local"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button><button class="mini-icon" id="toggleChat" title="Recolher chat" aria-label="Recolher chat">›</button></div></div>
       <div id="chatMessages" class="chat-messages" aria-live="polite"><div class="chat-empty"><span class="chat-bubble-icon">✦</span><strong>Nenhuma mensagem ainda.</strong><span>As mensagens enviadas aqui aparecem para quem está na sala.</span></div></div>
-      <form id="chatForm" class="chat-composer"><button type="button" id="chatPlus" class="composer-plus" title="Informações do chat" aria-label="Informações do chat">+</button><input id="chatInput" class="field chat-input" placeholder="Digite uma mensagem..." maxlength="500" autocomplete="off" aria-label="Mensagem do chat"><button type="submit" class="send-btn" title="Enviar mensagem" aria-label="Enviar mensagem"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 20 18-8L3 4l2 7 9 1-9 1z"/></svg></button></form>
+      <div id="chatReplyBar" class="chat-reply-bar" hidden><span id="chatReplyLabel"></span><button type="button" id="cancelChatReply" aria-label="Cancelar resposta" title="Cancelar resposta">×</button></div>
+      <div id="chatExtras" class="chat-extras" hidden>
+        <div id="emojiPicker" class="emoji-picker" hidden aria-label="Escolher emoji"></div>
+        <div id="gifPanel" class="gif-panel" hidden>
+          <div class="gif-panel-head"><strong>Enviar GIF</strong><button type="button" id="closeGifPanel" class="tiny-close" aria-label="Fechar GIF">×</button></div>
+          <div class="gif-search-row"><input id="gifSearchQuery" class="field" placeholder="Pesquisar GIFs…" maxlength="60"><button type="button" id="tenorSearchBtn" class="btn secondary compact">Buscar</button></div>
+          <p>Escolha um GIF no Tenor e cole o link abaixo. Links diretos de GIF aparecem na conversa como imagem.</p>
+          <div class="gif-search-row"><input id="gifDirectUrl" class="field" placeholder="Cole o link do GIF" inputmode="url"><button type="button" id="insertGifUrl" class="btn primary compact">Inserir</button></div>
+        </div>
+        <div id="mentionPicker" class="mention-picker" hidden></div>
+      </div>
+      <form id="chatForm" class="chat-composer"><button type="button" id="chatPlus" class="composer-plus" title="Ajuda do chat" aria-label="Ajuda do chat" hidden>+</button><button type="button" id="emojiToggle" class="composer-tool" title="Escolher emoji" aria-label="Escolher emoji">☺</button><button type="button" id="gifToggle" class="composer-gif" title="Enviar GIF" aria-label="Enviar GIF">GIF</button><input id="chatInput" class="field chat-input" placeholder="Digite uma mensagem..." maxlength="500" autocomplete="off" aria-label="Mensagem do chat"><button type="submit" class="send-btn" title="Enviar mensagem" aria-label="Enviar mensagem"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 20 18-8L3 4l2 7 9 1-9 1z"/></svg></button></form>
       <div class="user-footer"><div class="user-mini"><span class="avatar avatar-blue">V</span><div><strong>Lock · Você</strong><small id="footerStatus">Conectado localmente</small></div></div><div class="user-footer-actions"><button id="footerInvite" title="Copiar convite" aria-label="Copiar convite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg></button><button id="footerExit" title="Sair ou encerrar" aria-label="Sair ou encerrar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3m10-8h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/></svg></button></div></div>
     </aside>
   </div>
@@ -2856,6 +2880,7 @@ let vpeer = null;
 let vconn = null;
 let viewerCode = '';
 let chatHistory = [];
+let lockActiveReplyTarget = null;
 let roomStarted = false;
 let closingHostRoom = false;
 const ACTIVE_HOST_ROOM_KEY = 'lock-active-host-room-v1';
@@ -2954,6 +2979,16 @@ function localProfileSnapshot() {
 }
 
 function profileForPeer(id) { return participantProfiles.get(id) || { name: 'Conectando…', photo: '' }; }
+window.getLockChatMentionNames = function() {
+  const names = [localProfileSnapshot().name];
+  if (peer && !peer.destroyed) {
+    for (const conn of connections.values()) { const p = participantProfiles.get(conn.peer); if (p && p.name) names.push(p.name); }
+  }
+  if (vpeer && !vpeer.destroyed) {
+    for (const p of remoteRoster.values()) { if (p && p.name) names.push(p.name); }
+  }
+  return [...new Set(names.filter(Boolean))];
+};
 
 function renderParticipants() {
   const list = $('participantsList');
@@ -3635,7 +3670,7 @@ function startWatch(code) {
   show('watching');
   setInfo('Conectando à sala…');
   $('remote').srcObject = null;
-  $('remote').muted = true;
+  $('remote').muted = false;
   refreshTools();
   refreshCount();
   renderShare();
@@ -3719,7 +3754,7 @@ function leaveWatch() {
   if (currentPeer) currentPeer.destroy();
   if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
   $('remote').srcObject = null;
-  $('remote').muted = true;
+  $('remote').muted = false;
   $('stage').hidden = false;
   history.replaceState(null, '', location.pathname + location.search);
   chatHistory = [];
@@ -3762,10 +3797,18 @@ function resetChatDisplay() {
 }
 
 function addChatMessage(message, displayName = null, persist = true) {
+  const safeReply = message.replyTo && typeof message.replyTo === 'object' ? {
+    id: String(message.replyTo.id || '').slice(0, 100),
+    name: String(message.replyTo.name || 'Participante').slice(0, 40),
+    text: String(message.replyTo.text || '').slice(0, 180)
+  } : null;
   const normalized = {
     type: 'chat',
+    id: String(message.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2))).slice(0, 100),
     text: String(message.text || '').slice(0, 500),
     name: String(message.name || 'Participante').slice(0, 40),
+    photo: String(message.photo || '').slice(0, 180000),
+    replyTo: safeReply,
     time: String(message.time || clock()).slice(0, 12)
   };
   if (!normalized.text) return;
@@ -3776,26 +3819,74 @@ function addChatMessage(message, displayName = null, persist = true) {
   const container = $('chatMessages');
   const empty = container.querySelector('.chat-empty');
   if (empty) empty.remove();
-  const row = document.createElement('div');
+  const row = document.createElement('article');
   row.className = 'chat-message';
+  row.dataset.messageId = normalized.id;
+  const avatar = document.createElement('span');
+  avatar.className = 'avatar avatar-blue chat-message-avatar';
+  avatar.textContent = normalized.name.slice(0, 1).toUpperCase();
+  if (/^(data:image\/|https:\/\/)/i.test(normalized.photo)) {
+    const image = document.createElement('img');
+    image.src = normalized.photo; image.alt = ''; image.loading = 'lazy';
+    image.onerror = () => { image.remove(); avatar.textContent = normalized.name.slice(0, 1).toUpperCase(); };
+    avatar.replaceChildren(image);
+  }
   const body = document.createElement('div');
   body.className = 'chat-message-body';
   const meta = document.createElement('div');
   meta.className = 'chat-message-meta';
   const name = document.createElement('strong');
-  name.textContent = displayName || normalized.name;
+  name.textContent = normalized.name;
   const time = document.createElement('time');
   time.textContent = normalized.time;
   meta.append(name, time);
-  const text = document.createElement('p');
+  if (displayName === 'Você') {
+    const self = document.createElement('span'); self.className = 'chat-self-tag'; self.textContent = 'Você'; meta.append(self);
+  }
+  if (normalized.replyTo) {
+    const quote = document.createElement('div'); quote.className = 'chat-reply-quote';
+    const quoteName = document.createElement('strong'); quoteName.textContent = normalized.replyTo.name;
+    const quoteText = document.createElement('span'); quoteText.textContent = normalized.replyTo.text;
+    quote.append(quoteName, quoteText); body.append(quote);
+  }
+  const text = document.createElement('div');
   text.className = 'chat-message-text';
-  text.textContent = normalized.text;
-  body.append(meta, text);
-  row.append(body);
+  appendLockChatText(text, normalized.text);
+  const actions = document.createElement('div'); actions.className = 'chat-message-actions';
+  const reply = document.createElement('button'); reply.type = 'button'; reply.className = 'chat-reply-action'; reply.textContent = '↩ Responder';
+  reply.addEventListener('click', () => window.dispatchEvent(new CustomEvent('lock-chat-reply', { detail: { id: normalized.id, name: normalized.name, text: normalized.text } })));
+  actions.append(reply);
+  body.append(meta, text, actions);
+  row.append(avatar, body);
   container.append(row);
   container.scrollTop = container.scrollHeight;
 }
 
+function appendLockChatText(target, value) {
+  const raw = String(value || '');
+  const tokens = raw.split(/(https?:\/\/[^\s<>]+|@[\p{L}\p{N}_.-]{1,40})/gu);
+  const localName = String(localProfileSnapshot().name || '').toLocaleLowerCase();
+  for (let token of tokens) {
+    if (!token) continue;
+    if (/^https?:\/\//i.test(token)) {
+      let url = token, tail = '';
+      while (/[.,!?)]$/.test(url)) { tail = url.slice(-1) + tail; url = url.slice(0, -1); }
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') { target.append(document.createTextNode(token)); continue; }
+        const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.className = 'chat-link';
+        if (/\.(gif|png|jpe?g|webp)(\?.*)?$/i.test(parsed.pathname + parsed.search) && /(^|\.)(tenor\.com|giphy\.com|gfycat\.com|imgur\.com|discordapp\.net|discordapp\.com|media\.tenor\.com|media\.giphy\.com)$/i.test(parsed.hostname)) {
+          const img = document.createElement('img'); img.src = url; img.alt = 'GIF compartilhado'; img.loading = 'lazy'; img.className = 'chat-gif-preview'; img.onerror = () => img.remove(); link.append(img);
+        } else link.textContent = url;
+        target.append(link); if (tail) target.append(document.createTextNode(tail));
+      } catch { target.append(document.createTextNode(token)); }
+    } else if (token.startsWith('@')) {
+      const mention = document.createElement('span'); mention.className = 'chat-mention';
+      if (localName && token.slice(1).toLocaleLowerCase() === localName) mention.classList.add('chat-mention-self');
+      mention.textContent = token; target.append(mention);
+    } else target.append(document.createTextNode(token));
+  }
+}
 function receiveFromViewer(data, sourceConn) {
   if (!data || typeof data !== 'object') return;
   if (data.type === 'identity') {
@@ -3806,7 +3897,7 @@ function receiveFromViewer(data, sourceConn) {
   }
   if (data.type !== 'chat' || typeof data.text !== 'string') return;
   const savedProfile = sourceConn ? participantProfiles.get(sourceConn.peer) : null;
-  const packet = { type: 'chat', text: data.text.slice(0, 500), name: String(savedProfile?.name || data.name || 'Participante').slice(0, 32), time: data.time || clock() };
+  const packet = { type: 'chat', id: String(data.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2))), text: data.text.slice(0, 500), name: String(savedProfile?.name || data.name || 'Participante').slice(0, 32), photo: String(savedProfile?.photo || data.photo || '').slice(0, 180000), replyTo: data.replyTo && typeof data.replyTo === 'object' ? { id: String(data.replyTo.id || '').slice(0,100), name: String(data.replyTo.name || '').slice(0,40), text: String(data.replyTo.text || '').slice(0,180) } : null, time: data.time || clock() };
   if (!packet.text.trim()) return;
   addChatMessage(packet);
   connections.forEach(conn => {
@@ -3838,7 +3929,7 @@ function receiveFromHost(data) {
     return;
   }
   if (data.type === 'chat' && typeof data.text === 'string') {
-    addChatMessage({ type: 'chat', text: data.text.slice(0, 500), name: String(data.name || 'Participante').slice(0, 32), time: data.time || clock() });
+    addChatMessage({ type: 'chat', id: data.id, text: data.text.slice(0, 500), name: String(data.name || 'Participante').slice(0, 32), photo: String(data.photo || '').slice(0,180000), replyTo: data.replyTo || null, time: data.time || clock() });
   }
 }
 
@@ -3847,23 +3938,27 @@ function sendChat(event) {
   const input = $('chatInput');
   const text = input.value.trim().slice(0, 500);
   if (!text) return;
-  const packet = { type: 'chat', text, time: clock() };
+  const profile = localProfileSnapshot();
+  const replyTo = window.lockReplyTarget && typeof window.lockReplyTarget === 'object' ? {
+    id: String(window.lockReplyTarget.id || '').slice(0,100),
+    name: String(window.lockReplyTarget.name || '').slice(0,40),
+    text: String(window.lockReplyTarget.text || '').slice(0,180)
+  } : null;
+  const packet = { type: 'chat', id: crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2), text, name: profile.name || 'Participante', photo: String(profile.photo || '').slice(0,180000), replyTo, time: clock() };
   if (peer && !peer.destroyed) {
-    packet.name = localProfileSnapshot().name || 'Anfitrião';
     addChatMessage(packet, 'Você');
     connections.forEach(conn => { if (conn.open) { try { conn.send(packet); } catch {} } });
   } else if (vpeer && vconn && vconn.open) {
-    packet.name = localProfileSnapshot().name || 'Participante';
     addChatMessage(packet, 'Você');
-    try { vconn.send(packet); } catch { say('chatSubtitle', 'Não foi possível enviar. Verifique a conexão.'); }
+    try { vconn.send(packet); } catch { say('chatSubtitle', 'Não foi possível enviar. Verifique a conexão.'); return; }
   } else {
-    say('chatSubtitle', 'Entre em uma sala ou inicie uma transmissão para conversar.');
+    say('chatSubtitle', 'Entre em uma sala para conversar.');
     return;
   }
   input.value = '';
+  window.dispatchEvent(new CustomEvent('lock-chat-sent'));
   input.focus();
 }
-
 /* ---------- convite e opções de envio ---------- */
 function openInviteModal() {
   renderShare();
@@ -4475,6 +4570,135 @@ body.light-theme .app-shell:not([data-current-view="home"]) .topbar .top-tools{b
   .app-shell:not([data-current-view="home"]) .workspace{padding-bottom:82px!important}
 }
 </style>
+
+
+<style id="lockcall-v2-layout">
+/* LockCall v2: clean room layout, bottom controls, and a reliable collapsed-chat reopen affordance. */
+.app-shell[data-current-view="home"] > .topbar { display:none !important; }
+.app-shell[data-current-view="home"] .home-state { position:relative; }
+.home-profile-top { position:fixed; z-index:100; top:16px; right:18px; display:none; align-items:center; gap:8px; padding:8px 12px; border:1px solid #3a3c48; border-radius:10px; color:#e8eaf2; background:#202129; font:600 12px/1 var(--text-font); cursor:pointer; box-shadow:0 5px 20px #0003; }
+.home-profile-top:hover { border-color:#0bb58a; background:#202b29; }
+.home-profile-top-avatar { display:grid; place-items:center; width:23px; height:23px; border-radius:50%; background:#087e63; color:#fff; font-size:15px; }
+.app-shell[data-current-view="home"] ~ #homeProfileTop { display:flex; }
+body:has(.app-shell[data-current-view="home"]) .home-profile-top { display:flex; }
+#lockProfileFromHome, #lockProfileBtn, #toolSettings, #manageRoom { display:none !important; }
+.app-shell:not([data-current-view="home"]) { grid-template-rows:0 minmax(0,1fr) !important; }
+.app-shell:not([data-current-view="home"]) > .topbar { height:0 !important; min-height:0 !important; padding:0 !important; overflow:visible !important; border:0 !important; background:transparent !important; }
+.app-shell:not([data-current-view="home"]) > .topbar > .top-left,
+.app-shell:not([data-current-view="home"]) > .topbar > .top-actions { display:none !important; }
+.app-shell:not([data-current-view="home"]) .topbar .top-tools { position:fixed; z-index:100; left:50%; top:auto; bottom:8px; transform:translateX(-50%); display:flex; align-items:center; gap:3px; max-width:calc(100vw - 14px); padding:3px 4px; border:1px solid #353742; border-radius:13px; background:#202129f2; box-shadow:0 8px 28px #0009; }
+.app-shell:not([data-current-view="home"]) .tool-btn { width:33px !important; min-width:33px !important; height:31px !important; min-height:31px !important; padding:5px !important; border-radius:8px !important; }
+.app-shell:not([data-current-view="home"]) .tool-btn svg { width:15px; height:15px; }
+.app-shell:not([data-current-view="home"]) .tool-divider { margin:0 1px; }
+.app-shell:not([data-current-view="home"]) .workspace { padding-bottom:52px !important; }
+.app-shell:not([data-current-view="home"]) .center-panel { min-height:0; }
+.app-shell:not([data-current-view="home"]) .right-panel { position:relative; min-width:0; }
+.app-shell:not([data-current-view="home"]) .right-panel .chat-heading { flex:0 0 auto; }
+.app-shell:not([data-current-view="home"]) #chatMessages { flex:1 1 auto; min-height:0; }
+.app-shell.chat-collapsed:not([data-current-view="home"]) .workspace { grid-template-columns:minmax(205px,22.2%) minmax(0,1fr) 42px !important; }
+.app-shell.chat-collapsed .right-panel { width:42px !important; min-width:42px !important; padding:0 !important; overflow:hidden !important; }
+.app-shell.chat-collapsed .chat-heading { min-height:48px; justify-content:center; padding:4px 0; }
+.app-shell.chat-collapsed .chat-heading>div, .app-shell.chat-collapsed #clearChat, .app-shell.chat-collapsed .chat-messages, .app-shell.chat-collapsed .chat-reply-bar, .app-shell.chat-collapsed .chat-extras, .app-shell.chat-collapsed .chat-composer { display:none !important; }
+.app-shell.chat-collapsed .chat-heading-actions { display:flex; flex-direction:column; gap:0; }
+.app-shell.chat-collapsed #toggleChat { display:grid !important; place-items:center; width:32px; height:36px; font-size:20px; cursor:pointer; }
+.reopen-chat { position:fixed; z-index:120; right:7px; top:50%; transform:translateY(-50%); width:33px; height:66px; padding:0; border:1px solid #393b47; border-radius:11px 0 0 11px; color:#e9ebf3; background:#252630; font-size:11px; font-weight:800; writing-mode:vertical-rl; cursor:pointer; box-shadow:0 4px 18px #0005; }
+.reopen-chat:hover { background:#087e63; border-color:#0ca981; }
+.chat-composer { flex:0 0 auto; gap:4px; margin:0 7px 7px; padding:4px; }
+.chat-input { flex:1 1 auto; min-width:0; }
+.composer-tool, .composer-gif { display:inline-grid; flex:0 0 auto; place-items:center; width:29px; height:29px; border:0; border-radius:7px; background:transparent; color:#c3c7d5; cursor:pointer; font-weight:750; }
+.composer-tool { font-size:19px; }
+.composer-gif { font-size:10px; border:1px solid #4a4c59; background:#282a34; }
+.composer-tool:hover,.composer-gif:hover { color:#fff; background:#30323d; }
+.chat-reply-bar { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 8px 6px; padding:6px 9px; border-left:2px solid #08b889; border-radius:5px; background:#202a29; color:#b9c8ca; font-size:10px; }
+.chat-reply-bar span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chat-reply-bar button,.tiny-close { border:0; background:transparent; color:#a9adbb; font-size:19px; cursor:pointer; }
+.chat-extras { position:absolute; z-index:90; left:8px; right:8px; bottom:57px; max-height:min(310px,45vh); overflow:auto; padding:10px; border:1px solid #383a45; border-radius:11px; background:#1d1f26; box-shadow:0 12px 35px #0009; }
+.emoji-picker { display:grid; grid-template-columns:repeat(8,minmax(26px,1fr)); gap:3px; }
+.emoji-pick { display:grid; place-items:center; min-width:26px; height:30px; border:0; border-radius:6px; background:transparent; font-size:18px; cursor:pointer; }
+.emoji-pick:hover { background:#343642; }
+.gif-panel { display:flex; flex-direction:column; gap:9px; }
+.gif-panel-head { display:flex; align-items:center; justify-content:space-between; font-size:12px; }
+.gif-search-row { display:flex; gap:5px; }
+.gif-search-row .field { min-width:0; flex:1; height:34px; font-size:11px; }
+.gif-panel p { color:#9399aa; font-size:10px; line-height:1.45; }
+.mention-picker { display:flex; flex-direction:column; gap:3px; }
+.mention-option { display:flex; align-items:center; gap:8px; padding:7px; border:0; border-radius:7px; background:transparent; text-align:left; color:#e6e8ef; cursor:pointer; font-size:11px; }
+.mention-option:hover { background:#30323d; }
+.mention-option small { margin-left:auto; color:#7d8497; }
+.chat-message { display:grid !important; grid-template-columns:28px minmax(0,1fr) !important; gap:8px !important; align-items:start !important; padding:3px 0; }
+.chat-message-avatar { width:27px !important; height:27px !important; min-width:27px; min-height:27px; overflow:hidden; }
+.chat-message-avatar img { display:block; width:100%; height:100%; border-radius:50%; object-fit:cover; }
+.chat-message-meta { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px; }
+.chat-message-meta strong { max-width:75%; overflow-wrap:anywhere; }
+.chat-self-tag { padding:1px 4px; border-radius:4px; background:#163e34; color:#61dfbc; font-size:8px; }
+.chat-message-text { margin-top:3px; font-size:12px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; }
+.chat-mention { padding:1px 3px; border-radius:4px; color:#a8b7ff; background:#38345f; font-weight:650; }
+.chat-mention-self { color:#68e4be; background:#134737; }
+.chat-link { color:#8fb6ff; text-decoration:underline; overflow-wrap:anywhere; }
+.chat-gif-preview { display:block; max-width:min(230px,100%); max-height:180px; margin-top:6px; border:1px solid #363946; border-radius:8px; object-fit:contain; }
+.chat-reply-quote { display:flex; flex-direction:column; gap:2px; margin-bottom:5px; padding:5px 7px; border-left:2px solid #707caa; border-radius:3px; background:#20222a; color:#a6abbb; font-size:10px; }
+.chat-reply-quote strong { color:#cfd3e2; }
+.chat-reply-quote span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chat-message-actions { display:flex; justify-content:flex-end; min-height:15px; opacity:0; transition:opacity .12s ease; }
+.chat-message:hover .chat-message-actions,.chat-message:focus-within .chat-message-actions { opacity:1; }
+.chat-reply-action { padding:2px 5px; border:0; border-radius:5px; background:transparent; color:#838ba0; font-size:9px; cursor:pointer; }
+.chat-reply-action:hover { background:#30323d; color:#e7e9f1; }
+#muteBtn, .viewer-controls { display:none !important; } /* the bottom toolbar is the only place for call controls */
+#toolAudio .slash { display:none; }
+#toolAudio.tool-red .slash { display:block; }
+@media (max-width:850px) {
+ .app-shell:not([data-current-view="home"]) .topbar .top-tools { bottom:6px; padding:3px; max-width:calc(100vw - 8px); }
+ .app-shell:not([data-current-view="home"]) .tool-btn { width:30px !important; min-width:30px !important; height:29px !important; min-height:29px !important; }
+ .app-shell:not([data-current-view="home"]) .workspace { padding-bottom:46px !important; }
+ .app-shell.chat-collapsed:not([data-current-view="home"]) .workspace { grid-template-columns:minmax(0,1fr) 42px !important; grid-template-rows:minmax(440px,auto) minmax(220px,auto); }
+ .app-shell.chat-collapsed .participants-panel { grid-column:1; grid-row:2; }
+ .app-shell.chat-collapsed .center-panel { grid-column:1 / -1; grid-row:1; }
+ .app-shell.chat-collapsed .right-panel { grid-column:2; grid-row:2; min-height:120px; }
+ .chat-message-actions { opacity:1; }
+}
+</style>
+
+
+<script id="lockcall-v2-chat-ui">
+(()=>{
+ const $=id=>document.getElementById(id);
+ const shell=document.querySelector('.app-shell');
+ const homeProfile=$('homeProfileTop');
+ homeProfile?.addEventListener('click',()=>{ if(typeof window.openLockProfile==='function')window.openLockProfile(); });
+ // Profile edit is only available from the home-screen corner.
+ const syncHomeButton=()=>{ if(homeProfile) homeProfile.style.display=(shell?.dataset.currentView==='home')?'flex':'none'; };
+ const observer=new MutationObserver(syncHomeButton); if(shell)observer.observe(shell,{attributes:true,attributeFilter:['data-current-view']}); syncHomeButton();
+ const showExtras=(panel)=>{const extras=$('chatExtras'); if(!extras)return; extras.hidden=false; ['emojiPicker','gifPanel','mentionPicker'].forEach(id=>{const el=$(id);if(el&&id!==panel)el.hidden=true;}); if(panel&&$(panel))$(panel).hidden=false;};
+ const hideExtras=()=>{if($('chatExtras'))$('chatExtras').hidden=true; ['emojiPicker','gifPanel','mentionPicker'].forEach(id=>{if($(id))$(id).hidden=true;});};
+ const emojiList=['😀','😃','😄','😁','😆','😅','😂','🤣','🥹','😊','😍','🥰','😘','😎','🤔','🙄','😭','💀','🤡','👀','🔥','💯','✨','🎉','❤️','💜','👍','👎','🙏','👏','🤝','✅','❌','🚀','🎮','🐱','🐶','👻','🤖','💻','🫶','🤍','😴','😡','😱','🥳','😈','🫡','🧠','🤯','🍿','🎃','☕','🖤','🗿','🤌','📸','🎵','🔒','💬','🟢','⚡','🫠'];
+ const picker=$('emojiPicker'); if(picker){picker.replaceChildren();emojiList.forEach(emoji=>{const b=document.createElement('button');b.type='button';b.className='emoji-pick';b.textContent=emoji;b.title=emoji;b.addEventListener('click',()=>{const input=$('chatInput');if(!input)return;const start=input.selectionStart??input.value.length,end=input.selectionEnd??input.value.length;input.value=input.value.slice(0,start)+emoji+input.value.slice(end);input.focus();input.setSelectionRange(start+emoji.length,start+emoji.length);});picker.append(b);});}
+ $('emojiToggle')?.addEventListener('click',()=>{const isOpen=$('chatExtras')&&!$('chatExtras').hidden&&!$('emojiPicker').hidden;if(isOpen)hideExtras();else showExtras('emojiPicker');});
+ $('gifToggle')?.addEventListener('click',()=>{const isOpen=$('chatExtras')&&!$('chatExtras').hidden&&!$('gifPanel').hidden;if(isOpen)hideExtras();else{showExtras('gifPanel');$('gifSearchQuery')?.focus();}});
+ $('closeGifPanel')?.addEventListener('click',hideExtras);
+ $('tenorSearchBtn')?.addEventListener('click',()=>{const q=($('gifSearchQuery')?.value||'').trim()||'reaction';window.open('https://tenor.com/search/'+encodeURIComponent(q)+'-gifs','_blank','noopener,noreferrer');});
+ $('insertGifUrl')?.addEventListener('click',()=>{const url=($('gifDirectUrl')?.value||'').trim();if(!/^https?:\/\//i.test(url)){alert('Cole o link público do GIF começando com http:// ou https://.');return;}const input=$('chatInput');input.value=(input.value?input.value+' ':'')+url.slice(0,450);hideExtras();$('chatForm').requestSubmit();});
+ const replyBar=$('chatReplyBar');
+ const setReply=target=>{window.lockReplyTarget=target||null;if(!replyBar)return;if(!target){replyBar.hidden=true;$('chatReplyLabel').textContent='';return;}replyBar.hidden=false;$('chatReplyLabel').textContent='Respondendo a '+target.name+': '+target.text; $('chatInput')?.focus();};
+ window.addEventListener('lock-chat-reply',e=>setReply(e.detail));
+ $('cancelChatReply')?.addEventListener('click',()=>setReply(null));
+ window.addEventListener('lock-chat-sent',()=>{setReply(null);hideExtras();});
+ const getNames=()=>{try{if(typeof window.getLockChatMentionNames==='function')return window.getLockChatMentionNames();}catch{}return [...document.querySelectorAll('.participant-name')].map(el=>(el.textContent||'').split('·')[0].trim()).filter(Boolean);};
+ const mentionPicker=$('mentionPicker'),input=$('chatInput');
+ const updateMentions=()=>{if(!input||!mentionPicker)return;const pos=input.selectionStart??input.value.length;const before=input.value.slice(0,pos);const match=before.match(/(^|\s)@([\p{L}\p{N}_.-]{0,32})$/u);if(!match){if(!mentionPicker.hidden){mentionPicker.hidden=true;if($('chatExtras')&&$('emojiPicker').hidden&&$('gifPanel').hidden)$('chatExtras').hidden=true;}return;}const query=(match[2]||'').toLocaleLowerCase();const names=[...new Set(getNames().filter(n=>n&&!/^(você|participante)$/i.test(n)))].filter(n=>n.toLocaleLowerCase().includes(query)).slice(0,8);if(!names.length){mentionPicker.hidden=true;return;}mentionPicker.replaceChildren();names.forEach(name=>{const b=document.createElement('button');b.type='button';b.className='mention-option';const av=document.createElement('span');av.className='avatar avatar-blue';av.textContent=name.slice(0,1).toUpperCase();const label=document.createElement('span');label.textContent=name;const suffix=document.createElement('small');suffix.textContent='mencionar';b.append(av,label,suffix);b.addEventListener('click',()=>{const start=pos-match[2].length-1;input.value=input.value.slice(0,start)+'@'+name+' '+input.value.slice(pos);const caret=start+name.length+2;input.focus();input.setSelectionRange(caret,caret);hideExtras();});mentionPicker.append(b);});showExtras('mentionPicker');};
+ input?.addEventListener('input',updateMentions); input?.addEventListener('keyup',updateMentions); input?.addEventListener('click',updateMentions);
+ // Keep the collapse button operable and show a persistent reopen tab outside the narrow panel.
+ const reopen=$('reopenChat'),toggle=$('toggleChat');
+ const syncChat=()=>{const collapsed=shell?.classList.contains('chat-collapsed');if(reopen)reopen.hidden=!collapsed;if(toggle){toggle.textContent=collapsed?'‹':'›';toggle.title=collapsed?'Expandir chat':'Recolher chat';toggle.setAttribute('aria-label',toggle.title);}};
+ const toggleChat=()=>{if(!shell)return;shell.classList.toggle('chat-collapsed');const collapsed=shell.classList.contains('chat-collapsed');try{localStorage.setItem('lock-chat-collapsed',collapsed?'true':'false')}catch{}syncChat();};
+ toggle?.addEventListener('click',()=>{setTimeout(syncChat,0);});
+ reopen?.addEventListener('click',()=>{if(shell?.classList.contains('chat-collapsed'))shell.classList.remove('chat-collapsed');try{localStorage.setItem('lock-chat-collapsed','false')}catch{}syncChat();});
+ syncChat();
+ // A single microphone button remains. The other media control is clearly a speaker for shared-screen audio.
+ const toolAudio=$('toolAudio'); if(toolAudio){toolAudio.title='Áudio da tela compartilhada';toolAudio.setAttribute('aria-label','Áudio da tela compartilhada');}
+ // Audio notifications default to on, except when the user explicitly switched them off in profile settings.
+ try { if(localStorage.getItem('lock-sounds-enabled')===null)localStorage.setItem('lock-sounds-enabled','true'); if($('lockSoundsEnabled'))$('lockSoundsEnabled').checked=localStorage.getItem('lock-sounds-enabled')!=='false'; } catch{}
+})();
+</script>
 
 </body>
 </html>
