@@ -1,11 +1,10 @@
-# Lock v1.7 · Site somente
+# Lock 1.8 · GitHub Pages
 
-Este pacote contém apenas o site do Lock. Não precisa instalar a extensão do Chrome.
+Versão web do Lock. Não precisa de extensão.
 
-## Publicar no GitHub Pages
-1. Extraia o ZIP.
-2. Envie `index.html` e `.nojekyll` para a raiz do repositório `Gueten/lock-site`.
-3. Mantenha o GitHub Pages configurado para a branch `main` e pasta `/(root)`.
-4. Abra https://gueten.github.io/lock-site/.
+## Publicação
+1. Envie `index.html` para a raiz do repositório `Gueten/lock-site`.
+2. Mantenha `.nojekyll` e habilite GitHub Pages em `main` / `/(root)`.
+3. Endereço-base: https://gueten.github.io/lock-site/
 
-Os perfis (nome e foto) são salvos localmente e compartilhados somente com os participantes conectados à mesma sala, para exibição na lista e nos cartões da chamada. O site em si não oferece autenticação nem um banco de dados central.
+Cada sala recebe um código aleatório e convite próprio com `#CODIGO`. A voz usa WebRTC/PeerJS e exige permissão de microfone dos participantes; telas exigem permissão de compartilhamento do navegador.

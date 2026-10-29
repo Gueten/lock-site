@@ -336,6 +336,9 @@ body.popup .preview-wrap { margin-top: 8px; }
       <span class="privacy-pill"><span></span>Sala privada</span>
     </div>
     <div class="top-tools" role="toolbar" aria-label="Controles da sala">
+      <button class="tool-btn tool-red" id="toolMic" title="Entrar na voz" aria-label="Entrar na voz" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/><path class="slash" d="m4 4 16 16"/></svg>
+      </button>
       <button class="tool-btn tool-red" id="toolAudio" title="Ativar ou desativar áudio compartilhado" aria-label="Áudio compartilhado" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4Z"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4m-4 0h8"/><path class="slash" d="m4 4 16 16"/></svg>
       </button>
@@ -416,7 +419,7 @@ body.popup .preview-wrap { margin-top: 8px; }
 
       <section id="sharing" class="main-state sharing-state" hidden>
         <div class="state-topline"><div><span class="live-pill"><i></i> AO VIVO</span><h1>Sua transmissão está no ar</h1><p class="state-description">Quem tiver seu convite poderá acompanhar esta tela.</p></div><button id="stopBtn" class="btn danger-outline">Parar transmissão</button></div><div class="layout-toolbar"><span>Ajustar telas</span><button type="button" class="btn compact selected" data-screen-layout="grid">Grade</button><button type="button" class="btn compact" data-screen-layout="focus">Foco</button></div>
-        <div id="sharingPeopleGrid" class="call-people-grid"></div><div class="preview-wrap"><video id="preview" muted autoplay playsinline></video><div class="preview-badge"><span class="red-dot"></span><span id="previewLabel">Sua tela</span></div></div><div id="hostRemoteGrid" class="remote-share-grid" hidden></div>
+        <div id="sharingPeopleGrid" class="call-people-grid"></div><div class="preview-wrap screen-tile"><video id="preview" muted autoplay playsinline></video><button class="tile-fullscreen" type="button" aria-label="Tela cheia da sua transmissão" title="Tela cheia">⛶</button><div class="preview-badge"><span class="red-dot"></span><span id="previewLabel">Sua tela</span></div></div><div id="hostRemoteGrid" class="remote-share-grid" hidden></div>
         <div class="share-info-card">
           <div class="share-info-heading"><div><span class="field-label">CÓDIGO DA SALA</span><div id="codeOut" class="code">------</div></div><button id="copyCode" class="btn compact">Copiar código</button></div>
           <div id="linkBox" class="linkbox" hidden><label for="linkOut" class="field-label">LINK PARA ASSISTIR</label><div class="link-row"><input id="linkOut" class="field" readonly aria-label="Link para assistir"><button id="copyLink" class="btn compact">Copiar link</button></div></div>
@@ -427,7 +430,7 @@ body.popup .preview-wrap { margin-top: 8px; }
 
       <section id="watching" class="main-state watching-state" hidden>
         <div class="state-topline"><div><span class="live-pill waiting-pill"><i></i> SALA REMOTA</span><h1>Assistindo à transmissão</h1><p class="state-description">A tela compartilhada aparecerá abaixo.</p></div><button id="leaveBtn" class="btn danger-outline">Sair da sala</button></div><div class="layout-toolbar"><span>Ajustar telas</span><button type="button" class="btn compact selected" data-screen-layout="grid">Grade</button><button type="button" class="btn compact" data-screen-layout="focus">Foco</button></div>
-        <div id="stage" class="stage"><video id="remote" autoplay muted playsinline></video><div id="info" class="info" role="status">Conectando…</div><span class="stage-corner-label">LOCK · LIVE</span></div>
+        <div id="stage" class="stage screen-tile"><video id="remote" autoplay muted playsinline></video><div id="info" class="info" role="status">Conectando…</div><button class="tile-fullscreen" type="button" aria-label="Tela cheia da transmissão" title="Tela cheia">⛶</button><span class="stage-corner-label">LOCK · LIVE</span></div>
         <div id="watchPeopleGrid" class="call-people-grid"></div><div id="remoteGrid" class="remote-share-grid" hidden></div><div class="viewer-controls"><button id="muteBtn" class="btn compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6"/></svg>Ativar som</button><button id="fsBtn" class="btn compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>Tela cheia</button></div>
       </section>
     </main>
@@ -2792,7 +2795,7 @@ const store = {
   set: (key, value) => { try { localStorage.setItem(key, value); } catch {} }
 };
 
-const show = name => ['home', 'lobby', 'sharing', 'watching'].forEach(view => { if ($(view)) $(view).hidden = view !== name; });
+const show = name => { const shell = document.querySelector('.app-shell'); if (shell) shell.dataset.currentView = name; document.body.dataset.currentView = name; ['home', 'lobby', 'sharing', 'watching'].forEach(view => { if ($(view)) $(view).hidden = view !== name; }); };
 const say = (id, message) => { const el = $(id); if (el) el.textContent = message || ''; };
 const clean = value => String(value || '').split('#').pop().replace(/[^a-z0-9]/gi, '').toUpperCase();
 const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), byte => ABC[byte % ABC.length]).join('');
@@ -2882,17 +2885,21 @@ function normalizePublicBase(value) {
 
 function publicBase() { return LOCK_BASE; }
 
+function currentRoomCode() { return shareCode || viewerCode || clean(location.hash); }
+
 function getShareLink() {
   const base = publicBase();
-  if (!base || !shareCode) return '';
-  return base.split('#')[0].split('?')[0] + '#' + shareCode;
+  const code = currentRoomCode();
+  if (!base || !code) return '';
+  return base.split('#')[0].split('?')[0] + '#' + code;
 }
 
 function inviteText() {
-  if (!shareCode) return '';
+  const code = currentRoomCode();
+  if (!code) return '';
   const link = getShareLink();
   if (!link) return '';
-  return `🔒 Convite do Lock\nEntre para assistir à minha transmissão ao vivo.\nLink da sala: ${link}\nCódigo da sala: ${shareCode}`;
+  return `🔒 Convite do Lock\nEntre para conversar por voz e compartilhar na sala.\nLink da sala: ${link}\nCódigo da sala: ${currentRoomCode()}`;
 }
 
 function refreshCount() {
@@ -3055,6 +3062,7 @@ function refreshTools() {
   $('toolAudio').title = audioTracks.length && audioTracks.some(track => track.enabled) ? 'Desativar áudio compartilhado' : 'Ativar áudio compartilhado';
   $('toolMute').disabled = !vpeer;
   $('toolMute').classList.toggle('tool-red', !!$('remote').muted);
+  refreshMicControl();
   $('toolScreen').disabled = !canCapture || !!stream || !(peer && !peer.destroyed);
   $('toolCamera').disabled = !canUseCamera || !!stream || !(peer && !peer.destroyed);
   $('startShare').disabled = !canCapture || !!stream;
@@ -3164,17 +3172,21 @@ function activateStream(nextStream, mode) {
 function createRoom() {
   if (vpeer) leaveWatch();
   if (peer && !peer.destroyed) {
-    shareCode = localStorage.getItem('lock-fixed-room-code') || shareCode || newCode();
     show(stream ? 'sharing' : 'lobby');
     renderShare(); refreshTools(); refreshCount();
     setRoomStatus(stream ? 'Transmitindo ao vivo' : 'Sala criada · pronta para compartilhar', !!stream);
     return;
   }
+  // Each room gets a different random code and therefore a different invitation URL.
+  shareCode = newCode();
+  try { localStorage.removeItem('lock-fixed-room-code'); } catch {}
+  history.replaceState(null, '', location.pathname + location.search);
   say('homeMsg', 'Criando sua sala…');
   openPeer();
 }
 
 function leaveHostRoom() {
+  stopLocalVoice();
   if (stream) { const active = stream; stream = null; active.getTracks().forEach(track => track.stop()); }
   calls.forEach(call => { try { call.close(); } catch {} }); calls.clear();
   connections.forEach(conn => { try { conn.close(); } catch {} }); connections.clear();
@@ -3189,8 +3201,8 @@ function leaveHostRoom() {
 }
 
 function openPeer(tries = 0) {
-  const code = localStorage.getItem('lock-fixed-room-code') || newCode();
-  try { localStorage.setItem('lock-fixed-room-code', code); } catch {}
+  const code = shareCode || newCode();
+  shareCode = code;
 
   // Keep the room peer alive when the local screen is stopped, so existing viewers can reconnect to a new stream.
   if (peer && !peer.destroyed) {
@@ -3232,7 +3244,10 @@ function openPeer(tries = 0) {
   currentPeer.on('connection', conn => {
     conn.on('open', () => serve(conn));
   });
-  currentPeer.on('call', call => acceptParticipantShare(call));
+  currentPeer.on('call', call => {
+    if ((call.metadata || {}).kind === 'voice') acceptVoiceCall(call);
+    else acceptParticipantShare(call);
+  });
   currentPeer.on('disconnected', () => {
     window.setTimeout(() => {
       if (peer === currentPeer && !currentPeer.destroyed) currentPeer.reconnect();
@@ -3240,10 +3255,13 @@ function openPeer(tries = 0) {
   });
   currentPeer.on('error', error => {
     if (peer !== currentPeer) return;
-    if (error.type === 'unavailable-id' && tries < 5) {
+    if (error.type === 'unavailable-id' && tries < 8) {
       currentPeer.destroy();
-      // Keep the room code and link stable: report a conflict instead of silently changing the invite.
-      say('homeMsg', 'Este código de sala já está em uso em outra aba ou dispositivo. Feche a outra transmissão e tente novamente.');
+      if (peer === currentPeer) peer = null;
+      // A collision is extraordinarily rare, but safely roll a fresh code before displaying the invite.
+      shareCode = newCode();
+      say('homeMsg', 'Escolhendo um código de sala disponível…');
+      window.setTimeout(() => { if (!peer || peer.destroyed) openPeer(tries + 1); }, 100);
       return;
     }
     if (error.type !== 'peer-unavailable' && !opened) {
@@ -3276,6 +3294,15 @@ function serve(conn) {
     calls.delete(conn.peer);
     if (activeCall) { try { activeCall.close(); } catch {} }
     closeRelaysForTarget(conn.peer);
+    closeVoiceRelaysForPeer(conn.peer);
+    const voice = incomingVoiceStreams.get(conn.peer);
+    if (voice) {
+      incomingVoiceStreams.delete(conn.peer);
+      dropRemoteVoice(conn.peer, voice.call);
+      if (voice.call) { try { voice.call.close(); } catch {} }
+    }
+    const outgoingVoice = voiceOutgoingCalls.get(conn.peer);
+    if (outgoingVoice) { try { outgoingVoice.close(); } catch {} voiceOutgoingCalls.delete(conn.peer); }
     const share = incomingShares.get(conn.peer);
     if (share && share.call) { try { share.call.close(); } catch {} }
     refreshCount();
@@ -3286,6 +3313,10 @@ function serve(conn) {
   if (chatHistory.length) { try { conn.send({ type: 'history', messages: chatHistory.slice(-30) }); } catch {} }
   broadcastRoster();
   sendPrimaryTo(conn);
+  if (micStream) sendHostVoiceTo(conn);
+  incomingVoiceStreams.forEach((item, owner) => {
+    if (item.stream && owner !== conn.peer) relayVoiceTo(owner, conn, item.stream);
+  });
   incomingShares.forEach((item, owner) => {
     if (item.stream && owner !== conn.peer) relayParticipantShare(owner, conn, item.stream);
   });
@@ -3378,10 +3409,18 @@ function showRemoteShareTile(owner, incomingStream) {
     video.autoplay = true;
     video.playsInline = true;
     video.muted = true;
+    tile.classList.add('screen-tile');
+    const fullscreen = document.createElement('button');
+    fullscreen.className = 'tile-fullscreen';
+    fullscreen.type = 'button';
+    fullscreen.title = 'Tela cheia';
+    fullscreen.setAttribute('aria-label', 'Tela cheia da transmissão');
+    fullscreen.textContent = '⛶';
     const label = document.createElement('span');
     label.className = 'remote-share-label';
     label.textContent = displayNameForPeer(owner) + ' · compartilhando tela';
-    tile.append(video, label);
+    tile.append(video, fullscreen, label);
+    tile.addEventListener('click', event => { if (event.target !== fullscreen) tile.classList.toggle('show-tile-tools'); });
     remoteShareTiles.set(owner, { tile, video });
   }
   const entry = remoteShareTiles.get(owner);
@@ -3435,10 +3474,11 @@ function boost(call) {
 function renderShare() {
   const link = getShareLink();
   const saved = LOCK_BASE;
-  const active = !!shareCode;
-  say('codeOut', shareCode || '------');
-  say('modalCode', shareCode || '------');
-  say('topCode', shareCode || viewerCode || '------');
+  const roomCode = currentRoomCode();
+  const active = !!roomCode;
+  say('codeOut', roomCode || '------');
+  say('modalCode', roomCode || '------');
+  say('topCode', roomCode || '------');
   $('linkBox').hidden = !link;
   $('qr').hidden = !link;
   $('hostBox').hidden = !isExt;
@@ -3446,7 +3486,7 @@ function renderShare() {
   $('baseIn').value = saved;
   $('linkOut').value = link;
   $('modalLinkOut').value = link;
-  if ($('lobbyCodeOut')) $('lobbyCodeOut').textContent = shareCode || '------';
+  if ($('lobbyCodeOut')) $('lobbyCodeOut').textContent = roomCode || '------';
   if ($('lobbyLinkOut')) $('lobbyLinkOut').value = link;
   if ($('lobbyLinkArea')) $('lobbyLinkArea').hidden = !link;
   if ($('lobbyCopyCode')) $('lobbyCopyCode').disabled = !active;
@@ -3463,7 +3503,7 @@ function renderShare() {
     const label = $('topLinkLabel');
     if (link) {
       let hostLabel = link;
-      try { const url = new URL(link); hostLabel = url.host + url.pathname + '#' + shareCode; } catch {}
+      try { const url = new URL(link); hostLabel = url.host + url.pathname + '#' + roomCode; } catch {}
       label.textContent = hostLabel.length > 28 ? hostLabel.slice(0, 27) + '…' : hostLabel;
       linkButton.title = 'Copiar link da sala: ' + link;
       linkButton.disabled = false;
@@ -3549,6 +3589,7 @@ function startWatch(code) {
       if (vconn !== conn) return;
       const identity = safeProfileForNetwork(localProfileSnapshot());
       try { conn.send({ type: 'identity', profile: identity }); } catch {}
+      if (micStream) sendViewerVoice();
       setRoomStatus('Conectado à sala', true);
       refreshCount();
     });
@@ -3562,7 +3603,9 @@ function startWatch(code) {
     const owner = metadata.source || call.peer;
     call.answer();
     call.on('stream', incomingStream => {
-      if (kind === 'participant') {
+      if (kind === 'voice') {
+        playRemoteVoice(owner, incomingStream, call);
+      } else if (kind === 'participant') {
         showRemoteShareTile(owner, incomingStream);
       } else {
         const video = $('remote');
@@ -3575,14 +3618,16 @@ function startWatch(code) {
       }
     });
     call.on('close', () => {
-      if (kind === 'participant') removeRemoteShareTile(owner);
+      if (kind === 'voice') dropRemoteVoice(owner, call);
+      else if (kind === 'participant') removeRemoteShareTile(owner);
       else {
         $('remote').srcObject = null;
         if (!remoteShareTiles.size) setInfo('A transmissão foi pausada. Aguarde o anfitrião retomar ou veja outra tela compartilhada.');
       }
     });
     call.on('error', () => {
-      if (kind === 'participant') removeRemoteShareTile(owner);
+      if (kind === 'voice') dropRemoteVoice(owner, call);
+      else if (kind === 'participant') removeRemoteShareTile(owner);
       else if (!remoteShareTiles.size) setInfo('A transmissão foi desconectada.');
     });
   });
@@ -3596,6 +3641,7 @@ function startWatch(code) {
 }
 
 function leaveWatch() {
+  stopLocalVoice();
   if (viewerShareCall || (vpeer && stream && !peer)) stopViewerShare('', true);
   const currentPeer = vpeer;
   vpeer = null;
@@ -3746,9 +3792,9 @@ function sendChat(event) {
 /* ---------- convite e opções de envio ---------- */
 function openInviteModal() {
   renderShare();
-  $('inviteStatus').textContent = shareCode
-    ? (getShareLink() ? 'O convite inclui o link clicável do site e o código da sala.' : 'O código já existe, mas falta configurar o endereço público do site. Configure uma vez para gerar links que abrem para outras pessoas.')
-    : 'Crie uma sala para gerar seu código e link. O compartilhamento de tela é opcional e começa depois.';
+  $('inviteStatus').textContent = currentRoomCode()
+    ? (getShareLink() ? 'O convite inclui o link clicável do site e o código desta sala.' : 'O código já existe, mas falta configurar o endereço público do site. Configure uma vez para gerar links que abrem para outras pessoas.')
+    : 'Crie ou entre em uma sala para usar o convite. O compartilhamento de tela é opcional e começa depois.';
   $('configureInviteLink').hidden = !isExt || !!getShareLink();
   $('inviteOverlay').hidden = false;
   $('closeInvite').focus();
@@ -3757,7 +3803,7 @@ function openInviteModal() {
 function closeInviteModal() { $('inviteOverlay').hidden = true; }
 
 async function copyInvite(button) {
-  if (!shareCode) { openInviteModal(); return false; }
+  if (!currentRoomCode()) { openInviteModal(); return false; }
   if (!getShareLink()) {
     openInviteModal();
     say('inviteStatus', 'Ainda não existe um link público configurado. Clique em “Configurar link público do site” e salve o endereço HTTPS do Lock.');
@@ -3774,7 +3820,7 @@ function openExternal(url) {
 }
 
 function requirePublicInvite() {
-  if (!shareCode) { openInviteModal(); return false; }
+  if (!currentRoomCode()) { openInviteModal(); return false; }
   if (!getShareLink()) {
     openInviteModal();
     say('inviteStatus', 'Configure primeiro o link público do site. Assim o WhatsApp, Discord e outros serviços receberão o link real junto com o código.');
@@ -3877,6 +3923,161 @@ function saveBase() {
   say('inviteStatus', 'O convite usa o link fixo do site e o código da sala.');
 }
 
+/* ---------- voz em grupo via WebRTC/PeerJS ---------- */
+let micStream = null;
+let micMuted = false;
+let viewerVoiceCall = null;
+const voiceOutgoingCalls = new Map();
+const incomingVoiceStreams = new Map();
+const voiceRelayCalls = new Map();
+const voicePlaybackCalls = new Map();
+const voiceAudioElements = new Map();
+
+function playRemoteVoice(owner, incomingStream, call) {
+  const previous = voicePlaybackCalls.get(owner);
+  if (previous && previous !== call) { try { previous.close(); } catch {} }
+  voicePlaybackCalls.set(owner, call);
+  let audio = voiceAudioElements.get(owner);
+  if (!audio) {
+    audio = document.createElement('audio');
+    audio.autoplay = true;
+    audio.playsInline = true;
+    audio.setAttribute('aria-label', 'Áudio de ' + (displayNameForPeer(owner) || 'participante'));
+    audio.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-10px;bottom:-10px';
+    document.body.append(audio);
+    voiceAudioElements.set(owner, audio);
+  }
+  audio.srcObject = incomingStream;
+  audio.muted = false;
+  audio.volume = 1;
+  audio.play().catch(() => {
+    say('chatSubtitle', 'A voz está conectada. Clique uma vez na página para liberar o áudio do navegador.');
+  });
+}
+
+function dropRemoteVoice(owner, call) {
+  if (voicePlaybackCalls.get(owner) !== call) return;
+  voicePlaybackCalls.delete(owner);
+  const audio = voiceAudioElements.get(owner);
+  if (audio) { audio.pause(); audio.srcObject = null; audio.remove(); voiceAudioElements.delete(owner); }
+}
+
+function closeVoiceRelaysForPeer(peerId) {
+  // Only close relay paths. The direct host microphone call is independent.
+  for (const [key, relay] of voiceRelayCalls) {
+    if (key.startsWith(peerId + '->') || key.endsWith('->' + peerId)) {
+      try { relay.close(); } catch {}
+      voiceRelayCalls.delete(key);
+    }
+  }
+}
+
+function relayVoiceTo(owner, conn, incomingStream) {
+  if (!peer || peer.destroyed || !conn || !conn.open || !incomingStream || conn.peer === owner) return;
+  const key = owner + '->' + conn.peer;
+  const previous = voiceRelayCalls.get(key);
+  if (previous) { try { previous.close(); } catch {} }
+  const relay = peer.call(conn.peer, incomingStream, { metadata: { kind: 'voice', source: owner } });
+  if (!relay) return;
+  voiceRelayCalls.set(key, relay);
+  relay.on('close', () => { if (voiceRelayCalls.get(key) === relay) voiceRelayCalls.delete(key); });
+  relay.on('error', () => { if (voiceRelayCalls.get(key) === relay) voiceRelayCalls.delete(key); });
+}
+
+function acceptVoiceCall(call) {
+  if (!call || !peer || peer.destroyed) return;
+  const owner = call.peer;
+  const previous = incomingVoiceStreams.get(owner);
+  if (previous && previous.call !== call) { try { previous.call.close(); } catch {} }
+  const record = { call, stream: null };
+  incomingVoiceStreams.set(owner, record);
+  call.answer();
+  call.on('stream', incomingStream => {
+    if (incomingVoiceStreams.get(owner) !== record) return;
+    record.stream = incomingStream;
+    playRemoteVoice(owner, incomingStream, call);
+    connections.forEach(conn => { if (conn.peer !== owner) relayVoiceTo(owner, conn, incomingStream); });
+  });
+  const cleanup = () => {
+    if (incomingVoiceStreams.get(owner) !== record) return;
+    incomingVoiceStreams.delete(owner);
+    dropRemoteVoice(owner, call);
+    closeVoiceRelaysForPeer(owner);
+  };
+  call.on('close', cleanup);
+  call.on('error', cleanup);
+}
+
+function sendHostVoiceTo(conn) {
+  if (!peer || peer.destroyed || !micStream || !conn || !conn.open) return;
+  const previous = voiceOutgoingCalls.get(conn.peer);
+  if (previous) { try { previous.close(); } catch {} }
+  const call = peer.call(conn.peer, micStream, { metadata: { kind: 'voice', source: peer.id } });
+  if (!call) return;
+  voiceOutgoingCalls.set(conn.peer, call);
+  call.on('close', () => { if (voiceOutgoingCalls.get(conn.peer) === call) voiceOutgoingCalls.delete(conn.peer); });
+  call.on('error', () => { if (voiceOutgoingCalls.get(conn.peer) === call) voiceOutgoingCalls.delete(conn.peer); });
+}
+
+function sendViewerVoice() {
+  if (!vpeer || vpeer.destroyed || !micStream || !viewerCode || !vconn || !vconn.open) return;
+  if (viewerVoiceCall) { try { viewerVoiceCall.close(); } catch {} }
+  const call = vpeer.call(PREFIX + viewerCode, micStream, { metadata: { kind: 'voice', source: vpeer.id } });
+  viewerVoiceCall = call || null;
+  if (call) {
+    call.on('close', () => { if (viewerVoiceCall === call) viewerVoiceCall = null; });
+    call.on('error', () => { if (viewerVoiceCall === call) viewerVoiceCall = null; });
+  }
+}
+
+function refreshMicControl() {
+  const button = $('toolMic');
+  if (!button) return;
+  const inRoom = !!((peer && !peer.destroyed) || (vpeer && !vpeer.destroyed));
+  button.disabled = !inRoom || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia;
+  const active = !!micStream;
+  button.classList.toggle('tool-red', !active || micMuted);
+  button.classList.toggle('mic-active', active && !micMuted);
+  button.title = !active ? 'Entrar na voz' : micMuted ? 'Ativar microfone' : 'Silenciar microfone';
+  button.setAttribute('aria-label', button.title);
+  button.setAttribute('aria-pressed', String(active && !micMuted));
+}
+
+async function toggleVoice() {
+  if (!(peer && !peer.destroyed) && !(vpeer && !vpeer.destroyed)) {
+    say('homeMsg', 'Crie uma sala ou entre com um código antes de ligar a voz.');
+    return;
+  }
+  if (!micStream) {
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
+      micMuted = false;
+      if (peer && !peer.destroyed) connections.forEach(conn => sendHostVoiceTo(conn));
+      else sendViewerVoice();
+      say('chatSubtitle', 'Microfone conectado. A voz será ouvida por todos na sala.');
+    } catch (error) {
+      say('homeMsg', error.name === 'NotAllowedError' ? 'Permita o acesso ao microfone para entrar na voz.' : 'Não consegui ativar a voz: ' + error.message);
+      say('chatSubtitle', 'Não foi possível conectar o microfone. Verifique as permissões do navegador.');
+    }
+  } else {
+    micMuted = micStream.getAudioTracks().some(track => track.enabled);
+    micStream.getAudioTracks().forEach(track => { track.enabled = !micMuted; });
+    say('chatSubtitle', micMuted ? 'Microfone silenciado' : 'Microfone ativado');
+  }
+  refreshMicControl();
+}
+
+function stopLocalVoice() {
+  if (micStream) { micStream.getTracks().forEach(track => track.stop()); micStream = null; }
+  micMuted = false;
+  if (viewerVoiceCall) { try { viewerVoiceCall.close(); } catch {} viewerVoiceCall = null; }
+  voiceOutgoingCalls.forEach(call => { try { call.close(); } catch {} }); voiceOutgoingCalls.clear();
+  incomingVoiceStreams.forEach(record => { try { record.call.close(); } catch {} }); incomingVoiceStreams.clear();
+  voiceRelayCalls.forEach(call => { try { call.close(); } catch {} }); voiceRelayCalls.clear();
+  voicePlaybackCalls.forEach((call, owner) => dropRemoteVoice(owner, call));
+  refreshMicControl();
+}
+
 /* ---------- eventos da interface ---------- */
 $('startShare').disabled = !canCapture;
 $('toolScreen').disabled = !canCapture;
@@ -3885,7 +4086,7 @@ $('toolCamera').disabled = !canUseCamera;
 $('createRoomBtn')?.addEventListener('click', createRoom);
 $('backHomeFromLobby')?.addEventListener('click', leaveHostRoom);
 $('lobbyInviteBtn')?.addEventListener('click', openInviteModal);
-$('lobbyCopyCode')?.addEventListener('click', event => copy(shareCode, event.currentTarget));
+$('lobbyCopyCode')?.addEventListener('click', event => copy(currentRoomCode(), event.currentTarget));
 $('lobbyCopyLink')?.addEventListener('click', event => copy(getShareLink(), event.currentTarget));
 document.querySelectorAll('[data-screen-layout]').forEach(button => button.addEventListener('click', () => {
   document.body.dataset.screenLayout = button.dataset.screenLayout;
@@ -3898,6 +4099,7 @@ $('stopBtn').addEventListener('click', () => stopShare(''));
 $('toolScreen').addEventListener('click', startShare);
 $('toolCamera').addEventListener('click', startCamera);
 $('toolAudio').addEventListener('click', toggleSharedAudio);
+$('toolMic').addEventListener('click', toggleVoice);
 $('toolMute').addEventListener('click', toggleRemoteAudio);
 $('toolSettings').addEventListener('click', () => { if (typeof window.openLockProfile === 'function') window.openLockProfile(); else configurePublicLink(); });
 $('topLink').addEventListener('click', handleTopLink);
@@ -3910,9 +4112,9 @@ $('moreBtn').addEventListener('click', openInviteModal);
 $('quickCopy').addEventListener('click', () => shareCode ? copyInvite($('quickCopy')) : openInviteModal());
 $('footerInvite').addEventListener('click', () => shareCode ? copyInvite($('footerInvite')) : openInviteModal());
 $('copyInviteHome').addEventListener('click', openInviteModal);
-$('copyCode').addEventListener('click', event => copy(shareCode, event.currentTarget));
+$('copyCode').addEventListener('click', event => copy(currentRoomCode(), event.currentTarget));
 $('copyLink').addEventListener('click', event => copy($('linkOut').value, event.currentTarget));
-$('modalCopyCode').addEventListener('click', event => copy(shareCode, event.currentTarget));
+$('modalCopyCode').addEventListener('click', event => copy(currentRoomCode(), event.currentTarget));
 $('modalCopyLink').addEventListener('click', event => copy(getShareLink(), event.currentTarget));
 $('copyInvite').addEventListener('click', event => copyInvite(event.currentTarget));
 $('discordShare').addEventListener('click', shareToDiscord);
@@ -3940,6 +4142,15 @@ $('fsBtn').addEventListener('click', () => {
   const enterFullscreen = stage.requestFullscreen || stage.webkitRequestFullscreen;
   if (enterFullscreen) enterFullscreen.call(stage);
   else if ($('remote').webkitEnterFullscreen) $('remote').webkitEnterFullscreen();
+});
+document.addEventListener('click', event => {
+  const button = event.target.closest('.tile-fullscreen');
+  if (!button) return;
+  event.preventDefault(); event.stopPropagation();
+  const tile = button.closest('.screen-tile');
+  if (!tile) return;
+  const request = tile.requestFullscreen || tile.webkitRequestFullscreen;
+  if (request) Promise.resolve(request.call(tile)).catch(() => {});
 });
 $('leaveBtn').addEventListener('click', leaveWatch);
 $('toolExit').addEventListener('click', () => {
@@ -3972,6 +4183,7 @@ $('codeIn').addEventListener('keydown', event => { if (event.key === 'Enter') $(
 $('baseIn').addEventListener('keydown', event => { if (event.key === 'Enter') saveBase(); });
 $('chatInput').addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); $('chatForm').requestSubmit(); } });
 addEventListener('pagehide', () => {
+  if (micStream) micStream.getTracks().forEach(track => track.stop());
   if (peer) peer.destroy();
   if (vpeer) vpeer.destroy();
   if (stream) stream.getTracks().forEach(track => track.stop());
@@ -4113,6 +4325,29 @@ body[data-screen-layout="focus"] .call-person-avatar{width:90px;height:90px;}
  if(!profile.name){overlay.hidden=false;byId('lockProfileClose').textContent='Definir depois';byId('lockProfileClose').disabled=true;byId('lockProfileName').focus()}
 })();
 </script>
+
+
+<style id="lock-v1-8-layout">
+/* Before a room is created, keep the landing screen clean and centered. */
+.app-shell[data-current-view="home"] > .topbar{display:none!important}
+.app-shell[data-current-view="home"] .workspace{display:block!important;min-height:100vh;padding:14px;box-sizing:border-box}
+.app-shell[data-current-view="home"] .participants-panel,.app-shell[data-current-view="home"] .right-panel,.app-shell[data-current-view="home"] .center-status{display:none!important}
+.app-shell[data-current-view="home"] .center-panel{display:block!important;width:100%;max-width:none;min-width:0;margin:0}
+.app-shell[data-current-view="home"] .home-state{min-height:calc(100vh - 28px);width:min(100%,980px);margin:0 auto;box-sizing:border-box;align-items:center;justify-content:center;text-align:center}
+.app-shell[data-current-view="home"] .home-footer{display:none!important}
+.app-shell[data-current-view="home"] .global-notice:empty{display:none!important}
+#toolMic.mic-active{background:#087e63;border-color:#0aa77f;color:#fff}
+#toolMic.tool-red:not(:disabled){background:#3b1720;border-color:#7f2538;color:#ff7d91}
+#toolMic.tool-red .slash{display:block}
+#toolMic.mic-active .slash{display:none}
+.screen-tile{position:relative}
+.tile-fullscreen{position:absolute;z-index:5;top:9px;right:9px;width:36px;height:36px;display:grid;place-items:center;border:1px solid #ffffff32;border-radius:9px;background:#11131bd9;color:#fff;font-size:22px;line-height:1;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .14s ease,transform .14s ease;transform:translateY(-3px)}
+.screen-tile:hover .tile-fullscreen,.screen-tile:focus-within .tile-fullscreen,.screen-tile.show-tile-tools .tile-fullscreen{opacity:1;pointer-events:auto;transform:translateY(0)}
+.screen-tile:fullscreen,.screen-tile:-webkit-full-screen{width:100vw;height:100vh;max-width:none;max-height:none;border-radius:0;background:#000}
+.screen-tile:fullscreen video,.screen-tile:-webkit-full-screen video{width:100%;height:100%;max-height:none;object-fit:contain}
+.screen-tile:fullscreen .tile-fullscreen,.screen-tile:-webkit-full-screen .tile-fullscreen{opacity:1;pointer-events:auto}
+@media(hover:none){.tile-fullscreen{opacity:1;pointer-events:auto;transform:none}}
+</style>
 
 </body>
 </html>
