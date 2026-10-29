@@ -1,9 +1,11 @@
-# Lock — GitHub Pages
+# Lock v1.7 · Site somente
 
-1. Envie `index.html`, `.nojekyll` e `README.md` para a raiz do repositório GitHub Pages.
-2. Configure GitHub Pages para publicar a branch `main`, pasta `/(root)`.
-3. URL base: https://gueten.github.io/lock-site/
+Este pacote contém apenas o site do Lock. Não precisa instalar a extensão do Chrome.
 
-A tela inicial apenas cria uma sala. A captura de tela só começa quando o usuário clica em **Compartilhar tela**. O perfil de nome/foto é armazenado apenas no localStorage deste navegador e não é enviado a outros participantes. A visualização de compartilhamentos oferece os modos Grade e Foco.
+## Publicar no GitHub Pages
+1. Extraia o ZIP.
+2. Envie `index.html` e `.nojekyll` para a raiz do repositório `Gueten/lock-site`.
+3. Mantenha o GitHub Pages configurado para a branch `main` e pasta `/(root)`.
+4. Abra https://gueten.github.io/lock-site/.
 
-Observação: a transmissão em tempo real usa PeerJS/WebRTC. GitHub Pages hospeda o frontend, não um servidor de mídia.
+Os perfis (nome e foto) são salvos localmente e compartilhados somente com os participantes conectados à mesma sala, para exibição na lista e nos cartões da chamada. O site em si não oferece autenticação nem um banco de dados central.
