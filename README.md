@@ -1,21 +1,23 @@
-# Lock — site público
+# Lock — site público (v1.5)
 
-Este pacote contém a página estática do Lock preparada para publicar com GitHub Pages.
+Esta é a página web do Lock, preparada para publicar no repositório `Gueten/lock-site` usando GitHub Pages.
 
-## Publicar
+## Atualizar o site
 
-1. Crie um repositório público no GitHub, por exemplo `lock-site`.
-2. Envie para a raiz do repositório os arquivos `index.html` e `.nojekyll` deste pacote. O `README.md` é opcional.
-3. No repositório, abra **Settings → Pages**.
-4. Em **Build and deployment**, escolha **Deploy from a branch**.
-5. Escolha a branch `main` e a pasta `/(root)`; clique em **Save**.
-6. Aguarde o GitHub publicar o site. O endereço normalmente será `https://SEU-USUARIO.github.io/lock-site/`.
-7. Abra a extensão Lock → **Configurar** e cole o endereço público do site, incluindo a barra final. Salve.
+1. Extraia este ZIP.
+2. Envie `index.html` e `.nojekyll` para a raiz do repositório `Gueten/lock-site`, substituindo o arquivo antigo.
+3. Mantenha o GitHub Pages ativado em **Settings → Pages**, branch `main`, pasta `/(root)`.
+4. O endereço base dos convites é fixo: `https://gueten.github.io/lock-site/`. Os links da sala acrescentam `#CODIGO` no final.
 
-Os convites ficarão no formato `https://SEU-USUARIO.github.io/lock-site/#CODIGO-DA-SALA`.
+## O que mudou
 
-## Importante
+- Na primeira visita, pede um nome e, opcionalmente, uma foto. O perfil e a foto ficam no `localStorage` do próprio navegador e não são enviados aos outros participantes. Para outras pessoas, o chat usa rótulos genéricos.
+- A sala mantém o mesmo código/link ao parar e voltar a compartilhar tela, enquanto a aba do anfitrião continua aberta.
+- Permite até duas transmissões simultâneas: a tela do anfitrião mais uma tela de participante, ou duas telas de participantes quando o anfitrião não está transmitindo.
+- O anfitrião retransmite a segunda tela aos demais participantes por WebRTC/PeerJS.
 
-- Use o endereço real que o GitHub Pages mostrar em **Settings → Pages**; não copie o exemplo literalmente.
-- O repositório e o site publicados são públicos. Não coloque senhas, tokens ou dados privados nele.
-- O site é estático e usa PeerJS/WebRTC para negociação da conexão. O GitHub Pages hospeda os arquivos, mas não é um servidor de sinalização próprio; a conexão ainda depende do serviço PeerJS e das redes/navegadores dos participantes.
+## Limitações conhecidas
+
+- O perfil é local; não é uma conta sincronizada entre dispositivos.
+- O site é estático. O transporte de mídia depende do PeerJS e de WebRTC; firewalls, navegadores e redes podem impedir conexões ou causar baixa qualidade.
+- O envio da tela para vários participantes passa pelo navegador anfitrião. A qualidade cai conforme a largura de banda e o número de pessoas aumentam.
