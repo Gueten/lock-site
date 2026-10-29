@@ -334,7 +334,7 @@ body.popup .preview-wrap { margin-top: 8px; }
 </head>
 <body>
 <button id="homeProfileTop" class="home-profile-top" type="button" aria-label="Editar perfil" title="Editar perfil">
-  <span class="home-profile-top-avatar">☺</span><span>Editar perfil</span>
+  <span class="home-profile-top-avatar">☺</span><span class="home-profile-top-copy"><strong>Seu perfil</strong><small>Editar perfil</small></span>
 </button>
 <div class="app-shell">
   <header class="topbar">
@@ -358,7 +358,7 @@ body.popup .preview-wrap { margin-top: 8px; }
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/></svg>
       </button>
       <span class="tool-divider"></span>
-      <button class="tool-btn" id="toolSettings" title="Configurar link público" aria-label="Configurações">
+      <button class="tool-btn" id="toolSettings" title="Configurações da chamada" aria-label="Configurações da chamada">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1 1.2.9-1.4 2.4-1.4-.6a8 8 0 0 1-1.7 1l-.2 1.5h-2.8l-.2-1.5a8 8 0 0 1-1.7-1l-1.4.6-1.4-2.4 1.2-.9a7 7 0 0 1 0-2l-1.2-.9 1.4-2.4 1.4.6a8 8 0 0 1 1.7-1l.2-1.5h2.8l.2 1.5a8 8 0 0 1 1.7 1l1.4-.6 1.4 2.4-1.2.9a7 7 0 0 1 0 2Z" transform="translate(-1 -1)"/></svg>
       </button>
       <button class="tool-btn" id="toolScreen" title="Compartilhar tela" aria-label="Compartilhar tela">
@@ -465,15 +465,10 @@ body.popup .preview-wrap { margin-top: 8px; }
       <div id="chatReplyBar" class="chat-reply-bar" hidden><span id="chatReplyLabel"></span><button type="button" id="cancelChatReply" aria-label="Cancelar resposta" title="Cancelar resposta">×</button></div>
       <div id="chatExtras" class="chat-extras" hidden>
         <div id="emojiPicker" class="emoji-picker" hidden aria-label="Escolher emoji"></div>
-        <div id="gifPanel" class="gif-panel" hidden>
-          <div class="gif-panel-head"><strong>Enviar GIF</strong><button type="button" id="closeGifPanel" class="tiny-close" aria-label="Fechar GIF">×</button></div>
-          <div class="gif-search-row"><input id="gifSearchQuery" class="field" placeholder="Pesquisar GIFs…" maxlength="60"><button type="button" id="tenorSearchBtn" class="btn secondary compact">Buscar</button></div>
-          <p>Escolha um GIF no Tenor e cole o link abaixo. Links diretos de GIF aparecem na conversa como imagem.</p>
-          <div class="gif-search-row"><input id="gifDirectUrl" class="field" placeholder="Cole o link do GIF" inputmode="url"><button type="button" id="insertGifUrl" class="btn primary compact">Inserir</button></div>
-        </div>
+        
         <div id="mentionPicker" class="mention-picker" hidden></div>
       </div>
-      <form id="chatForm" class="chat-composer"><button type="button" id="chatPlus" class="composer-plus" title="Ajuda do chat" aria-label="Ajuda do chat" hidden>+</button><button type="button" id="emojiToggle" class="composer-tool" title="Escolher emoji" aria-label="Escolher emoji">☺</button><button type="button" id="gifToggle" class="composer-gif" title="Enviar GIF" aria-label="Enviar GIF">GIF</button><input id="chatInput" class="field chat-input" placeholder="Digite uma mensagem..." maxlength="500" autocomplete="off" aria-label="Mensagem do chat"><button type="submit" class="send-btn" title="Enviar mensagem" aria-label="Enviar mensagem"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 20 18-8L3 4l2 7 9 1-9 1z"/></svg></button></form>
+      <form id="chatForm" class="chat-composer"><button type="button" id="chatPlus" class="composer-plus" title="Ajuda do chat" aria-label="Ajuda do chat" hidden>+</button><button type="button" id="emojiToggle" class="composer-tool" title="Escolher emoji" aria-label="Escolher emoji">☺</button><input id="chatInput" class="field chat-input" placeholder="Digite uma mensagem..." maxlength="500" autocomplete="off" aria-label="Mensagem do chat"><button type="submit" class="send-btn" title="Enviar mensagem" aria-label="Enviar mensagem"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 20 18-8L3 4l2 7 9 1-9 1z"/></svg></button></form>
       <div class="user-footer"><div class="user-mini"><span class="avatar avatar-blue">V</span><div><strong>Lock · Você</strong><small id="footerStatus">Conectado localmente</small></div></div><div class="user-footer-actions"><button id="footerInvite" title="Copiar convite" aria-label="Copiar convite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg></button><button id="footerExit" title="Sair ou encerrar" aria-label="Sair ou encerrar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3m10-8h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/></svg></button></div></div>
     </aside>
   </div>
@@ -2974,7 +2969,7 @@ function participantRow(initial, name, role, stateClass = 'green-dot', photo = '
 function localProfileSnapshot() {
   try {
     const p = typeof window.getLockLocalProfile === 'function' ? window.getLockLocalProfile() : {};
-    return { name: String(p.name || 'Lock user').slice(0, 32), photo: String(p.photo || '').slice(0, 180000) };
+    return { name: String(p.name || 'Lock user').slice(0, 32), photo: String(p.photo || '').slice(0, 600000) };
   } catch { return { name: 'Lock user', photo: '' }; }
 }
 
@@ -3022,7 +3017,7 @@ function renderParticipants() {
 function safeProfileForNetwork(profile) {
   return {
     name: String(profile && profile.name || 'Participante').slice(0, 32),
-    photo: String(profile && profile.photo || '').slice(0, 180000)
+    photo: String(profile && profile.photo || '').slice(0, 600000)
   };
 }
 
@@ -3032,9 +3027,9 @@ function broadcastRoster() {
   const participants = Array.from(connections.values()).filter(conn => conn.open).map(conn => {
     const prof = safeProfileForNetwork(participantProfiles.get(conn.peer));
     const share = incomingShares.get(conn.peer);
-    return { id: conn.peer, ...prof, sharing: !!(share && share.stream) };
+    return { id: conn.peer, ...prof, sharing: !!(share && share.stream), sharingMode: share && share.mode || '' };
   });
-  const packet = { type: 'roster', host: { id: peer.id, ...hostProfile, sharing: !!stream }, participants };
+  const packet = { type: 'roster', host: { id: peer.id, ...hostProfile, sharing: !!stream, sharingMode: captureMode }, participants };
   connections.forEach(conn => { if (conn.open) { try { conn.send(packet); } catch {} } });
   renderParticipants();
 }
@@ -3045,11 +3040,12 @@ function applyRemoteRoster(packet) {
   if (packet && Array.isArray(packet.participants)) {
     packet.participants.forEach(person => {
       if (!person || !person.id) return;
-      remoteRoster.set(person.id, { name: String(person.name || 'Participante').slice(0, 32), photo: String(person.photo || '').slice(0, 180000), sharing: !!person.sharing });
+      remoteRoster.set(person.id, { name: String(person.name || 'Participante').slice(0, 32), photo: String(person.photo || '').slice(0, 600000), sharing: !!person.sharing, sharingMode: String(person.sharingMode || '').slice(0,16) });
     });
   }
   renderParticipants();
-  remoteShareTiles.forEach((entry, owner) => { const label = entry.tile.querySelector('.remote-share-label'); if (label) label.textContent = displayNameForPeer(owner) + ' · compartilhando tela'; });
+  refreshTools();
+  remoteShareTiles.forEach((entry, owner) => { const label = entry.tile.querySelector('.remote-share-label'); if (label) label.textContent = displayNameForPeer(owner) + ((entry.mode === 'camera') ? ' · câmera' : ' · compartilhando tela'); });
 }
 
 function renderPeopleGrids() {
@@ -3104,89 +3100,118 @@ function setRoomStatus(text, active = false) {
   say('chatSubtitle', active ? 'Mensagens da sala' : 'Entre em uma sala para conversar');
 }
 
+function activeRoomShareCount() {
+  if (peer && !peer.destroyed && !vpeer) return (stream ? 1 : 0) + incomingShares.size;
+  if (vpeer && !vpeer.destroyed) {
+    const remoteActive = Array.from(remoteRoster.entries()).filter(([id, person]) => id !== 'host' && id !== vpeer.id && person && person.sharing).length;
+    const hostSharing = !!(remoteRoster.get('host') && remoteRoster.get('host').sharing);
+    return (stream ? 1 : 0) + remoteActive + (hostSharing ? 1 : 0);
+  }
+  return stream ? 1 : 0;
+}
+
 function refreshTools() {
   const audioTracks = stream ? stream.getAudioTracks() : [];
+  const inRoom = !!((peer && !peer.destroyed) || (vpeer && !vpeer.destroyed));
+  const atLimit = activeRoomShareCount() >= 3;
   $('toolAudio').disabled = !stream || audioTracks.length === 0;
   $('toolAudio').classList.toggle('tool-red', !audioTracks.some(track => track.enabled));
-  $('toolAudio').title = audioTracks.length && audioTracks.some(track => track.enabled) ? 'Desativar áudio compartilhado' : 'Ativar áudio compartilhado';
-  $('toolMute').disabled = !vpeer;
-  $('toolMute').classList.toggle('tool-red', !!$('remote').muted);
+  $('toolAudio').title = audioTracks.length && audioTracks.some(track => track.enabled) ? 'Desativar áudio da sua transmissão' : 'Ativar áudio da sua transmissão';
+  $('toolMute').disabled = !inRoom;
+  $('toolMute').classList.toggle('tool-red', !!roomSoundMuted);
+  $('toolMute').title = roomSoundMuted ? 'Ativar som recebido da sala' : 'Silenciar som recebido da sala';
+  $('toolMute').setAttribute('aria-pressed', String(!roomSoundMuted));
+  $('toolMute').querySelector('svg')?.setAttribute('aria-label', roomSoundMuted ? 'Som silenciado' : 'Som ativo');
   refreshMicControl();
-  const roomShareLimitReached = !!(peer && !peer.destroyed && !vpeer && incomingShares.size >= 3);
-  $('toolScreen').disabled = !canCapture || !!stream || !(peer && !peer.destroyed) || roomShareLimitReached;
-  $('toolCamera').disabled = !canUseCamera || !!stream || !(peer && !peer.destroyed) || roomShareLimitReached;
-  $('startShare').disabled = !canCapture || !!stream || roomShareLimitReached;
-  $('startCamera').disabled = !canUseCamera || !!stream || roomShareLimitReached;
-  $('toolExit').disabled = !(stream || vpeer || peer);
+  const sharingScreen = !!stream && captureMode === 'screen';
+  const sharingCamera = !!stream && captureMode === 'camera';
+  $('toolScreen').disabled = !canCapture || !inRoom || (!stream && atLimit) || (!!stream && !sharingScreen);
+  $('toolCamera').disabled = !canUseCamera || !inRoom || (!stream && atLimit) || (!!stream && !sharingCamera);
+  $('toolScreen').classList.toggle('tool-active', sharingScreen);
+  $('toolCamera').classList.toggle('tool-active', sharingCamera);
+  $('toolScreen').title = sharingScreen ? 'Parar compartilhamento de tela' : 'Compartilhar tela';
+  $('toolCamera').title = sharingCamera ? 'Desligar câmera compartilhada' : 'Compartilhar câmera';
+  $('startShare').disabled = !canCapture || !inRoom || (!stream && atLimit) || (!!stream && !sharingScreen);
+  $('startCamera').disabled = !canUseCamera || !inRoom || (!stream && atLimit) || (!!stream && !sharingCamera);
+  $('toolExit').disabled = !inRoom;
+  if (atLimit && !stream) {
+    $('toolScreen').title = 'Limite de três transmissões atingido';
+    $('toolCamera').title = 'Limite de três transmissões atingido';
+  }
 }
 
 /* ---------- captura e compartilhamento ---------- */
 async function startShare() {
-  if (stream) return;
-  if (peer && !vpeer && incomingShares.size >= 3) return say('homeMsg', 'A sala já atingiu o limite de três transmissões simultâneas. Espere uma terminar.');
+  const inRoom = !!((peer && !peer.destroyed) || (vpeer && !vpeer.destroyed));
+  if (!inRoom) { say('homeMsg', 'Crie uma sala ou entre com um código antes de compartilhar.'); return; }
+  if (stream) {
+    if (captureMode === 'screen') { if (vpeer && viewerShareCall) stopViewerShare('Você parou de compartilhar a tela.'); else stopShare('Você parou de compartilhar a tela.'); }
+    else say('homeMsg', 'Desligue a câmera compartilhada antes de iniciar o compartilhamento de tela.');
+    return;
+  }
+  if (activeRoomShareCount() >= 3) return say('homeMsg', 'A sala já atingiu o limite de três transmissões simultâneas. Espere uma terminar.');
   if (!canCapture) return say('homeMsg', 'Este navegador não permite compartilhar a tela. Abra o Lock em um computador compatível.');
   say('homeMsg', '');
+  const prefs = window.lockGetSettings ? window.lockGetSettings() : {};
+  const resolution = ({ '720': [1280,720], '1080': [1920,1080], '1440': [2560,1440] })[prefs.resolution] || null;
+  const videoConstraints = resolution ? { width: { ideal: resolution[0] }, height: { ideal: resolution[1] }, frameRate: { ideal: 30, max: 60 } } : { frameRate: { ideal: 30, max: 60 } };
   try {
-    const screenStream = await navigator.mediaDevices.getDisplayMedia({
-      video: { frameRate: { ideal: 30 } },
-      audio: $('withAudio').checked,
-      selfBrowserSurface: 'exclude'
-    });
-    if (vpeer && vconn && vconn.open && viewerCode) activateViewerStream(screenStream);
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: videoConstraints, audio: !!$('withAudio')?.checked, selfBrowserSurface: 'exclude' });
+    const track = screenStream.getVideoTracks()[0];
+    if (track && resolution) { try { await track.applyConstraints({ width: { ideal: resolution[0] }, height: { ideal: resolution[1] } }); } catch {} }
+    if (vpeer && (!vconn || !vconn.open || !viewerCode)) { screenStream.getTracks().forEach(track => track.stop()); say('homeMsg', 'A conexão com a sala ainda não está pronta. Tente compartilhar novamente.'); return; }
+    if (vpeer && viewerCode) activateViewerStream(screenStream, 'screen');
     else activateStream(screenStream, 'screen');
   } catch (error) {
-    say('homeMsg', error.name === 'NotAllowedError'
-      ? 'Seleção cancelada. Você pode tentar novamente quando quiser.'
-      : 'Não consegui capturar a tela: ' + error.message);
+    say('homeMsg', error.name === 'NotAllowedError' ? 'Seleção cancelada. Você pode tentar novamente quando quiser.' : 'Não consegui capturar a tela: ' + error.message);
   }
 }
 
 async function startCamera() {
-  if (stream) return;
-  if (peer && !vpeer && incomingShares.size >= 3) return say('homeMsg', 'A sala já atingiu o limite de três transmissões simultâneas. Espere uma terminar.');
+  const inRoom = !!((peer && !peer.destroyed) || (vpeer && !vpeer.destroyed));
+  if (!inRoom) { say('homeMsg', 'Crie uma sala ou entre com um código antes de ligar a câmera.'); return; }
+  if (stream) {
+    if (captureMode === 'camera') { if (vpeer && viewerShareCall) stopViewerShare('Você desligou a câmera.'); else stopShare('Você desligou a câmera.'); }
+    else say('homeMsg', 'Pare o compartilhamento de tela antes de ligar a câmera compartilhada.');
+    return;
+  }
+  if (activeRoomShareCount() >= 3) return say('homeMsg', 'A sala já atingiu o limite de três transmissões simultâneas. Espere uma terminar.');
   if (!canUseCamera) return say('homeMsg', 'Este navegador não permite acessar a câmera.');
   say('homeMsg', '');
+  const prefs = window.lockGetSettings ? window.lockGetSettings() : {};
+  const resolution = ({ '720': [1280,720], '1080': [1920,1080], '1440': [2560,1440] })[prefs.resolution] || [1280,720];
   try {
-    const cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: $('withAudio').checked
-    });
-    if (vpeer && vconn && vconn.open && viewerCode) {
-      say('homeMsg', 'A transmissão secundária aceita compartilhamento de tela. Use Compartilhar tela.');
-      cameraStream.getTracks().forEach(track => track.stop());
-      return;
-    }
-    activateStream(cameraStream, 'camera');
+    const cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: resolution[0] }, height: { ideal: resolution[1] }, frameRate: { ideal: 30 } }, audio: false });
+    if (vpeer && (!vconn || !vconn.open || !viewerCode)) { cameraStream.getTracks().forEach(track => track.stop()); say('homeMsg', 'A conexão com a sala ainda não está pronta. Tente ligar a câmera novamente.'); return; }
+    if (vpeer && viewerCode) activateViewerStream(cameraStream, 'camera');
+    else activateStream(cameraStream, 'camera');
   } catch (error) {
-    say('homeMsg', error.name === 'NotAllowedError'
-      ? 'Permita o acesso à câmera e tente novamente.'
-      : 'Não consegui abrir a câmera: ' + error.message);
+    say('homeMsg', error.name === 'NotAllowedError' ? 'Permita o acesso à câmera e tente novamente.' : 'Não consegui abrir a câmera: ' + error.message);
   }
 }
 
-function activateViewerStream(nextStream) {
+function activateViewerStream(nextStream, mode = 'screen') {
   if (!vpeer || !vconn || !vconn.open || !viewerCode) {
     nextStream.getTracks().forEach(track => track.stop());
     return;
   }
   stream = nextStream;
-  captureMode = 'screen';
+  captureMode = mode;
   const videoTrack = stream.getVideoTracks()[0];
   if (videoTrack) videoTrack.addEventListener('ended', () => {
-    if (stream === nextStream) stopViewerShare('Você parou de compartilhar a tela.');
+    if (stream === nextStream) stopViewerShare(mode === 'camera' ? 'Você desligou a câmera.' : 'Você parou de compartilhar a tela.');
   }, { once: true });
   try {
-    viewerShareCall = vpeer.call(PREFIX + viewerCode, stream, { metadata: { kind: 'participant' } });
-    if (!viewerShareCall) throw new Error('Não foi possível iniciar a transmissão secundária.');
-    viewerShareCall.on('close', () => {
-      if (stream === nextStream) stopViewerShare('A sala encerrou sua transmissão secundária.', false);
-    });
-    viewerShareCall.on('error', () => {
-      if (stream === nextStream) stopViewerShare('A transmissão secundária foi desconectada.', false);
-    });
-    say('info', 'Sua tela está sendo compartilhada com a sala.');
-    say('homeMsg', 'Sua tela está sendo compartilhada com a sala.');
+    viewerShareCall = vpeer.call(PREFIX + viewerCode, stream, { metadata: { kind: 'participant', source: vpeer.id, mode } });
+    if (!viewerShareCall) throw new Error('Não foi possível iniciar a transmissão.');
+    viewerShareCall.on('close', () => { if (stream === nextStream) stopViewerShare('A sala encerrou sua transmissão.', false); });
+    viewerShareCall.on('error', () => { if (stream === nextStream) stopViewerShare('A transmissão foi desconectada.', false); });
+    $('preview').srcObject = stream;
+    $('previewLabel').textContent = mode === 'camera' ? 'Sua câmera' : 'Sua tela';
+    say('info', mode === 'camera' ? 'Sua câmera está ativa na sala.' : 'Sua tela está sendo compartilhada com a sala.');
+    say('homeMsg', mode === 'camera' ? 'Sua câmera está ativa na sala.' : 'Sua tela está sendo compartilhada com a sala.');
     refreshTools();
+    renderParticipants();
   } catch (error) {
     stopViewerShare('Não foi possível iniciar a transmissão: ' + error.message, false);
   }
@@ -3198,6 +3223,7 @@ function stopViewerShare(message = '', closeCall = true) {
   stream = null;
   viewerShareCall = null;
   if (currentStream) currentStream.getTracks().forEach(track => track.stop());
+  if ($('preview')) $('preview').srcObject = null;
   if (closeCall && currentCall) { try { currentCall.close(); } catch {} }
   refreshTools();
   if (message) say('info', message);
@@ -3394,7 +3420,7 @@ function serve(conn) {
     if (item.stream && owner !== conn.peer) relayVoiceTo(owner, conn, item.stream);
   });
   incomingShares.forEach((item, owner) => {
-    if (item.stream && owner !== conn.peer) relayParticipantShare(owner, conn, item.stream);
+    if (item.stream && owner !== conn.peer) relayParticipantShare(owner, conn, item.stream, item.mode || 'screen');
   });
   refreshCount();
 }
@@ -3421,17 +3447,18 @@ function acceptParticipantShare(call) {
     return;
   }
   // Reserve a slot immediately so nearly simultaneous incoming shares cannot exceed the limit.
-  incomingShares.set(owner, { call, stream: null });
+  const shareMode = (call.metadata || {}).mode === 'camera' ? 'camera' : 'screen';
+  incomingShares.set(owner, { call, stream: null, mode: shareMode });
   call.answer();
   call.on('stream', incomingStream => {
     const record = incomingShares.get(owner);
     if (!record || record.call !== call) return;
     record.stream = incomingStream;
-    showRemoteShareTile(owner, incomingStream);
+    showRemoteShareTile(owner, incomingStream, shareMode);
     if (typeof window.notifyLockSound === 'function') window.notifyLockSound('share');
     broadcastRoster();
     connections.forEach(conn => {
-      if (conn.peer !== owner && conn.open) relayParticipantShare(owner, conn, incomingStream);
+      if (conn.peer !== owner && conn.open) relayParticipantShare(owner, conn, incomingStream, shareMode);
     });
     refreshCount();
   });
@@ -3440,12 +3467,12 @@ function acceptParticipantShare(call) {
   call.on('error', remove);
 }
 
-function relayParticipantShare(owner, conn, incomingStream) {
+function relayParticipantShare(owner, conn, incomingStream, mode = 'screen') {
   if (!peer || !conn || !conn.open || !incomingStream || conn.peer === owner) return;
   const key = owner + '->' + conn.peer;
   const previous = relayCalls.get(key);
   if (previous) { try { previous.close(); } catch {} }
-  const relay = peer.call(conn.peer, incomingStream, { metadata: { kind: 'participant', source: owner } });
+  const relay = peer.call(conn.peer, incomingStream, { metadata: { kind: 'participant', source: owner, mode } });
   if (relay) {
     relayCalls.set(key, relay);
     relay.on('close', () => { if (relayCalls.get(key) === relay) relayCalls.delete(key); });
@@ -3488,14 +3515,14 @@ function displayNameForPeer(owner) {
   return 'Participante';
 }
 
-function showRemoteShareTile(owner, incomingStream) {
+function showRemoteShareTile(owner, incomingStream, mode = 'screen') {
   if (!remoteShareTiles.has(owner)) {
     const tile = document.createElement('div');
     tile.className = 'remote-share-tile';
     const video = document.createElement('video');
     video.autoplay = true;
     video.playsInline = true;
-    video.muted = true;
+    video.muted = !!roomSoundMuted;
     tile.classList.add('screen-tile');
     const fullscreen = document.createElement('button');
     fullscreen.className = 'tile-fullscreen';
@@ -3505,12 +3532,14 @@ function showRemoteShareTile(owner, incomingStream) {
     fullscreen.textContent = '⛶';
     const label = document.createElement('span');
     label.className = 'remote-share-label';
-    label.textContent = displayNameForPeer(owner) + ' · compartilhando tela';
+    label.textContent = displayNameForPeer(owner) + (mode === 'camera' ? ' · câmera' : ' · compartilhando tela');
     tile.append(video, fullscreen, label);
     tile.addEventListener('click', event => { if (event.target !== fullscreen) tile.classList.toggle('show-tile-tools'); });
-    remoteShareTiles.set(owner, { tile, video });
+    remoteShareTiles.set(owner, { tile, video, mode });
   }
   const entry = remoteShareTiles.get(owner);
+  entry.mode = mode;
+  const label = entry.tile.querySelector('.remote-share-label'); if (label) label.textContent = displayNameForPeer(owner) + (mode === 'camera' ? ' · câmera' : ' · compartilhando tela');
   entry.video.srcObject = incomingStream;
   entry.video.play().catch(() => {});
   refreshRemoteTileLayout();
@@ -3534,13 +3563,14 @@ function refreshRemoteTileLayout() {
   remoteShareTiles.forEach(({ tile }) => { if (target && tile.parentElement !== target) target.append(tile); });
   if (hostTarget) hostTarget.hidden = !stream || hostTarget.children.length === 0;
   if (viewerTarget) viewerTarget.hidden = viewerTarget.children.length === 0;
+  refreshTools();
   if (isHost && !stream && incomingShares.size) {
     show('lobby');
     if ($('stage')) $('stage').hidden = true;
   } else if (isHost && stream) {
     if ($('stage')) $('stage').hidden = false;
   } else if (!isHost && $('stage')) {
-    $('stage').hidden = false;
+    $('stage').hidden = !($('remote') && $('remote').srcObject);
   }
 }
 
@@ -3668,9 +3698,12 @@ function startWatch(code) {
   chatHistory = [];
   resetChatDisplay();
   show('watching');
-  setInfo('Conectando à sala…');
+  setInfo('', false);
+  $('stage').hidden = true;
+  $('watching').querySelector('.state-topline h1').textContent = 'Sala de voz';
+  $('watching').querySelector('.state-topline .state-description').textContent = 'Converse, ligue a câmera ou compartilhe sua tela.';
   $('remote').srcObject = null;
-  $('remote').muted = false;
+  $('remote').muted = !!roomSoundMuted;
   refreshTools();
   refreshCount();
   renderShare();
@@ -3686,6 +3719,7 @@ function startWatch(code) {
     });
     conn.on('open', () => {
       if (vconn !== conn) return;
+      refreshTools();
       const identity = safeProfileForNetwork(localProfileSnapshot());
       try { conn.send({ type: 'identity', profile: identity }); } catch {}
       if (micStream) sendViewerVoice();
@@ -3709,11 +3743,13 @@ function startWatch(code) {
       if (kind === 'voice') {
         playRemoteVoice(owner, incomingStream, call);
       } else if (kind === 'participant') {
-        showRemoteShareTile(owner, incomingStream);
+        showRemoteShareTile(owner, incomingStream, (call.metadata || {}).mode || 'screen');
       } else {
         const video = $('remote');
         setInfo('', true);
         $('stage').hidden = false;
+        $('watching').querySelector('.state-topline h1').textContent = 'Assistindo à transmissão';
+        $('watching').querySelector('.state-topline .state-description').textContent = 'A tela compartilhada está ao vivo.';
         if (video.srcObject !== incomingStream) video.srcObject = incomingStream;
         video.play().catch(() => {});
         refreshTools();
@@ -3725,13 +3761,13 @@ function startWatch(code) {
       else if (kind === 'participant') removeRemoteShareTile(owner);
       else {
         $('remote').srcObject = null;
-        if (!remoteShareTiles.size) setInfo('A transmissão foi pausada. Aguarde o anfitrião retomar ou veja outra tela compartilhada.');
+        if (!remoteShareTiles.size) { $('stage').hidden = true; setInfo('', false); $('watching').querySelector('.state-topline h1').textContent = 'Sala de voz'; $('watching').querySelector('.state-topline .state-description').textContent = 'Converse, ligue a câmera ou compartilhe sua tela.'; }
       }
     });
     call.on('error', () => {
       if (kind === 'voice') dropRemoteVoice(owner, call);
       else if (kind === 'participant') removeRemoteShareTile(owner);
-      else if (!remoteShareTiles.size) setInfo('A transmissão foi desconectada.');
+      else if (!remoteShareTiles.size) { $('stage').hidden = true; setInfo('', false); }
     });
   });
   currentPeer.on('error', error => {
@@ -3807,7 +3843,7 @@ function addChatMessage(message, displayName = null, persist = true) {
     id: String(message.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2))).slice(0, 100),
     text: String(message.text || '').slice(0, 500),
     name: String(message.name || 'Participante').slice(0, 40),
-    photo: String(message.photo || '').slice(0, 180000),
+    photo: String(message.photo || '').slice(0, 600000),
     replyTo: safeReply,
     time: String(message.time || clock()).slice(0, 12)
   };
@@ -3875,7 +3911,7 @@ function appendLockChatText(target, value) {
         const parsed = new URL(url);
         if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') { target.append(document.createTextNode(token)); continue; }
         const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.className = 'chat-link';
-        if (/\.(gif|png|jpe?g|webp)(\?.*)?$/i.test(parsed.pathname + parsed.search) && /(^|\.)(tenor\.com|giphy\.com|gfycat\.com|imgur\.com|discordapp\.net|discordapp\.com|media\.tenor\.com|media\.giphy\.com)$/i.test(parsed.hostname)) {
+        if (/\.(gif|png|jpe?g|webp|apng)(\?.*)?$/i.test(parsed.pathname + parsed.search)) {
           const img = document.createElement('img'); img.src = url; img.alt = 'GIF compartilhado'; img.loading = 'lazy'; img.className = 'chat-gif-preview'; img.onerror = () => img.remove(); link.append(img);
         } else link.textContent = url;
         target.append(link); if (tail) target.append(document.createTextNode(tail));
@@ -3897,7 +3933,7 @@ function receiveFromViewer(data, sourceConn) {
   }
   if (data.type !== 'chat' || typeof data.text !== 'string') return;
   const savedProfile = sourceConn ? participantProfiles.get(sourceConn.peer) : null;
-  const packet = { type: 'chat', id: String(data.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2))), text: data.text.slice(0, 500), name: String(savedProfile?.name || data.name || 'Participante').slice(0, 32), photo: String(savedProfile?.photo || data.photo || '').slice(0, 180000), replyTo: data.replyTo && typeof data.replyTo === 'object' ? { id: String(data.replyTo.id || '').slice(0,100), name: String(data.replyTo.name || '').slice(0,40), text: String(data.replyTo.text || '').slice(0,180) } : null, time: data.time || clock() };
+  const packet = { type: 'chat', id: String(data.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2))), text: data.text.slice(0, 500), name: String(savedProfile?.name || data.name || 'Participante').slice(0, 32), photo: String(savedProfile?.photo || data.photo || '').slice(0, 600000), replyTo: data.replyTo && typeof data.replyTo === 'object' ? { id: String(data.replyTo.id || '').slice(0,100), name: String(data.replyTo.name || '').slice(0,40), text: String(data.replyTo.text || '').slice(0,180) } : null, time: data.time || clock() };
   if (!packet.text.trim()) return;
   addChatMessage(packet);
   connections.forEach(conn => {
@@ -3921,7 +3957,7 @@ function receiveFromHost(data) {
   }
   if (data.type === 'roster') { applyRemoteRoster(data); return; }
   if (data.type === 'share-limit') { stopViewerShare(data.message || 'A sala permite no máximo três transmissões simultâneas.'); return; }
-  if (data.type === 'host-share-ended') { if (!$('remote').srcObject && !remoteShareTiles.size) setInfo('A transmissão principal foi pausada. Aguarde ela voltar ou veja outra tela compartilhada.'); return; }
+  if (data.type === 'host-share-ended') { if (!$('remote').srcObject && !remoteShareTiles.size) { $('stage').hidden = true; setInfo('', false); $('watching').querySelector('.state-topline h1').textContent = 'Sala de voz'; $('watching').querySelector('.state-topline .state-description').textContent = 'Converse, ligue a câmera ou compartilhe sua tela.'; } return; }
   if (data.type === 'history' && Array.isArray(data.messages)) {
     data.messages.slice(-30).forEach(message => {
       if (message && message.type === 'chat' && typeof message.text === 'string') addChatMessage(message);
@@ -3929,7 +3965,7 @@ function receiveFromHost(data) {
     return;
   }
   if (data.type === 'chat' && typeof data.text === 'string') {
-    addChatMessage({ type: 'chat', id: data.id, text: data.text.slice(0, 500), name: String(data.name || 'Participante').slice(0, 32), photo: String(data.photo || '').slice(0,180000), replyTo: data.replyTo || null, time: data.time || clock() });
+    addChatMessage({ type: 'chat', id: data.id, text: data.text.slice(0, 500), name: String(data.name || 'Participante').slice(0, 32), photo: String(data.photo || '').slice(0,600000), replyTo: data.replyTo || null, time: data.time || clock() });
   }
 }
 
@@ -3944,7 +3980,7 @@ function sendChat(event) {
     name: String(window.lockReplyTarget.name || '').slice(0,40),
     text: String(window.lockReplyTarget.text || '').slice(0,180)
   } : null;
-  const packet = { type: 'chat', id: crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2), text, name: profile.name || 'Participante', photo: String(profile.photo || '').slice(0,180000), replyTo, time: clock() };
+  const packet = { type: 'chat', id: crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2), text, name: profile.name || 'Participante', photo: String(profile.photo || '').slice(0,600000), replyTo, time: clock() };
   if (peer && !peer.destroyed) {
     addChatMessage(packet, 'Você');
     connections.forEach(conn => { if (conn.open) { try { conn.send(packet); } catch {} } });
@@ -4066,12 +4102,10 @@ function toggleSharedAudio() {
 }
 
 function toggleRemoteAudio() {
-  const video = $('remote');
-  video.muted = !video.muted;
-  $('muteBtn').innerHTML = video.muted
-    ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6"/></svg>Ativar som'
-    : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/></svg>Silenciar';
+  roomSoundMuted = !roomSoundMuted;
+  applyRoomSoundState();
   refreshTools();
+  say('chatSubtitle', roomSoundMuted ? 'Som da sala silenciado neste dispositivo.' : 'Som da sala ativado neste dispositivo.');
 }
 
 function configurePublicLink() {
@@ -4093,6 +4127,19 @@ function saveBase() {
   say('inviteStatus', 'O convite usa o link fixo do site e o código da sala.');
 }
 
+let roomSoundMuted = false;
+function applyRoomSoundState() {
+  const muted = !!roomSoundMuted;
+  const mainVideo = $('remote'); if (mainVideo) mainVideo.muted = muted;
+  document.querySelectorAll('audio[data-lock-remote-voice]').forEach(audio => { audio.muted = muted; });
+  remoteShareTiles.forEach(entry => { if (entry.video) entry.video.muted = muted; });
+  if ($('toolMute')) {
+    $('toolMute').classList.toggle('tool-red', muted);
+    $('toolMute').title = muted ? 'Ativar som recebido da sala' : 'Silenciar som recebido da sala';
+    $('toolMute').setAttribute('aria-pressed', String(!muted));
+  }
+}
+
 /* ---------- voz em grupo via WebRTC/PeerJS ---------- */
 let micStream = null;
 let micMuted = false;
@@ -4112,14 +4159,15 @@ function playRemoteVoice(owner, incomingStream, call) {
     audio = document.createElement('audio');
     audio.autoplay = true;
     audio.playsInline = true;
+    audio.dataset.lockRemoteVoice = 'true';
     audio.setAttribute('aria-label', 'Áudio de ' + (displayNameForPeer(owner) || 'participante'));
     audio.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-10px;bottom:-10px';
     document.body.append(audio);
     voiceAudioElements.set(owner, audio);
   }
   audio.srcObject = incomingStream;
-  audio.muted = false;
-  audio.volume = 1;
+  audio.muted = !!roomSoundMuted;
+  audio.volume = window.lockGetSettings ? window.lockGetSettings().volume : 1;
   audio.play().catch(() => {
     say('chatSubtitle', 'A voz está conectada. Clique uma vez na página para liberar o áudio do navegador.');
   });
@@ -4220,7 +4268,7 @@ async function toggleVoice() {
   }
   if (!micStream) {
     try {
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: window.lockMicConstraints ? window.lockMicConstraints() : { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
       micMuted = false;
       if (peer && !peer.destroyed) connections.forEach(conn => sendHostVoiceTo(conn));
       else sendViewerVoice();
@@ -4271,7 +4319,7 @@ $('toolCamera').addEventListener('click', startCamera);
 $('toolAudio').addEventListener('click', toggleSharedAudio);
 $('toolMic').addEventListener('click', toggleVoice);
 $('toolMute').addEventListener('click', toggleRemoteAudio);
-$('toolSettings').addEventListener('click', () => { if (typeof window.openLockProfile === 'function') window.openLockProfile(); else configurePublicLink(); });
+$('toolSettings').addEventListener('click', () => { if (typeof window.openLockSettings === 'function') window.openLockSettings(); });
 $('topLink').addEventListener('click', handleTopLink);
 $('configureInviteLink').addEventListener('click', () => { closeInviteModal(); configurePublicLink(); });
 $('toolInvite').addEventListener('click', openInviteModal);
@@ -4425,7 +4473,7 @@ body[data-screen-layout="focus"] .call-person-avatar{width:90px;height:90px;}
 @media(max-width:780px){.call-people-grid{grid-template-columns:1fr}.call-person-card{min-height:145px}.call-person-avatar{width:60px;height:60px}}
 
 </style>
-<div id="lockProfileOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="lockProfileTitle"><section class="lock-profile-card"><div class="lock-profile-row"><img id="lockProfilePreview" class="lock-profile-avatar" alt="Foto de perfil" hidden><div id="lockProfileInitial" class="lock-profile-avatar">L</div><div><h2 id="lockProfileTitle">Seu perfil Lock</h2><p style="margin:4px 0 0">Seu nome e sua foto ficam salvos neste navegador e aparecem apenas para quem estiver conectado à mesma sala.</p></div></div><label for="lockProfileName">Nome de exibição</label><input id="lockProfileName" type="text" maxlength="32" placeholder="Seu nome" autocomplete="nickname"><label for="lockProfilePhoto">Foto de perfil</label><input id="lockProfilePhoto" type="file" accept="image/*"><div class="lock-setting-line"><span>Notificações sonoras</span><label style="margin:0;display:flex;align-items:center;gap:8px"><input id="lockSoundsEnabled" type="checkbox" checked> Ativadas</label></div><p class="lock-profile-hint">Seu nome e sua foto só são compartilhados com as pessoas da mesma sala. Eles não ficam públicos no site. A preferência de som fica salva neste navegador.</p><div class="lock-profile-actions"><button id="lockProfileSave" class="save">Salvar perfil</button><button id="lockProfileClose">Fechar</button></div></section></div>
+<div id="lockProfileOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="lockProfileTitle"><section class="lock-profile-card"><div class="lock-profile-row"><img id="lockProfilePreview" class="lock-profile-avatar" alt="Foto de perfil" hidden><div id="lockProfileInitial" class="lock-profile-avatar">L</div><div><h2 id="lockProfileTitle">Seu perfil Lock</h2><p style="margin:4px 0 0">Seu nome e sua foto ficam salvos neste navegador e aparecem apenas para quem estiver conectado à mesma sala.</p></div></div><label for="lockProfileName">Nome de exibição</label><input id="lockProfileName" type="text" maxlength="32" placeholder="Seu nome" autocomplete="nickname"><label for="lockProfilePhoto">Foto de perfil</label><input id="lockProfilePhoto" type="file" accept="image/*,.gif"><div class="lock-setting-line"><span>Notificações sonoras</span><label style="margin:0;display:flex;align-items:center;gap:8px"><input id="lockSoundsEnabled" type="checkbox" checked> Ativadas</label></div><p class="lock-profile-hint">Seu nome e sua foto só são compartilhados com as pessoas da mesma sala. Eles não ficam públicos no site. A preferência de som fica salva neste navegador.</p><div class="lock-profile-actions"><button id="lockProfileSave" class="save">Salvar perfil</button><button id="lockProfileClose">Fechar</button></div></section></div>
 <script>
 (()=>{
  const byId=id=>document.getElementById(id);
@@ -4440,6 +4488,9 @@ body[data-screen-layout="focus"] .call-person-avatar{width:90px;height:90px;}
    byId('lockProfileName').value=profile.name||'';
    byId('lockProfileInitial').textContent=(profile.name||'L').slice(0,1).toUpperCase();
    const img=byId('lockProfilePreview');img.hidden=!profile.photo;img.src=profile.photo||'';byId('lockProfileInitial').hidden=!!profile.photo;
+   const homeAvatar=document.querySelector('.home-profile-top-avatar');
+   if(homeAvatar){homeAvatar.replaceChildren();if(profile.photo){const image=document.createElement('img');image.src=profile.photo;image.alt='';image.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%';homeAvatar.append(image)}else homeAvatar.textContent=(profile.name||'V').slice(0,1).toUpperCase();}
+   const homeCopy=document.querySelector('.home-profile-top-copy');if(homeCopy){homeCopy.innerHTML='';const strong=document.createElement('strong');strong.textContent=profile.name||'Seu perfil';const small=document.createElement('small');small.textContent='Editar perfil';homeCopy.append(strong,small);}
    // Keep this profile local to this browser: show it in the local participant row and footer only.
    document.querySelectorAll('.user-mini strong').forEach(el=>el.textContent=profile.name||'Lock · Você');
    document.querySelectorAll('.user-mini .avatar').forEach(el=>{
@@ -4455,8 +4506,10 @@ body[data-screen-layout="focus"] .call-person-avatar{width:90px;height:90px;}
  overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
  byId('lockProfilePhoto').addEventListener('change',e=>{
    const file=e.target.files&&e.target.files[0];if(!file)return;
-   if(!file.type.startsWith('image/')){alert('Escolha uma imagem.');return}
+   if(!file.type.startsWith('image/')){alert('Escolha uma imagem ou GIF.');return}
+   if(file.size>400*1024){alert('Escolha uma imagem de até 400 KB para manter o perfil leve e permitir sincronizar com a sala.');e.target.value='';return}
    const reader=new FileReader();reader.onload=()=>{
+     if(file.type==='image/gif'){ profile.photo=String(reader.result||''); draw(); return; }
      const img=new Image();img.onload=()=>{
        const canvas=document.createElement('canvas');const scale=Math.min(1,256/Math.max(img.width,img.height));
        canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
@@ -4684,7 +4737,7 @@ body:has(.app-shell[data-current-view="home"]) .home-profile-top { display:flex;
  window.addEventListener('lock-chat-sent',()=>{setReply(null);hideExtras();});
  const getNames=()=>{try{if(typeof window.getLockChatMentionNames==='function')return window.getLockChatMentionNames();}catch{}return [...document.querySelectorAll('.participant-name')].map(el=>(el.textContent||'').split('·')[0].trim()).filter(Boolean);};
  const mentionPicker=$('mentionPicker'),input=$('chatInput');
- const updateMentions=()=>{if(!input||!mentionPicker)return;const pos=input.selectionStart??input.value.length;const before=input.value.slice(0,pos);const match=before.match(/(^|\s)@([\p{L}\p{N}_.-]{0,32})$/u);if(!match){if(!mentionPicker.hidden){mentionPicker.hidden=true;if($('chatExtras')&&$('emojiPicker').hidden&&$('gifPanel').hidden)$('chatExtras').hidden=true;}return;}const query=(match[2]||'').toLocaleLowerCase();const names=[...new Set(getNames().filter(n=>n&&!/^(você|participante)$/i.test(n)))].filter(n=>n.toLocaleLowerCase().includes(query)).slice(0,8);if(!names.length){mentionPicker.hidden=true;return;}mentionPicker.replaceChildren();names.forEach(name=>{const b=document.createElement('button');b.type='button';b.className='mention-option';const av=document.createElement('span');av.className='avatar avatar-blue';av.textContent=name.slice(0,1).toUpperCase();const label=document.createElement('span');label.textContent=name;const suffix=document.createElement('small');suffix.textContent='mencionar';b.append(av,label,suffix);b.addEventListener('click',()=>{const start=pos-match[2].length-1;input.value=input.value.slice(0,start)+'@'+name+' '+input.value.slice(pos);const caret=start+name.length+2;input.focus();input.setSelectionRange(caret,caret);hideExtras();});mentionPicker.append(b);});showExtras('mentionPicker');};
+ const updateMentions=()=>{if(!input||!mentionPicker)return;const pos=input.selectionStart??input.value.length;const before=input.value.slice(0,pos);const match=before.match(/(^|\s)@([\p{L}\p{N}_.-]{0,32})$/u);if(!match){if(!mentionPicker.hidden){mentionPicker.hidden=true;if($('chatExtras')&&$('emojiPicker').hidden&&(!$('gifPanel')||$('gifPanel').hidden))$('chatExtras').hidden=true;}return;}const query=(match[2]||'').toLocaleLowerCase();const names=[...new Set(getNames().filter(n=>n&&!/^(você|participante)$/i.test(n)))].filter(n=>n.toLocaleLowerCase().includes(query)).slice(0,8);if(!names.length){mentionPicker.hidden=true;return;}mentionPicker.replaceChildren();names.forEach(name=>{const b=document.createElement('button');b.type='button';b.className='mention-option';const av=document.createElement('span');av.className='avatar avatar-blue';av.textContent=name.slice(0,1).toUpperCase();const label=document.createElement('span');label.textContent=name;const suffix=document.createElement('small');suffix.textContent='mencionar';b.append(av,label,suffix);b.addEventListener('click',()=>{const start=pos-match[2].length-1;input.value=input.value.slice(0,start)+'@'+name+' '+input.value.slice(pos);const caret=start+name.length+2;input.focus();input.setSelectionRange(caret,caret);hideExtras();});mentionPicker.append(b);});showExtras('mentionPicker');};
  input?.addEventListener('input',updateMentions); input?.addEventListener('keyup',updateMentions); input?.addEventListener('click',updateMentions);
  // Keep the collapse button operable and show a persistent reopen tab outside the narrow panel.
  const reopen=$('reopenChat'),toggle=$('toggleChat');
@@ -4697,6 +4750,97 @@ body:has(.app-shell[data-current-view="home"]) .home-profile-top { display:flex;
  const toolAudio=$('toolAudio'); if(toolAudio){toolAudio.title='Áudio da tela compartilhada';toolAudio.setAttribute('aria-label','Áudio da tela compartilhada');}
  // Audio notifications default to on, except when the user explicitly switched them off in profile settings.
  try { if(localStorage.getItem('lock-sounds-enabled')===null)localStorage.setItem('lock-sounds-enabled','true'); if($('lockSoundsEnabled'))$('lockSoundsEnabled').checked=localStorage.getItem('lock-sounds-enabled')!=='false'; } catch{}
+})();
+</script>
+
+
+<div id="lockSettingsOverlay" class="lock-settings-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="lockSettingsTitle">
+  <section class="lock-settings-card">
+    <div class="lock-settings-head"><div><h2 id="lockSettingsTitle">Configurações da chamada</h2><p>Ajustes locais para este navegador.</p></div><button id="lockSettingsClose" type="button" aria-label="Fechar configurações">×</button></div>
+    <div class="lock-settings-grid">
+      <label>Resolução da tela e câmera<select id="lockResolution"><option value="auto">Automática</option><option value="720">HD · 720p</option><option value="1080">Full HD · 1080p</option><option value="1440">QHD · 1440p</option></select><small>A captura pode ser limitada pelo navegador, computador ou tela escolhida.</small></label>
+      <label>Qualidade do microfone<select id="lockMicQuality"><option value="standard">Padrão · menor consumo</option><option value="high">Alta · 48 kHz quando disponível</option></select></label>
+      <label class="lock-setting-check"><input id="lockNoiseReduction" type="checkbox" checked><span><strong>Redução de ruído</strong><small>Filtra ruídos de fundo, se suportado pelo navegador.</small></span></label>
+      <label class="lock-setting-check"><input id="lockEchoCancel" type="checkbox" checked><span><strong>Cancelamento de eco</strong><small>Ajuda a evitar que o áudio dos alto-falantes volte pelo microfone.</small></span></label>
+      <label class="lock-setting-check"><input id="lockAutoGain" type="checkbox" checked><span><strong>Volume automático do microfone</strong><small>Ajusta o nível do microfone quando o dispositivo oferece suporte.</small></span></label>
+      <label>Volume recebido<select id="lockSpeakerVolume"><option value="0.5">50%</option><option value="0.75">75%</option><option value="1">100%</option></select></label>
+      <label>Tema<select id="lockThemeChoice"><option value="dark">Escuro</option><option value="light">Claro</option><option value="system">Seguir o sistema</option></select></label>
+    </div>
+    <p id="lockSettingsStatus" class="lock-settings-status" aria-live="polite"></p>
+    <div class="lock-settings-actions"><button id="lockSettingsSave" type="button">Salvar ajustes</button><button id="lockSettingsCancel" type="button">Cancelar</button></div>
+  </section>
+</div>
+<style id="lockcall-v2-1-style">
+/* Keep the home profile card visually prominent while preserving the single edit entry point. */
+.home-profile-top{min-width:170px;max-width:min(280px,calc(100vw - 24px));gap:10px;padding:8px 13px;border-radius:14px;border-color:#2e6658;background:linear-gradient(145deg,#202b2a,#171b22);box-shadow:0 10px 32px #0005}
+.home-profile-top-avatar{width:40px;height:40px;flex:0 0 40px;border:2px solid #16b889;overflow:hidden;font-size:18px}
+.home-profile-top-avatar img{width:100%;height:100%;object-fit:cover}
+.home-profile-top-copy{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}.home-profile-top-copy strong{font-size:12px;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f4f8f7}.home-profile-top-copy small{font-size:10px;color:#7bd9bd}
+/* No stale empty/capturing placeholders when nobody is sharing. */
+.lobby-placeholder{display:none!important}.lobby-share-info,.sharing-state>.share-info-card,#qr{display:none!important}
+#stage[hidden]{display:none!important}
+/* Avatar and message ergonomics */
+.chat-message{display:flex!important;align-items:flex-start;gap:9px;margin:12px 8px;}
+.chat-message-avatar{width:32px;height:32px;flex:0 0 32px;overflow:hidden;display:grid;place-items:center;border-radius:50%;}
+.chat-message-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.chat-message-body{min-width:0;flex:1}.chat-message-meta{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}.chat-message-meta time{font-size:10px;color:#777f90}.chat-message-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}.chat-gif-preview{display:block;max-width:min(260px,100%);max-height:220px;object-fit:contain;border-radius:9px;margin-top:6px}
+/* The old GIF picker is removed: direct GIF/image URLs typed in chat still render inline. */
+#gifToggle,#gifPanel{display:none!important}.chat-composer .composer-tool{flex:0 0 auto}
+#toolSettings{display:grid!important;place-items:center!important}
+#toolSettings svg{width:17px;height:17px}
+.tool-active{background:#087e63!important;border-color:#0aa77f!important;color:#fff!important}
+.lock-settings-backdrop{position:fixed;inset:0;z-index:11000;display:grid;place-items:center;padding:16px;background:#05060bcc;backdrop-filter:blur(7px)}.lock-settings-backdrop[hidden]{display:none!important}
+.lock-settings-card{width:min(560px,100%);max-height:min(88dvh,760px);overflow:auto;padding:21px;border:1px solid #373a48;border-radius:18px;background:#191b23;color:#f2f3f9;box-shadow:0 26px 90px #000b}
+.lock-settings-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:17px}.lock-settings-head h2{margin:0;font-size:20px}.lock-settings-head p{margin:5px 0 0;color:#999fb0;font-size:12px}.lock-settings-head button{width:32px;height:32px;border:1px solid #414453;border-radius:9px;background:#272a35;color:#fff;font-size:23px;cursor:pointer}
+.lock-settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.lock-settings-grid>label{display:flex;flex-direction:column;gap:7px;min-width:0;color:#c4c9d8;font-size:12px}.lock-settings-grid select{width:100%;min-height:39px;padding:8px 10px;border:1px solid #3c404e;border-radius:9px;background:#101218;color:#f3f5fb;font:inherit}.lock-settings-grid small{color:#8b91a3;font-size:10px;line-height:1.45}.lock-settings-grid .lock-setting-check{display:flex;flex-direction:row;align-items:flex-start;gap:9px;padding:10px;border:1px solid #333642;border-radius:10px;background:#20222b}.lock-setting-check input{margin:2px 0 0;accent-color:#0db58a}.lock-setting-check span{display:flex;flex-direction:column;gap:4px}.lock-setting-check strong{font-size:11px;color:#e4e7f0}.lock-settings-status{min-height:16px;color:#6ce0bd;font-size:11px}.lock-settings-actions{display:flex;gap:8px;justify-content:flex-end}.lock-settings-actions button{padding:10px 15px;border:1px solid #3b3e4c;border-radius:9px;background:#262933;color:#fff;font-weight:700;cursor:pointer}.lock-settings-actions #lockSettingsSave{background:#078768;border-color:#078768}
+@media(max-width:560px){.lock-settings-grid{grid-template-columns:1fr}.home-profile-top{top:10px;right:10px}}
+</style>
+<script id="lockcall-v2-1-settings-and-controls">
+(()=>{
+ const $=id=>document.getElementById(id);
+ const KEY='lock-call-settings-v1';
+ const defaults={resolution:'auto',micQuality:'standard',noiseReduction:true,echoCancellation:true,autoGain:true,volume:1,theme:'dark'};
+ let settings={...defaults};
+ try{settings={...defaults,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{}
+ const overlay=$('lockSettingsOverlay');
+ const applyTheme=theme=>{const choice=theme||settings.theme||'dark';let light=choice==='light';if(choice==='system')light=!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches);document.body.classList.toggle('light-theme',light);const toggle=$('themeToggle');if(toggle)toggle.classList.toggle('selected',!light)};
+ const fill=()=>{ $('lockResolution').value=settings.resolution; $('lockMicQuality').value=settings.micQuality; $('lockNoiseReduction').checked=!!settings.noiseReduction; $('lockEchoCancel').checked=!!settings.echoCancellation; $('lockAutoGain').checked=!!settings.autoGain; $('lockSpeakerVolume').value=String(settings.volume); $('lockThemeChoice').value=settings.theme; };
+ const read=()=>({resolution:$('lockResolution').value,micQuality:$('lockMicQuality').value,noiseReduction:$('lockNoiseReduction').checked,echoCancellation:$('lockEchoCancel').checked,autoGain:$('lockAutoGain').checked,volume:Number($('lockSpeakerVolume').value)||1,theme:$('lockThemeChoice').value});
+ window.lockGetSettings=()=>({...settings});
+ window.lockMicConstraints=()=>({echoCancellation:!!settings.echoCancellation,noiseSuppression:!!settings.noiseReduction,autoGainControl:!!settings.autoGain, ...(settings.micQuality==='high'?{sampleRate:{ideal:48000},channelCount:{ideal:1}}:{sampleRate:{ideal:44100},channelCount:{ideal:1}})});
+ window.openLockSettings=()=>{fill();$('lockSettingsStatus').textContent='';overlay.hidden=false;$('lockSettingsClose').focus()};
+ const close=()=>{overlay.hidden=true};
+ $('lockSettingsClose').addEventListener('click',close);$('lockSettingsCancel').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
+ $('lockSettingsSave').addEventListener('click',async()=>{
+   settings=read();try{localStorage.setItem(KEY,JSON.stringify(settings))}catch{}
+   applyTheme(settings.theme);
+   if(typeof micStream!=='undefined'&&micStream){for(const track of micStream.getAudioTracks()){try{await track.applyConstraints(window.lockMicConstraints())}catch{}}}
+   if(typeof voiceAudioElements!=='undefined'&&voiceAudioElements&&voiceAudioElements.forEach){voiceAudioElements.forEach(audio=>{audio.volume=settings.volume})}
+   document.querySelectorAll('audio[data-lock-remote-voice]').forEach(audio=>{audio.volume=settings.volume});
+   const remoteVideo=$('remote');if(remoteVideo)remoteVideo.volume=settings.volume;
+   if(typeof remoteShareTiles!=='undefined'&&remoteShareTiles&&remoteShareTiles.forEach){remoteShareTiles.forEach(entry=>{if(entry.video)entry.video.volume=settings.volume})}
+   $('lockSettingsStatus').textContent='Ajustes salvos neste navegador. Alguns dispositivos podem ignorar opções não suportadas.';
+   setTimeout(close,900);
+ });
+ // Persist theme changes made by the existing quick theme buttons.
+ ['themeToggle','rightTheme'].forEach(id=>$(id)?.addEventListener('click',()=>setTimeout(()=>{settings.theme=document.body.classList.contains('light-theme')?'light':'dark';try{localStorage.setItem(KEY,JSON.stringify(settings))}catch{}fill();},0)));
+ const originalToggle=window.toggleTheme;
+ if(typeof originalToggle==='function'){
+   window.toggleTheme=function(){originalToggle();settings.theme=document.body.classList.contains('light-theme')?'light':'dark';try{localStorage.setItem(KEY,JSON.stringify(settings))}catch{}fill();};
+ }
+ // Always expose the room settings, never the profile editor from inside the call.
+ // Apply sound level and theme defaults; room audio is unmuted unless the user toggles it locally.
+ applyTheme(settings.theme);
+ const originalNotify=window.notifyLockSound;
+ // Profile-avatar display is refreshed by profile.js; refresh again after local settings load if available.
+ if(typeof window.openLockProfile==='function'){
+   const previousOpen=window.openLockProfile;
+   window.openLockProfile=function(){previousOpen();setTimeout(()=>{const avatar=document.querySelector('.home-profile-top-avatar');if(avatar){avatar.replaceChildren();const profile=window.getLockLocalProfile?.()||{};if(profile.photo){const img=document.createElement('img');img.src=profile.photo;img.alt='';avatar.append(img)}else avatar.textContent=(profile.name||'V').slice(0,1).toUpperCase();}},50)};
+ }
+ // Recompute controls after room joins/roster updates, with a little retry for WebRTC setup.
+ const refresh=()=>{try{if(typeof refreshTools==='function')refreshTools()}catch{}};
+ document.addEventListener('visibilitychange',refresh);
+ setTimeout(refresh,0);
 })();
 </script>
 
