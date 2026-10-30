@@ -4,7 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#17181d">
-<title>Lock · Sala privada</title>
+<title>LockCall · Salas de voz e compartilhamento de tela</title>
+<meta name="description" content="LockCall é uma forma simples de criar salas privadas, conversar por voz, compartilhar tela e convidar amigos pelo navegador.">
+<meta name="keywords" content="LockCall, Lock, chamada de voz, sala privada, compartilhar tela, call online, conversar pelo navegador">
+<meta name="application-name" content="LockCall">
+<meta property="og:type" content="website">
+<meta property="og:title" content="LockCall · Salas de voz e compartilhamento de tela">
+<meta property="og:description" content="Crie uma sala privada, converse por voz e compartilhe sua tela direto do navegador.">
+<meta property="og:url" content="https://gueten.github.io/lock-site/">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://gueten.github.io/lock-site/">
 <style>
 :root {
   color-scheme: dark;
@@ -322,8 +331,49 @@ body.popup .preview-wrap { margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 
 </style>
+
+<style>
+.screen-share-warning{display:flex;align-items:flex-start;gap:11px;width:100%;margin:12px 0 14px;padding:13px 14px;border:1px solid rgba(239,83,91,.48);border-radius:11px;background:rgba(133,28,38,.16);color:#ffd5d7;text-align:left}
+.screen-share-warning[hidden],.screen-share-warning a[hidden],.screen-share-warning small[hidden]{display:none!important}
+.screen-share-warning-icon{display:grid;place-items:center;flex:0 0 23px;width:23px;height:23px;border-radius:50%;background:#9c2932;color:#fff;font-size:15px;font-weight:900}
+.screen-share-warning-content{min-width:0;display:flex;flex-direction:column;gap:5px}
+.screen-share-warning strong{color:#ff858a;font-size:12px;font-weight:850}
+.screen-share-warning p{margin:0;color:#efbfc2;font-size:11px;line-height:1.5}
+.screen-share-warning-suggestion{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.screen-share-warning a{display:inline-flex;align-items:center;color:#ff9da2;font-size:11px;font-weight:800;text-decoration:underline;text-underline-offset:2px}
+.screen-share-warning small{display:block;color:#c99599;font-size:9px;line-height:1.5}
+body.light-theme .screen-share-warning{background:#fff0f0;border-color:#e7a9ad;color:#71232a}
+body.light-theme .screen-share-warning strong{color:#b32632}
+body.light-theme .screen-share-warning p{color:#853b42}
+body.light-theme .screen-share-warning small{color:#80575b}
+@media(max-width:560px){.screen-share-warning{padding:11px}.screen-share-warning-icon{flex-basis:21px;width:21px;height:21px}}
+</style>
+
+
+<style>
+.room-connection-notice{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0 13px;padding:12px 13px;border:1px solid rgba(238,76,89,.55);border-radius:11px;background:rgba(130,25,37,.2);color:#ffe0e2}
+.room-connection-notice[hidden]{display:none!important}
+.room-connection-notice-copy{min-width:0;display:flex;flex-direction:column;gap:4px}
+.room-connection-notice-copy strong{font-size:12px;font-weight:850;color:#ff858d}
+.room-connection-notice-copy p{margin:0;color:#f0c6c9;font-size:11px;line-height:1.5}
+#watchRetryButton{flex:0 0 auto;background:#8d2731;border-color:#bd4b56;color:#fff}
+#watchRetryButton:disabled{opacity:.55;cursor:wait}
+body.light-theme .room-connection-notice{background:#fff0f0;border-color:#e3a0a6;color:#71232a}
+body.light-theme .room-connection-notice-copy strong{color:#ae2833}
+body.light-theme .room-connection-notice-copy p{color:#803c43}
+body.light-theme #watchRetryButton{background:#b32c38;border-color:#b32c38;color:#fff}
+@media(max-width:560px){.room-connection-notice{align-items:stretch;flex-direction:column}.room-connection-notice-copy p{font-size:10px}#watchRetryButton{width:100%}}
+</style>
+
+
+<style>
+#toolMic.mic-pending{outline:2px solid rgba(234,179,8,.45);outline-offset:2px}
+</style>
 </head>
 <body>
+<button id="homeProfileTop" class="home-profile-top" type="button" aria-label="Editar perfil" title="Editar perfil">
+  <span class="home-profile-top-avatar">☺</span><span class="home-profile-top-copy"><strong>Seu perfil</strong><small>Editar perfil</small></span>
+</button>
 <div class="app-shell">
   <header class="topbar">
     <div class="top-left">
@@ -339,14 +389,14 @@ body.popup .preview-wrap { margin-top: 8px; }
       <button class="tool-btn tool-red" id="toolMic" title="Entrar na voz" aria-label="Entrar na voz" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/><path class="slash" d="m4 4 16 16"/></svg>
       </button>
-      <button class="tool-btn tool-red" id="toolAudio" title="Ativar ou desativar áudio compartilhado" aria-label="Áudio compartilhado" disabled>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4Z"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4m-4 0h8"/><path class="slash" d="m4 4 16 16"/></svg>
+      <button class="tool-btn" id="toolAudio" title="Ativar ou desativar o áudio da tela compartilhada" aria-label="Áudio da tela" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9z"/><path d="M16 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/><path class="slash" d="m4 4 16 16"/></svg>
       </button>
       <button class="tool-btn" id="toolMute" title="Ativar ou desativar som" aria-label="Som" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/></svg>
       </button>
       <span class="tool-divider"></span>
-      <button class="tool-btn" id="toolSettings" title="Configurar link público" aria-label="Configurações">
+      <button class="tool-btn" id="toolSettings" title="Configurações da chamada" aria-label="Configurações da chamada">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1 1.2.9-1.4 2.4-1.4-.6a8 8 0 0 1-1.7 1l-.2 1.5h-2.8l-.2-1.5a8 8 0 0 1-1.7-1l-1.4.6-1.4-2.4 1.2-.9a7 7 0 0 1 0-2l-1.2-.9 1.4-2.4 1.4.6a8 8 0 0 1 1.7-1l.2-1.5h2.8l.2 1.5a8 8 0 0 1 1.7 1l1.4-.6 1.4 2.4-1.2.9a7 7 0 0 1 0 2Z" transform="translate(-1 -1)"/></svg>
       </button>
       <button class="tool-btn" id="toolScreen" title="Compartilhar tela" aria-label="Compartilhar tela">
@@ -376,15 +426,6 @@ body.popup .preview-wrap { margin-top: 8px; }
         <div class="participant-row"><span class="avatar avatar-blue">V</span><span class="participant-name">Você <small>· anfitrião</small></span><span class="participant-state green-dot"></span></div>
       </div>
       <div class="sidebar-spacer"></div>
-      <div class="join-card">
-        <div class="join-title"><span class="tiny-link">↳</span><h3>Entrar em uma sala</h3></div>
-        <p>Digite o código que recebeu para assistir à transmissão.</p>
-        <div class="join-fields">
-          <input id="codeIn" class="field code-in" placeholder="K7P2QM" maxlength="80" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Código da transmissão">
-          <button id="watchBtn" class="btn primary join-btn">Entrar</button>
-        </div>
-        <p class="sidebar-hint">Não precisa de conta. Só do código certo.</p>
-      </div>
     </aside>
 
     <main class="center-panel">
@@ -395,12 +436,21 @@ body.popup .preview-wrap { margin-top: 8px; }
       <section id="home" class="main-state home-state">
         <div class="empty-illustration" aria-hidden="true"><div class="screen-outline"><span></span><i></i></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="spark spark-one">✦</div><div class="spark spark-two">✧</div></div>
         <div class="eyebrow"><span class="eyebrow-dot"></span> COMPARTILHAMENTO PRIVADO</div>
-        <h1>Crie sua sala no Lock.</h1>
-        <p class="state-description">Crie uma sala primeiro. Depois, compartilhe sua tela quando estiver pronto ou envie o convite para alguém entrar.</p>
+        <h1>Crie sua sala no LockCall.</h1>
+        <p class="state-description">Crie uma sala privada para conversar por voz, compartilhar sua tela e convidar amigos pelo navegador.</p>
         <div class="primary-actions">
           <button id="createRoomBtn" class="btn primary action-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/><rect x="3" y="3" width="18" height="18" rx="4"/></svg>Criar sala</button>
           <button id="lockProfileFromHome" class="btn action-btn secondary" type="button">Editar perfil</button>
         </div>
+      <div class="join-card home-join-card">
+        <div class="join-title"><span class="tiny-link">↳</span><h3>Entrar em uma sala</h3></div>
+        <p>Digite o código que recebeu para assistir à transmissão.</p>
+        <div class="join-fields">
+          <input id="codeIn" class="field code-in" placeholder="K7P2QM" maxlength="80" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Código da transmissão">
+          <button id="watchBtn" class="btn primary join-btn">Entrar</button>
+        </div>
+        <p class="sidebar-hint">Você pode entrar, assistir e conversar mesmo que seu navegador não consiga transmitir a própria tela.</p>
+      </div>
         <div class="home-footer"><span class="footer-lock">▣</span><span>Compartilhar a tela é opcional e não começa automaticamente.</span><button id="copyInviteHome" class="text-button">Como convidar?</button></div>
       </section>
 
@@ -409,7 +459,15 @@ body.popup .preview-wrap { margin-top: 8px; }
         <div class="lobby-placeholder"><div class="screen-outline"><span></span><i></i></div><div><h2>Aguardando compartilhamento</h2><p>Você continua conectado à sala. Criar a sala não liga sua tela nem pede permissão para capturar nada.</p></div></div><div id="lobbyPeopleGrid" class="call-people-grid"></div>
         <div class="lobby-actions"><button id="startShare" class="btn primary action-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M8 21h8m-4-4v4"/></svg>Compartilhar tela</button><button id="startCamera" class="btn action-btn secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3z"/></svg>Compartilhar câmera</button><button id="lobbyInviteBtn" class="btn action-btn secondary">Compartilhar convite</button></div>
         <label class="check"><input type="checkbox" id="withAudio" checked> Incluir áudio quando disponível</label>
-        <p id="noShare" class="note" hidden>Este navegador não consegue capturar a tela. Abra o Lock em um computador para transmitir; pelo celular você pode assistir.</p>
+        <div id="lobbyShareWarning" class="screen-share-warning" data-screen-share-warning hidden role="alert">
+          <span class="screen-share-warning-icon" aria-hidden="true">!</span>
+          <div class="screen-share-warning-content">
+            <strong>Não foi possível transmitir a tela</strong>
+            <p data-warning-copy></p>
+            <p class="screen-share-warning-suggestion"><span data-warning-suggestion></span> <a data-kiwi-link href="https://github.com/kiwibrowser/src.next/releases" target="_blank" rel="noopener noreferrer" hidden>Baixar Kiwi Browser pelo GitHub oficial</a></p>
+            <small data-kiwi-caution hidden>Atenção: o projeto informa que o Kiwi não recebe mais atualizações do Chromium desde janeiro de 2025. Baixe somente pelo repositório oficial e considere o risco de usar um navegador desatualizado.</small>
+          </div>
+        </div>
         <div class="layout-toolbar"><span>Ajustar telas</span><button type="button" class="btn compact selected" data-screen-layout="grid">Grade</button><button type="button" class="btn compact" data-screen-layout="focus">Foco</button></div>
         <div id="lobbyRemoteGrid" class="remote-share-grid" hidden></div>
         <div class="share-info-card lobby-share-info"><div class="share-info-heading"><div><span class="field-label">CÓDIGO DA SALA</span><div id="lobbyCodeOut" class="code">------</div></div><button id="lobbyCopyCode" class="btn compact">Copiar código</button></div>
@@ -429,13 +487,27 @@ body.popup .preview-wrap { margin-top: 8px; }
       </section>
 
       <section id="watching" class="main-state watching-state" hidden>
-        <div class="state-topline"><div><span class="live-pill waiting-pill"><i></i> SALA REMOTA</span><h1>Assistindo à transmissão</h1><p class="state-description">A tela compartilhada aparecerá abaixo.</p></div><button id="leaveBtn" class="btn danger-outline">Sair da sala</button></div><div class="layout-toolbar"><span>Ajustar telas</span><button type="button" class="btn compact selected" data-screen-layout="grid">Grade</button><button type="button" class="btn compact" data-screen-layout="focus">Foco</button></div>
-        <div id="stage" class="stage screen-tile"><video id="remote" autoplay muted playsinline></video><div id="info" class="info" role="status">Conectando…</div><button class="tile-fullscreen" type="button" aria-label="Tela cheia da transmissão" title="Tela cheia">⛶</button><span class="stage-corner-label">LOCK · LIVE</span></div>
-        <div id="watchPeopleGrid" class="call-people-grid"></div><div id="remoteGrid" class="remote-share-grid" hidden></div><div class="viewer-controls"><button id="muteBtn" class="btn compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6"/></svg>Ativar som</button><button id="fsBtn" class="btn compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>Tela cheia</button></div>
+        <div class="state-topline"><div><span class="live-pill waiting-pill"><i></i> SALA REMOTA</span><h1>Assistindo à transmissão</h1><p class="state-description">A tela compartilhada aparecerá abaixo.</p></div><button id="leaveBtn" class="btn danger-outline">Sair da sala</button></div>
+        <div id="watchConnectionNotice" class="room-connection-notice" hidden role="alert" aria-live="assertive">
+          <div class="room-connection-notice-copy"><strong>Não foi possível conectar ao canal</strong><p id="watchConnectionMessage">A conexão com a sala falhou. Isso é diferente da limitação de transmissão de tela.</p></div>
+          <button id="watchRetryButton" type="button" class="btn compact">Tentar novamente</button>
+        </div>
+        <div id="watchShareWarning" class="screen-share-warning" data-screen-share-warning hidden role="alert">
+          <span class="screen-share-warning-icon" aria-hidden="true">!</span>
+          <div class="screen-share-warning-content">
+            <strong>Não foi possível transmitir a tela</strong>
+            <p data-warning-copy></p>
+            <p class="screen-share-warning-suggestion"><span data-warning-suggestion></span> <a data-kiwi-link href="https://github.com/kiwibrowser/src.next/releases" target="_blank" rel="noopener noreferrer" hidden>Baixar Kiwi Browser pelo GitHub oficial</a></p>
+            <small data-kiwi-caution hidden>Atenção: o projeto informa que o Kiwi não recebe mais atualizações do Chromium desde janeiro de 2025. Baixe somente pelo repositório oficial e considere o risco de usar um navegador desatualizado.</small>
+          </div>
+        </div><div class="layout-toolbar"><span>Ajustar telas</span><button type="button" class="btn compact selected" data-screen-layout="grid">Grade</button><button type="button" class="btn compact" data-screen-layout="focus">Foco</button></div>
+        <div id="stage" class="stage screen-tile"><video id="remote" autoplay playsinline></video><div id="info" class="info" role="status">Conectando…</div><button class="tile-fullscreen" type="button" aria-label="Tela cheia da transmissão" title="Tela cheia">⛶</button><span class="stage-corner-label">LOCK · LIVE</span></div>
+        <div id="watchPeopleGrid" class="call-people-grid"></div><div id="remoteGrid" class="remote-share-grid" hidden><div id="selfSharePreviewTile" class="remote-share-tile screen-tile self-share-preview" hidden><video id="selfSharePreview" muted autoplay playsinline></video><button class="tile-fullscreen" type="button" aria-label="Tela cheia da sua transmissão" title="Tela cheia">⛶</button><span class="remote-share-label" id="selfSharePreviewLabel">Você · sua tela</span></div></div><div class="viewer-controls"><button id="muteBtn" class="btn compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6"/></svg>Ativar som</button><button id="fsBtn" class="btn compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>Tela cheia</button></div>
       </section>
     </main>
 
-    <aside class="panel right-panel" aria-label="Chat e controles da sala">
+    <button id="reopenChat" class="reopen-chat" type="button" aria-label="Abrir chat" title="Abrir chat" hidden>Chat</button>
+    <aside class="panel right-panel" aria-label="Chat da sala">
       <div class="room-actions">
         <button id="inviteBtn" class="room-action invite-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg><span>Convidar</span></button>
         <button id="rightTheme" class="room-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9c0-.6-.5-1-1.1-1H16a2 2 0 0 1-2-2c0-.6.3-1.2.8-1.6.5-.4.7-.9.7-1.4A3 3 0 0 0 12 3Z"/></svg><span>Tema da sala</span></button>
@@ -447,9 +519,30 @@ body.popup .preview-wrap { margin-top: 8px; }
         <div class="setting-fields"><input id="baseIn" class="field" placeholder="https://seu-site.netlify.app/" aria-label="Endereço do site"><button id="saveBase" class="btn primary compact">Salvar</button></div>
         <p id="baseStatus" class="setting-status"></p>
       </details>
-      <div class="chat-heading"><div><h2>Chat</h2><span id="chatSubtitle">Mensagens da sala</span></div><button class="mini-icon" id="clearChat" title="Limpar chat local" aria-label="Limpar chat local"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></div>
+      <div class="lock-sidebar-tabs" role="tablist" aria-label="Painel lateral">
+        <button id="lockFriendsTab" class="lock-sidebar-tab" type="button" role="tab" aria-controls="lockFriendsPanel">Amigos <span id="lockFriendsBadge" class="lock-social-badge" hidden>0</span></button>
+        <button id="lockChatTab" class="lock-sidebar-tab" type="button" role="tab" aria-controls="chatMessages">Chat</button>
+      </div>
+      <section id="lockFriendsPanel" class="lock-friends-panel" hidden aria-label="Amigos e pedidos">
+        <div class="lock-friends-head"><div><h2>Seus amigos</h2><p>Adicione pessoas da sala ou use um código de amigo.</p></div><button id="lockCopyFriendCode" class="lock-copy-code" type="button" title="Copiar seu código de amigo">Copiar código</button></div>
+        <div class="lock-own-code"><span>SEU CÓDIGO</span><strong id="lockMyFriendCode">GERANDO…</strong></div>
+        <form id="lockAddFriendForm" class="lock-add-friend-form"><input id="lockFriendCodeInput" class="field" type="text" maxlength="24" placeholder="Código de amigo" autocomplete="off" spellcheck="false" aria-label="Código de amigo"><button type="submit" class="btn primary compact">Adicionar</button></form>
+        <p id="lockSocialStatus" class="lock-social-status" role="status">Conectando ao serviço de amigos…</p>
+        <div class="lock-social-section" id="lockRoomInviteSection" hidden><h3>Convites de sala <span id="lockRoomInviteBadge" class="lock-social-badge" hidden>0</span></h3><div id="lockRoomInvites" class="lock-social-list"></div></div>
+        <div class="lock-social-section" id="lockJoinRequestSection" hidden><h3>Pedidos para entrar <span id="lockJoinBadge" class="lock-social-badge" hidden>0</span></h3><div id="lockJoinRequests" class="lock-social-list"></div></div>
+        <div class="lock-social-section" id="lockFriendRequestSection" hidden><h3>Pedidos de amizade <span id="lockFriendRequestBadge" class="lock-social-badge" hidden>0</span></h3><div id="lockFriendRequests" class="lock-social-list"></div></div>
+        <div class="lock-social-section lock-friends-list-section"><h3>Amigos <span id="lockFriendsCount">0</span></h3><div id="lockFriendList" class="lock-social-list"><p class="lock-social-empty">Ainda não há amigos adicionados.</p></div></div>
+      </section>
+      <div class="chat-heading"><div><h2>Chat</h2><span id="chatSubtitle">Mensagens da sala</span></div><div class="chat-heading-actions"><button class="mini-icon" id="toggleChat" title="Recolher chat" aria-label="Recolher chat">›</button></div></div>
+      <div id="chatTypingIndicator" class="chat-typing-indicator" hidden aria-live="polite"></div>
       <div id="chatMessages" class="chat-messages" aria-live="polite"><div class="chat-empty"><span class="chat-bubble-icon">✦</span><strong>Nenhuma mensagem ainda.</strong><span>As mensagens enviadas aqui aparecem para quem está na sala.</span></div></div>
-      <form id="chatForm" class="chat-composer"><button type="button" id="chatPlus" class="composer-plus" title="Informações do chat" aria-label="Informações do chat">+</button><input id="chatInput" class="field chat-input" placeholder="Digite uma mensagem..." maxlength="500" autocomplete="off" aria-label="Mensagem do chat"><button type="submit" class="send-btn" title="Enviar mensagem" aria-label="Enviar mensagem"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 20 18-8L3 4l2 7 9 1-9 1z"/></svg></button></form>
+      <div id="chatReplyBar" class="chat-reply-bar" hidden><span id="chatReplyLabel"></span><button type="button" id="cancelChatReply" aria-label="Cancelar resposta" title="Cancelar resposta">×</button></div>
+      <div id="chatExtras" class="chat-extras" hidden>
+        <div id="emojiPicker" class="emoji-picker" hidden aria-label="Escolher emoji"></div>
+        
+        <div id="mentionPicker" class="mention-picker" hidden></div>
+      </div>
+      <form id="chatForm" class="chat-composer"><button type="button" id="chatPlus" class="composer-plus" title="Ajuda do chat" aria-label="Ajuda do chat" hidden>+</button><button type="button" id="emojiToggle" class="composer-tool" title="Escolher emoji" aria-label="Escolher emoji">☺</button><input id="chatInput" class="field chat-input" placeholder="Digite uma mensagem..." maxlength="500" autocomplete="off" aria-label="Mensagem do chat"><button type="submit" class="send-btn" title="Enviar mensagem" aria-label="Enviar mensagem"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 20 18-8L3 4l2 7 9 1-9 1z"/></svg></button></form>
       <div class="user-footer"><div class="user-mini"><span class="avatar avatar-blue">V</span><div><strong>Lock · Você</strong><small id="footerStatus">Conectado localmente</small></div></div><div class="user-footer-actions"><button id="footerInvite" title="Copiar convite" aria-label="Copiar convite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg></button><button id="footerExit" title="Sair ou encerrar" aria-label="Sair ou encerrar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3m10-8h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/></svg></button></div></div>
     </aside>
   </div>
@@ -2786,7 +2879,42 @@ const PREFIX = 'lock-room-';
 const ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const isExt = /-extension:$/.test(location.protocol);
 const canCapture = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+const isMobileBrowser = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+const isAndroidBrowser = /Android/i.test(navigator.userAgent || '');
+const screenShareUnavailableMessage = isMobileBrowser
+  ? 'Seu navegador não permite transmitir a própria tela. Isso não impede assistir às telas de outras pessoas nem conversar normalmente no canal de voz, desde que você esteja conectado à sala.'
+  : 'Este navegador não oferece captura de tela. Você continua podendo participar da sala; tente um Chrome ou Edge atualizado usando HTTPS.';
 const canUseCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+
+function showScreenShareWarning(reason = 'unsupported') {
+  const unsupported = reason === 'unsupported';
+  let copy = unsupported
+    ? 'Seu navegador não permite transmitir a própria tela. Você ainda pode entrar na sala, assistir às transmissões das outras pessoas, conversar no chat e falar pelo microfone normalmente. Somente o compartilhamento da sua própria tela fica indisponível.'
+    : 'A tentativa de transmitir sua própria tela falhou. Isso não impede entrar na sala, assistir às transmissões das outras pessoas, conversar no chat ou falar pelo microfone normalmente. A captura da sua tela é uma função separada.';
+  let suggestion = '';
+  if (isAndroidBrowser) {
+    suggestion = 'No Android, você pode tentar abrir o LockCall no Kiwi Browser:';
+  } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent || '')) {
+    suggestion = 'O Kiwi Browser é uma opção para Android e não está disponível para iPhone/iPad. A transmissão depende do suporte do navegador e do sistema.';
+  } else {
+    suggestion = 'No computador, tente abrir o LockCall em uma versão atualizada do Chrome ou Edge, usando HTTPS.';
+  }
+  document.querySelectorAll('[data-screen-share-warning]').forEach(panel => {
+    panel.hidden = false;
+    const copyNode = panel.querySelector('[data-warning-copy]');
+    const suggestionNode = panel.querySelector('[data-warning-suggestion]');
+    const kiwiLink = panel.querySelector('[data-kiwi-link]');
+    const kiwiCaution = panel.querySelector('[data-kiwi-caution]');
+    if (copyNode) copyNode.textContent = copy;
+    if (suggestionNode) suggestionNode.textContent = suggestion;
+    if (kiwiLink) kiwiLink.hidden = !isAndroidBrowser;
+    if (kiwiCaution) kiwiCaution.hidden = !isAndroidBrowser;
+  });
+}
+
+function hideScreenShareWarning() {
+  document.querySelectorAll('[data-screen-share-warning]').forEach(panel => { panel.hidden = true; });
+}
 const selfUrl = 'https://gueten.github.io/lock-site/';
 const LOCK_BASE = 'https://gueten.github.io/lock-site/';
 
@@ -2856,7 +2984,27 @@ let vpeer = null;
 let vconn = null;
 let viewerCode = '';
 let chatHistory = [];
+let lockActiveReplyTarget = null;
+const roomTypingUsers = new Map();
+let localTypingActive = false;
+let localTypingStopTimer = null;
+let localTypingLastSentAt = 0;
+let watchConnectionTimer = null;
 let roomStarted = false;
+let closingHostRoom = false;
+const ACTIVE_HOST_ROOM_KEY = 'lock-active-host-room-v1';
+const LOCK_CLIENT_ID = (() => {
+  try {
+    let id = localStorage.getItem('lock-browser-client-id-v1');
+    if (!id) {
+      id = (crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), x => x.toString(16).padStart(2,'0')).join(''));
+      localStorage.setItem('lock-browser-client-id-v1', id);
+    }
+    return id;
+  } catch {
+    return crypto.randomUUID ? crypto.randomUUID() : newCode() + newCode();
+  }
+})();
 
 let autoCorrectedRepoUrl = false;
 
@@ -2909,11 +3057,21 @@ function refreshCount() {
   renderParticipants();
 }
 
-function participantRow(initial, name, role, stateClass = 'green-dot', photo = '') {
+function nameHue(name) {
+  const value = String(name || 'Participante').trim().toLocaleLowerCase();
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i++) { hash ^= value.charCodeAt(i); hash = Math.imul(hash, 16777619); }
+  return (hash >>> 0) % 360;
+}
+function nameColor(name) { return `hsl(${nameHue(name)} 76% 70%)`; }
+function nameGradient(name) { const hue = nameHue(name); return `linear-gradient(145deg, hsl(${hue} 78% 66%), hsl(${(hue + 35) % 360} 72% 45%))`; }
+
+function participantRow(initial, name, role, stateClass = 'green-dot', photo = '', socialId = '') {
   const row = document.createElement('div');
   row.className = 'participant-row';
   const avatar = document.createElement('span');
   avatar.className = `avatar ${initial === 'V' ? 'avatar-blue' : 'avatar-green'}`;
+  avatar.style.background = nameGradient(name);
   if (photo) {
     const image = document.createElement('img');
     image.src = photo; image.alt = ''; image.loading = 'lazy';
@@ -2922,24 +3080,54 @@ function participantRow(initial, name, role, stateClass = 'green-dot', photo = '
   } else avatar.textContent = initial;
   const label = document.createElement('span');
   label.className = 'participant-name';
+  label.style.color = nameColor(name);
   label.append(document.createTextNode(name));
   const detail = document.createElement('small');
   detail.textContent = ` · ${role}`;
   label.append(detail);
   const state = document.createElement('span');
   state.className = stateClass;
-  row.append(avatar, label, state);
+  row.append(avatar, label);
+  if (socialId && socialId !== String(window.lockSocialUserId || '') && typeof window.lockSendFriendRequest === 'function') {
+    const add = document.createElement('button');
+    add.type = 'button';
+    add.className = 'participant-add-friend';
+    add.title = 'Adicionar aos amigos';
+    add.setAttribute('aria-label', 'Adicionar ' + name + ' aos amigos');
+    const friendState = typeof window.lockFriendActionState === 'function' ? window.lockFriendActionState(socialId) : 'add';
+    add.textContent = friendState === 'friend' ? '−' : (friendState === 'pending' ? '…' : '+');
+    add.disabled = friendState === 'pending';
+    if (friendState === 'friend') { add.title = 'Remover dos amigos'; add.setAttribute('aria-label','Remover '+name+' dos amigos'); add.classList.add('is-friend'); }
+    else if (friendState === 'pending') add.title = 'Pedido de amizade enviado';
+    add.addEventListener('click', event => {
+      event.preventDefault(); event.stopPropagation();
+      if (friendState === 'friend' && typeof window.lockRemoveFriend === 'function') window.lockRemoveFriend(socialId);
+      else window.lockSendFriendRequest(socialId, { name, photo });
+    });
+    row.append(state, add);
+  } else row.append(state);
+
   return row;
 }
 
 function localProfileSnapshot() {
   try {
     const p = typeof window.getLockLocalProfile === 'function' ? window.getLockLocalProfile() : {};
-    return { name: String(p.name || 'Lock user').slice(0, 32), photo: String(p.photo || '').slice(0, 180000) };
+    return { name: String(p.name || 'Lock user').slice(0, 32), photo: String(p.photo || '').slice(0, 600000), socialId: String(window.lockSocialUserId || '').slice(0, 16) };
   } catch { return { name: 'Lock user', photo: '' }; }
 }
 
 function profileForPeer(id) { return participantProfiles.get(id) || { name: 'Conectando…', photo: '' }; }
+window.getLockChatMentionNames = function() {
+  const names = [localProfileSnapshot().name];
+  if (peer && !peer.destroyed) {
+    for (const conn of connections.values()) { const p = participantProfiles.get(conn.peer); if (p && p.name) names.push(p.name); }
+  }
+  if (vpeer && !vpeer.destroyed) {
+    for (const p of remoteRoster.values()) { if (p && p.name) names.push(p.name); }
+  }
+  return [...new Set(names.filter(Boolean))];
+};
 
 function renderParticipants() {
   const list = $('participantsList');
@@ -2953,14 +3141,14 @@ function renderParticipants() {
     for (const conn of connections.values()) {
       const remote = profileForPeer(conn.peer);
       const sharing = !!(incomingShares.get(conn.peer) && incomingShares.get(conn.peer).stream);
-      if (conn.open || conn.peer) list.append(participantRow((remote.name || 'P').slice(0, 1).toUpperCase(), remote.name || 'Participante', sharing ? 'compartilhando tela' : 'na sala', 'green-dot', remote.photo || ''));
+      if (conn.open || conn.peer) list.append(participantRow((remote.name || 'P').slice(0, 1).toUpperCase(), remote.name || 'Participante', sharing ? 'compartilhando tela' : 'na sala', 'green-dot', remote.photo || '', remote.socialId || ''));
     }
   } else if (vpeer) {
     const host = remoteRoster.get('host') || { name: 'Anfitrião', photo: '', status: 'na sala' };
-    list.append(participantRow((host.name || 'A').slice(0, 1).toUpperCase(), host.name || 'Anfitrião', host.sharing ? 'transmitindo' : 'na sala', 'green-dot', host.photo || ''));
+    list.append(participantRow((host.name || 'A').slice(0, 1).toUpperCase(), host.name || 'Anfitrião', host.sharing ? 'transmitindo' : 'na sala', 'green-dot', host.photo || '', host.socialId || ''));
     for (const [id, remote] of remoteRoster) {
       if (id === 'host' || id === vpeer.id) continue;
-      list.append(participantRow((remote.name || 'P').slice(0, 1).toUpperCase(), remote.name || 'Participante', remote.sharing ? 'compartilhando tela' : 'na sala', 'green-dot', remote.photo || ''));
+      list.append(participantRow((remote.name || 'P').slice(0, 1).toUpperCase(), remote.name || 'Participante', remote.sharing ? 'compartilhando tela' : 'na sala', 'green-dot', remote.photo || '', remote.socialId || ''));
     }
     list.append(participantRow(ownName.slice(0, 1).toUpperCase(), ownName, stream ? 'compartilhando tela' : 'você · na sala', 'green-dot', ownPhoto));
   } else {
@@ -2973,7 +3161,8 @@ function renderParticipants() {
 function safeProfileForNetwork(profile) {
   return {
     name: String(profile && profile.name || 'Participante').slice(0, 32),
-    photo: String(profile && profile.photo || '').slice(0, 180000)
+    photo: String(profile && profile.photo || '').slice(0, 600000),
+    socialId: String(profile && profile.socialId || '').replace(/[^A-Z0-9]/gi, '').slice(0, 16).toUpperCase()
   };
 }
 
@@ -2983,9 +3172,9 @@ function broadcastRoster() {
   const participants = Array.from(connections.values()).filter(conn => conn.open).map(conn => {
     const prof = safeProfileForNetwork(participantProfiles.get(conn.peer));
     const share = incomingShares.get(conn.peer);
-    return { id: conn.peer, ...prof, sharing: !!(share && share.stream) };
+    return { id: conn.peer, ...prof, sharing: !!(share && share.stream), sharingMode: share && share.mode || '' };
   });
-  const packet = { type: 'roster', host: { id: peer.id, ...hostProfile, sharing: !!stream }, participants };
+  const packet = { type: 'roster', host: { id: peer.id, ...hostProfile, sharing: !!stream, sharingMode: captureMode }, participants };
   connections.forEach(conn => { if (conn.open) { try { conn.send(packet); } catch {} } });
   renderParticipants();
 }
@@ -2996,11 +3185,17 @@ function applyRemoteRoster(packet) {
   if (packet && Array.isArray(packet.participants)) {
     packet.participants.forEach(person => {
       if (!person || !person.id) return;
-      remoteRoster.set(person.id, { name: String(person.name || 'Participante').slice(0, 32), photo: String(person.photo || '').slice(0, 180000), sharing: !!person.sharing });
+      remoteRoster.set(person.id, { name: String(person.name || 'Participante').slice(0, 32), photo: String(person.photo || '').slice(0, 600000), socialId: String(person.socialId || '').replace(/[^A-Z0-9]/gi, '').slice(0,16).toUpperCase(), sharing: !!person.sharing, sharingMode: String(person.sharingMode || '').slice(0,16) });
     });
   }
   renderParticipants();
-  remoteShareTiles.forEach((entry, owner) => { const label = entry.tile.querySelector('.remote-share-label'); if (label) label.textContent = displayNameForPeer(owner) + ' · compartilhando tela'; });
+  refreshTools();
+  if (vpeer && remoteRoster.get('host')?.name) {
+    $('watching').querySelector('.state-topline h1').textContent = `Sala de ${remoteRoster.get('host').name}`;
+    $('watching').querySelector('.state-topline .state-description').textContent = 'Você está conectado à sala original do anfitrião.';
+  }
+  window.lockSocialPublishPresence?.();
+  remoteShareTiles.forEach((entry, owner) => { const label = entry.tile.querySelector('.remote-share-label'); if (label) label.textContent = displayNameForPeer(owner) + ((entry.mode === 'camera') ? ' · câmera' : ' · compartilhando tela'); });
 }
 
 function renderPeopleGrids() {
@@ -3031,11 +3226,12 @@ function renderPeopleGrids() {
     people.forEach(person => {
       const card = document.createElement('div'); card.className = 'call-person-card';
       if (person.self) card.classList.add('is-self');
-      const avatar = document.createElement('div'); avatar.className = 'call-person-avatar';
+      const hue = nameHue(person.name);
+      const avatar = document.createElement('div'); avatar.className = 'call-person-avatar'; avatar.style.background = nameGradient(person.name); avatar.style.borderColor = nameColor(person.name);
       if (person.photo) { const img = document.createElement('img'); img.src = person.photo; img.alt = ''; avatar.append(img); }
       else avatar.textContent = (person.name || 'L').slice(0,1).toUpperCase();
       const badge = document.createElement('div'); badge.className = 'call-person-name';
-      const strong = document.createElement('strong'); strong.textContent = person.name || 'Participante';
+      const strong = document.createElement('strong'); strong.textContent = person.name || 'Participante'; strong.style.color = nameColor(person.name);
       const small = document.createElement('small'); small.textContent = person.role || 'Na sala';
       badge.append(strong, small); card.append(avatar, badge); target.append(card);
     });
@@ -3055,88 +3251,127 @@ function setRoomStatus(text, active = false) {
   say('chatSubtitle', active ? 'Mensagens da sala' : 'Entre em uma sala para conversar');
 }
 
+function activeRoomShareCount() {
+  if (peer && !peer.destroyed && !vpeer) return (stream ? 1 : 0) + incomingShares.size;
+  if (vpeer && !vpeer.destroyed) {
+    const remoteActive = Array.from(remoteRoster.entries()).filter(([id, person]) => id !== 'host' && id !== vpeer.id && person && person.sharing).length;
+    const hostSharing = !!(remoteRoster.get('host') && remoteRoster.get('host').sharing);
+    return (stream ? 1 : 0) + remoteActive + (hostSharing ? 1 : 0);
+  }
+  return stream ? 1 : 0;
+}
+
 function refreshTools() {
   const audioTracks = stream ? stream.getAudioTracks() : [];
+  const inRoom = !!((peer && !peer.destroyed && peer.open) || (vpeer && !vpeer.destroyed && vconn && vconn.open));
+  const atLimit = activeRoomShareCount() >= 3;
   $('toolAudio').disabled = !stream || audioTracks.length === 0;
   $('toolAudio').classList.toggle('tool-red', !audioTracks.some(track => track.enabled));
-  $('toolAudio').title = audioTracks.length && audioTracks.some(track => track.enabled) ? 'Desativar áudio compartilhado' : 'Ativar áudio compartilhado';
-  $('toolMute').disabled = !vpeer;
-  $('toolMute').classList.toggle('tool-red', !!$('remote').muted);
+  $('toolAudio').title = audioTracks.length && audioTracks.some(track => track.enabled) ? 'Desativar áudio da sua transmissão' : 'Ativar áudio da sua transmissão';
+  $('toolMute').disabled = !inRoom;
+  $('toolMute').classList.toggle('tool-red', !!roomSoundMuted);
+  $('toolMute').title = roomSoundMuted ? 'Ativar som recebido da sala' : 'Silenciar som recebido da sala';
+  $('toolMute').setAttribute('aria-pressed', String(!roomSoundMuted));
+  $('toolMute').querySelector('svg')?.setAttribute('aria-label', roomSoundMuted ? 'Som silenciado' : 'Som ativo');
   refreshMicControl();
-  $('toolScreen').disabled = !canCapture || !!stream || !(peer && !peer.destroyed);
-  $('toolCamera').disabled = !canUseCamera || !!stream || !(peer && !peer.destroyed);
-  $('startShare').disabled = !canCapture || !!stream;
-  $('startCamera').disabled = !canUseCamera || !!stream;
-  $('toolExit').disabled = !(stream || vpeer || peer);
+  const sharingScreen = !!stream && captureMode === 'screen';
+  const sharingCamera = !!stream && captureMode === 'camera';
+  $('toolScreen').disabled = !canCapture || !inRoom || (!stream && atLimit) || (!!stream && !sharingScreen);
+  $('toolCamera').disabled = !canUseCamera || !inRoom || (!stream && atLimit) || (!!stream && !sharingCamera);
+  $('toolScreen').classList.toggle('tool-active', sharingScreen);
+  $('toolCamera').classList.toggle('tool-active', sharingCamera);
+  $('toolScreen').title = sharingScreen ? 'Parar compartilhamento de tela' : 'Compartilhar tela';
+  $('toolCamera').title = sharingCamera ? 'Desligar câmera compartilhada' : 'Compartilhar câmera';
+  $('startShare').disabled = !canCapture || !inRoom || (!stream && atLimit) || (!!stream && !sharingScreen);
+  $('startCamera').disabled = !canUseCamera || !inRoom || (!stream && atLimit) || (!!stream && !sharingCamera);
+  $('toolExit').disabled = !inRoom;
+  const canInviteFromRoom = !!(peer && !peer.destroyed && peer.open && shareCode);
+  ['toolInvite','quickCopy','invitePeople','inviteBtn','footerInvite','copyInviteHome','moreBtn','openInvite','lobbyInviteBtn','lobbyCopyCode','lobbyCopyLink'].forEach(id => { const el=$(id); if(el) el.hidden = !canInviteFromRoom; });
+  if (atLimit && !stream) {
+    $('toolScreen').title = 'Limite de três transmissões atingido';
+    $('toolCamera').title = 'Limite de três transmissões atingido';
+  }
 }
 
 /* ---------- captura e compartilhamento ---------- */
 async function startShare() {
-  if (stream) return;
-  if (peer && !vpeer && incomingShares.size >= 2) return say('homeMsg', 'Já existem duas telas compartilhadas nesta sala. Espere uma delas terminar.');
-  if (!canCapture) return say('homeMsg', 'Este navegador não permite compartilhar a tela. Abra o Lock em um computador compatível.');
+  const inRoom = !!((peer && !peer.destroyed && peer.open) || (vpeer && !vpeer.destroyed && vconn && vconn.open));
+  if (!inRoom) { say('homeMsg', 'Conecte-se ao canal da sala antes de compartilhar. A captura de tela é opcional.'); return; }
+  if (stream) {
+    if (captureMode === 'screen') { if (vpeer && viewerShareCall) stopViewerShare('Você parou de compartilhar a tela.'); else stopShare('Você parou de compartilhar a tela.'); }
+    else say('homeMsg', 'Desligue a câmera compartilhada antes de iniciar o compartilhamento de tela.');
+    return;
+  }
+  if (activeRoomShareCount() >= 3) return say('homeMsg', 'A sala já atingiu o limite de três transmissões simultâneas. Espere uma terminar.');
+  if (!canCapture) { showScreenShareWarning('unsupported'); return; }
   say('homeMsg', '');
+  const prefs = window.lockGetSettings ? window.lockGetSettings() : {};
+  const resolution = ({ '720': [1280,720], '1080': [1920,1080], '1440': [2560,1440] })[prefs.resolution] || null;
+  const videoConstraints = resolution ? { width: { ideal: resolution[0] }, height: { ideal: resolution[1] }, frameRate: { ideal: 30, max: 60 } } : { frameRate: { ideal: 30, max: 60 } };
   try {
-    const screenStream = await navigator.mediaDevices.getDisplayMedia({
-      video: { frameRate: { ideal: 30 } },
-      audio: $('withAudio').checked,
-      selfBrowserSurface: 'exclude'
-    });
-    if (vpeer && vconn && vconn.open && viewerCode) activateViewerStream(screenStream);
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: videoConstraints, audio: !!$('withAudio')?.checked, selfBrowserSurface: 'exclude' });
+    const track = screenStream.getVideoTracks()[0];
+    if (track && resolution) { try { await track.applyConstraints({ width: { ideal: resolution[0] }, height: { ideal: resolution[1] } }); } catch {} }
+    if (vpeer && (!vconn || !vconn.open || !viewerCode)) { screenStream.getTracks().forEach(track => track.stop()); say('homeMsg', 'A conexão com a sala ainda não está pronta. Tente compartilhar novamente.'); return; }
+    hideScreenShareWarning();
+    if (vpeer && viewerCode) activateViewerStream(screenStream, 'screen');
     else activateStream(screenStream, 'screen');
   } catch (error) {
-    say('homeMsg', error.name === 'NotAllowedError'
-      ? 'Seleção cancelada. Você pode tentar novamente quando quiser.'
-      : 'Não consegui capturar a tela: ' + error.message);
+    showScreenShareWarning('failed');
+    say('homeMsg', error.name === 'NotAllowedError' ? 'A captura foi cancelada ou bloqueada. Você pode tentar novamente.' : 'A transmissão não iniciou. Confira o aviso em vermelho na sala.');
   }
 }
 
 async function startCamera() {
-  if (stream) return;
-  if (peer && !vpeer && incomingShares.size >= 2) return say('homeMsg', 'Já existem duas transmissões nesta sala. Espere uma delas terminar.');
+  const inRoom = !!((peer && !peer.destroyed && peer.open) || (vpeer && !vpeer.destroyed && vconn && vconn.open));
+  if (!inRoom) { say('homeMsg', 'Conecte-se ao canal da sala antes de ligar a câmera.'); return; }
+  if (stream) {
+    if (captureMode === 'camera') { if (vpeer && viewerShareCall) stopViewerShare('Você desligou a câmera.'); else stopShare('Você desligou a câmera.'); }
+    else say('homeMsg', 'Pare o compartilhamento de tela antes de ligar a câmera compartilhada.');
+    return;
+  }
+  if (activeRoomShareCount() >= 3) return say('homeMsg', 'A sala já atingiu o limite de três transmissões simultâneas. Espere uma terminar.');
   if (!canUseCamera) return say('homeMsg', 'Este navegador não permite acessar a câmera.');
   say('homeMsg', '');
+  const prefs = window.lockGetSettings ? window.lockGetSettings() : {};
+  const resolution = ({ '720': [1280,720], '1080': [1920,1080], '1440': [2560,1440] })[prefs.resolution] || [1280,720];
   try {
-    const cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: $('withAudio').checked
-    });
-    if (vpeer && vconn && vconn.open && viewerCode) {
-      say('homeMsg', 'A transmissão secundária aceita compartilhamento de tela. Use Compartilhar tela.');
-      cameraStream.getTracks().forEach(track => track.stop());
-      return;
-    }
-    activateStream(cameraStream, 'camera');
+    const cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: resolution[0] }, height: { ideal: resolution[1] }, frameRate: { ideal: 30 } }, audio: false });
+    if (vpeer && (!vconn || !vconn.open || !viewerCode)) { cameraStream.getTracks().forEach(track => track.stop()); say('homeMsg', 'A conexão com a sala ainda não está pronta. Tente ligar a câmera novamente.'); return; }
+    if (vpeer && viewerCode) activateViewerStream(cameraStream, 'camera');
+    else activateStream(cameraStream, 'camera');
   } catch (error) {
-    say('homeMsg', error.name === 'NotAllowedError'
-      ? 'Permita o acesso à câmera e tente novamente.'
-      : 'Não consegui abrir a câmera: ' + error.message);
+    say('homeMsg', error.name === 'NotAllowedError' ? 'Permita o acesso à câmera e tente novamente.' : 'Não consegui abrir a câmera: ' + error.message);
   }
 }
 
-function activateViewerStream(nextStream) {
+function activateViewerStream(nextStream, mode = 'screen') {
   if (!vpeer || !vconn || !vconn.open || !viewerCode) {
     nextStream.getTracks().forEach(track => track.stop());
     return;
   }
   stream = nextStream;
-  captureMode = 'screen';
+  captureMode = mode;
+  if (mode === 'screen') hideScreenShareWarning();
   const videoTrack = stream.getVideoTracks()[0];
   if (videoTrack) videoTrack.addEventListener('ended', () => {
-    if (stream === nextStream) stopViewerShare('Você parou de compartilhar a tela.');
+    if (stream === nextStream) stopViewerShare(mode === 'camera' ? 'Você desligou a câmera.' : 'Você parou de compartilhar a tela.');
   }, { once: true });
   try {
-    viewerShareCall = vpeer.call(PREFIX + viewerCode, stream, { metadata: { kind: 'participant' } });
-    if (!viewerShareCall) throw new Error('Não foi possível iniciar a transmissão secundária.');
-    viewerShareCall.on('close', () => {
-      if (stream === nextStream) stopViewerShare('A sala encerrou sua transmissão secundária.', false);
-    });
-    viewerShareCall.on('error', () => {
-      if (stream === nextStream) stopViewerShare('A transmissão secundária foi desconectada.', false);
-    });
-    say('info', 'Sua tela está sendo compartilhada com a sala.');
-    say('homeMsg', 'Sua tela está sendo compartilhada com a sala.');
+    viewerShareCall = vpeer.call(PREFIX + viewerCode, stream, { metadata: { kind: 'participant', source: vpeer.id, mode } });
+    if (!viewerShareCall) throw new Error('Não foi possível iniciar a transmissão.');
+    viewerShareCall.on('close', () => { if (stream === nextStream) stopViewerShare('A sala encerrou sua transmissão.', false); });
+    viewerShareCall.on('error', () => { if (stream === nextStream) stopViewerShare('A transmissão foi desconectada.', false); });
+    $('preview').srcObject = stream;
+    $('previewLabel').textContent = mode === 'camera' ? 'Sua câmera' : 'Sua tela';
+    const selfTile = $('selfSharePreviewTile');
+    const selfVideo = $('selfSharePreview');
+    if (selfTile && selfVideo && vpeer) { selfTile.hidden = false; selfVideo.setAttribute('playsinline',''); selfVideo.setAttribute('webkit-playsinline',''); selfVideo.srcObject = stream; selfVideo.play().catch(() => {}); $('selfSharePreviewLabel').textContent = mode === 'camera' ? 'Você · sua câmera' : 'Você · sua tela'; }
+    say('info', mode === 'camera' ? 'Sua câmera está ativa na sala; a prévia aparece na grade.' : 'Sua tela está sendo compartilhada com a sala; a prévia aparece na grade.');
+    say('homeMsg', mode === 'camera' ? 'Sua câmera está ativa na sala.' : 'Sua tela está sendo compartilhada com a sala.');
+    refreshRemoteTileLayout();
     refreshTools();
+    renderParticipants();
   } catch (error) {
     stopViewerShare('Não foi possível iniciar a transmissão: ' + error.message, false);
   }
@@ -3148,7 +3383,11 @@ function stopViewerShare(message = '', closeCall = true) {
   stream = null;
   viewerShareCall = null;
   if (currentStream) currentStream.getTracks().forEach(track => track.stop());
+  if ($('preview')) $('preview').srcObject = null;
+  if ($('selfSharePreview')) $('selfSharePreview').srcObject = null;
+  if ($('selfSharePreviewTile')) $('selfSharePreviewTile').hidden = true;
   if (closeCall && currentCall) { try { currentCall.close(); } catch {} }
+  refreshRemoteTileLayout();
   refreshTools();
   if (message) say('info', message);
 }
@@ -3156,6 +3395,7 @@ function stopViewerShare(message = '', closeCall = true) {
 function activateStream(nextStream, mode) {
   stream = nextStream;
   captureMode = mode;
+  if (mode === 'screen') hideScreenShareWarning();
   const videoTrack = stream.getVideoTracks()[0];
   if (videoTrack) {
     const onEnded = () => { if (stream === nextStream) stopShare('Compartilhamento encerrado.'); };
@@ -3177,7 +3417,10 @@ function createRoom() {
     setRoomStatus(stream ? 'Transmitindo ao vivo' : 'Sala criada · pronta para compartilhar', !!stream);
     return;
   }
-  // Each room gets a different random code and therefore a different invitation URL.
+  // Each room starts with a fresh in-memory chat history and a different invitation URL.
+  chatHistory = [];
+  resetChatDisplay();
+  say('chatSubtitle', 'Mensagens desta sala');
   shareCode = newCode();
   try { localStorage.removeItem('lock-fixed-room-code'); } catch {}
   history.replaceState(null, '', location.pathname + location.search);
@@ -3186,18 +3429,32 @@ function createRoom() {
 }
 
 function leaveHostRoom() {
-  stopLocalVoice();
-  if (stream) { const active = stream; stream = null; active.getTracks().forEach(track => track.stop()); }
-  calls.forEach(call => { try { call.close(); } catch {} }); calls.clear();
-  connections.forEach(conn => { try { conn.close(); } catch {} }); connections.clear();
-  relayCalls.forEach(call => { try { call.close(); } catch {} }); relayCalls.clear();
-  incomingShares.forEach(item => { try { item.call?.close(); } catch {} }); incomingShares.clear();
-  if (peer) { try { peer.destroy(); } catch {} }
-  peer = null; opened = false;
-  $('preview').srcObject = null;
-  remoteShareTiles.forEach(({video,tile})=>{try{video.srcObject=null;tile.remove()}catch{}}); remoteShareTiles.clear();
-  shareCode = ''; participantProfiles.clear(); remoteRoster.clear(); renderShare(); refreshTools(); refreshCount(); show('home');
-  setRoomStatus('Sala pronta', false); say('homeMsg','');
+  if (closingHostRoom) return;
+  closingHostRoom = true;
+  connections.forEach(conn => {
+    if (conn.open) { try { conn.send({ type: 'room-closed', code: shareCode }); } catch {} }
+  });
+  // Give the reliable data channel a moment to deliver the closure event before destroying the host peer.
+  window.setTimeout(() => {
+    const closedCode = shareCode;
+    stopLocalVoice();
+    if (stream) { const active = stream; stream = null; active.getTracks().forEach(track => track.stop()); }
+    calls.forEach(call => { try { call.close(); } catch {} }); calls.clear();
+    connections.forEach(conn => { try { conn.close(); } catch {} }); connections.clear();
+    relayCalls.forEach(call => { try { call.close(); } catch {} }); relayCalls.clear();
+    incomingShares.forEach(item => { try { item.call?.close(); } catch {} }); incomingShares.clear();
+    incomingVoiceStreams.forEach(item => { try { item.call?.close(); } catch {} }); incomingVoiceStreams.clear();
+    voiceRelayCalls.forEach(call => { try { call.close(); } catch {} }); voiceRelayCalls.clear();
+    voiceOutgoingCalls.forEach(call => { try { call.close(); } catch {} }); voiceOutgoingCalls.clear();
+    if (peer) { try { peer.destroy(); } catch {} }
+    peer = null; opened = false;
+    try { if (localStorage.getItem(ACTIVE_HOST_ROOM_KEY) === closedCode) localStorage.removeItem(ACTIVE_HOST_ROOM_KEY); } catch {}
+    $('preview').srcObject = null;
+    remoteShareTiles.forEach(({video,tile})=>{try{video.srcObject=null;tile.remove()}catch{}}); remoteShareTiles.clear();
+    shareCode = ''; participantProfiles.clear(); remoteRoster.clear(); renderShare(); refreshTools(); refreshCount(); show('home'); window.lockSocialPublishPresence?.();
+    setRoomStatus('Sala pronta', false); say('homeMsg','');
+    closingHostRoom = false;
+  }, 300);
 }
 
 function openPeer(tries = 0) {
@@ -3228,6 +3485,8 @@ function openPeer(tries = 0) {
     if (peer !== currentPeer) return;
     opened = true;
     shareCode = code;
+    try { localStorage.setItem(ACTIVE_HOST_ROOM_KEY, code); } catch {}
+    window.lockSocialPublishPresence?.();
     viewerCode = '';
     show(stream ? 'sharing' : 'lobby');
     renderShare();
@@ -3284,8 +3543,19 @@ function sendPrimaryTo(conn) {
 
 function serve(conn) {
   if (!peer || connections.has(conn.peer)) return;
+  const incomingClientId = String(conn.metadata && conn.metadata.lockClientId || '');
+  const duplicateClient = incomingClientId && (
+    incomingClientId === LOCK_CLIENT_ID ||
+    Array.from(connections.values()).some(existing => existing.open && String(existing.metadata && existing.metadata.lockClientId || '') === incomingClientId)
+  );
+  if (duplicateClient) {
+    if (conn.open) { try { conn.send({ type: 'duplicate-session', message: 'Esta conta do navegador já está conectada à sala.' }); } catch {} }
+    window.setTimeout(() => { try { conn.close(); } catch {} }, 450);
+    return;
+  }
   connections.set(conn.peer, conn);
-  participantProfiles.set(conn.peer, safeProfileForNetwork(conn.metadata || { name: 'Participante', photo: '' }));
+  const metaProfile = conn.metadata && conn.metadata.profile ? conn.metadata.profile : (conn.metadata || { name: 'Participante', photo: '' });
+  participantProfiles.set(conn.peer, safeProfileForNetwork(metaProfile));
   conn.on('data', data => receiveFromViewer(data, conn));
   const drop = () => {
     connections.delete(conn.peer);
@@ -3318,7 +3588,7 @@ function serve(conn) {
     if (item.stream && owner !== conn.peer) relayVoiceTo(owner, conn, item.stream);
   });
   incomingShares.forEach((item, owner) => {
-    if (item.stream && owner !== conn.peer) relayParticipantShare(owner, conn, item.stream);
+    if (item.stream && owner !== conn.peer) relayParticipantShare(owner, conn, item.stream, item.mode || 'screen');
   });
   refreshCount();
 }
@@ -3326,25 +3596,37 @@ function serve(conn) {
 function acceptParticipantShare(call) {
   if (!call || !peer) return;
   const owner = call.peer;
+  // If this participant stopped and immediately started again, replace the old call instead
+  // of counting the same person twice or rejecting the restarted screen share.
+  const previousRecord = incomingShares.get(owner);
+  if (previousRecord && previousRecord.call !== call) {
+    incomingShares.delete(owner);
+    for (const [key, relay] of relayCalls) {
+      if (key.startsWith(owner + '->')) { try { relay.close(); } catch {} relayCalls.delete(key); }
+    }
+    removeRemoteShareTile(owner);
+    try { previousRecord.call?.close(); } catch {}
+  }
   const activeCount = (stream ? 1 : 0) + incomingShares.size;
-  if (activeCount >= 2 || incomingShares.has(owner)) {
+  if (activeCount >= 3) {
     const conn = connections.get(owner);
-    if (conn && conn.open) { try { conn.send({ type: 'share-limit', message: 'A sala permite no máximo duas transmissões de tela ao mesmo tempo.' }); } catch {} }
+    if (conn && conn.open) { try { conn.send({ type: 'share-limit', message: 'A sala permite no máximo três transmissões de tela ao mesmo tempo.' }); } catch {} }
     try { call.close(); } catch {}
     return;
   }
-  // Reserve a slot immediately so two nearly simultaneous requests cannot exceed the limit.
-  incomingShares.set(owner, { call, stream: null });
+  // Reserve a slot immediately so nearly simultaneous incoming shares cannot exceed the limit.
+  const shareMode = (call.metadata || {}).mode === 'camera' ? 'camera' : 'screen';
+  incomingShares.set(owner, { call, stream: null, mode: shareMode });
   call.answer();
   call.on('stream', incomingStream => {
     const record = incomingShares.get(owner);
     if (!record || record.call !== call) return;
     record.stream = incomingStream;
-    showRemoteShareTile(owner, incomingStream);
+    showRemoteShareTile(owner, incomingStream, shareMode);
     if (typeof window.notifyLockSound === 'function') window.notifyLockSound('share');
     broadcastRoster();
     connections.forEach(conn => {
-      if (conn.peer !== owner && conn.open) relayParticipantShare(owner, conn, incomingStream);
+      if (conn.peer !== owner && conn.open) relayParticipantShare(owner, conn, incomingStream, shareMode);
     });
     refreshCount();
   });
@@ -3353,12 +3635,12 @@ function acceptParticipantShare(call) {
   call.on('error', remove);
 }
 
-function relayParticipantShare(owner, conn, incomingStream) {
+function relayParticipantShare(owner, conn, incomingStream, mode = 'screen') {
   if (!peer || !conn || !conn.open || !incomingStream || conn.peer === owner) return;
   const key = owner + '->' + conn.peer;
   const previous = relayCalls.get(key);
   if (previous) { try { previous.close(); } catch {} }
-  const relay = peer.call(conn.peer, incomingStream, { metadata: { kind: 'participant', source: owner } });
+  const relay = peer.call(conn.peer, incomingStream, { metadata: { kind: 'participant', source: owner, mode } });
   if (relay) {
     relayCalls.set(key, relay);
     relay.on('close', () => { if (relayCalls.get(key) === relay) relayCalls.delete(key); });
@@ -3401,14 +3683,16 @@ function displayNameForPeer(owner) {
   return 'Participante';
 }
 
-function showRemoteShareTile(owner, incomingStream) {
+function showRemoteShareTile(owner, incomingStream, mode = 'screen') {
   if (!remoteShareTiles.has(owner)) {
     const tile = document.createElement('div');
     tile.className = 'remote-share-tile';
     const video = document.createElement('video');
     video.autoplay = true;
     video.playsInline = true;
-    video.muted = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.muted = !!roomSoundMuted;
     tile.classList.add('screen-tile');
     const fullscreen = document.createElement('button');
     fullscreen.className = 'tile-fullscreen';
@@ -3418,14 +3702,21 @@ function showRemoteShareTile(owner, incomingStream) {
     fullscreen.textContent = '⛶';
     const label = document.createElement('span');
     label.className = 'remote-share-label';
-    label.textContent = displayNameForPeer(owner) + ' · compartilhando tela';
+    label.textContent = displayNameForPeer(owner) + (mode === 'camera' ? ' · câmera' : ' · compartilhando tela');
     tile.append(video, fullscreen, label);
     tile.addEventListener('click', event => { if (event.target !== fullscreen) tile.classList.toggle('show-tile-tools'); });
-    remoteShareTiles.set(owner, { tile, video });
+    remoteShareTiles.set(owner, { tile, video, mode });
   }
   const entry = remoteShareTiles.get(owner);
+  entry.mode = mode;
+  const label = entry.tile.querySelector('.remote-share-label'); if (label) label.textContent = displayNameForPeer(owner) + (mode === 'camera' ? ' · câmera' : ' · compartilhando tela');
   entry.video.srcObject = incomingStream;
-  entry.video.play().catch(() => {});
+  entry.video.muted = !!roomSoundMuted;
+  entry.video.play().catch(() => {
+    // Mobile browsers may block autoplay until the user interacts with the page.
+    entry.tile.classList.add('needs-play-tap');
+    entry.tile.addEventListener('click', () => entry.video.play().then(() => entry.tile.classList.remove('needs-play-tap')).catch(() => {}), { once: true });
+  });
   refreshRemoteTileLayout();
 }
 
@@ -3446,14 +3737,17 @@ function refreshRemoteTileLayout() {
   const target = isHost ? (stream ? hostTarget : (lobbyTarget || viewerTarget)) : viewerTarget;
   remoteShareTiles.forEach(({ tile }) => { if (target && tile.parentElement !== target) target.append(tile); });
   if (hostTarget) hostTarget.hidden = !stream || hostTarget.children.length === 0;
-  if (viewerTarget) viewerTarget.hidden = viewerTarget.children.length === 0;
+  if (viewerTarget) viewerTarget.hidden = !Array.from(viewerTarget.children).some(child => !child.hidden);
+  refreshTools();
   if (isHost && !stream && incomingShares.size) {
     show('lobby');
     if ($('stage')) $('stage').hidden = true;
   } else if (isHost && stream) {
     if ($('stage')) $('stage').hidden = false;
   } else if (!isHost && $('stage')) {
-    $('stage').hidden = false;
+    const hasCamera = !!($('remote') && $('remote').srcObject);
+    const hasScreenTile = !!(viewerTarget && Array.from(viewerTarget.children).some(child => !child.hidden));
+    $('stage').hidden = !(hasCamera || hasScreenTile);
   }
 }
 
@@ -3560,42 +3854,122 @@ const setInfo = (message, live) => {
   say('info', message);
 };
 
+function hideWatchConnectionNotice() {
+  const notice = $('watchConnectionNotice');
+  if (notice) notice.hidden = true;
+  const retry = $('watchRetryButton');
+  if (retry) { retry.disabled = false; retry.textContent = 'Tentar novamente'; }
+}
+
+function showWatchConnectionNotice(message) {
+  const notice = $('watchConnectionNotice');
+  if (!notice) { setInfo(message, true); return; }
+  say('watchConnectionMessage', message || 'Não foi possível conectar ao canal da sala.');
+  notice.hidden = false;
+  const retry = $('watchRetryButton');
+  if (retry) { retry.disabled = false; retry.textContent = 'Tentar novamente'; }
+  setRoomStatus('Falha ao conectar ao canal', false);
+  const heading = $('watching').querySelector('.state-topline h1');
+  const description = $('watching').querySelector('.state-topline .state-description');
+  if (heading) heading.textContent = 'Conexão com a sala interrompida';
+  if (description) description.textContent = 'A transmissão de tela é opcional; primeiro é necessário conectar ao canal da sala.';
+}
+
 function startWatch(code) {
   if (peer && !peer.destroyed) {
-    say('homeMsg', 'Esta aba está mantendo a sala aberta. Use outro navegador ou dispositivo para entrar como participante.');
+    if (shareCode === code) say('homeMsg', 'Você já é o anfitrião desta sala nesta aba. Envie o convite para outra pessoa.');
+    else say('homeMsg', 'Esta aba já está mantendo uma sala aberta. Use outro navegador ou dispositivo para entrar em outra sala.');
     return;
   }
-  if (viewerCode === code && vpeer) return;
-  if (vpeer) vpeer.destroy();
+  // Do not trust a persisted host-room marker here: mobile browsers may preserve
+  // localStorage after a tab crash. Only a live host Peer blocks joining; duplicate
+  // tabs are rejected by the room's LOCK_CLIENT_ID check in serve().
+  if (viewerCode === code && vpeer && !vpeer.destroyed && vconn && vconn.open) return;
+  if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+  if (vpeer) { try { vpeer.destroy(); } catch {} }
+  remoteRoster.clear();
+  remoteShareTiles.forEach(entry => { try { entry.video.srcObject = null; entry.tile.remove(); } catch {} });
+  remoteShareTiles.clear();
   viewerCode = code;
+  hideWatchConnectionNotice();
+  window.lockSocialPublishPresence?.();
   vconn = null;
   chatHistory = [];
   resetChatDisplay();
   show('watching');
-  setInfo('Conectando à sala…');
+  setInfo('', false);
+  $('stage').hidden = true;
+  $('watching').querySelector('.state-topline h1').textContent = 'Sala de voz';
+  $('watching').querySelector('.state-topline .state-description').textContent = 'Converse, ligue a câmera ou compartilhe sua tela.';
   $('remote').srcObject = null;
-  $('remote').muted = true;
+  $('remote').muted = !!roomSoundMuted;
+  $('remote').setAttribute('playsinline', '');
+  $('remote').setAttribute('webkit-playsinline', '');
   refreshTools();
   refreshCount();
   renderShare();
   say('topCode', code);
-  setRoomStatus('Entrando na sala…', true);
-  const currentPeer = vpeer = new Peer();
+  setRoomStatus('Conectando à sala do anfitrião…', false);
+  $('watching').querySelector('.state-topline h1').textContent = 'Conectando à sala…';
+  $('watching').querySelector('.state-topline .state-description').textContent = 'Aguardando conexão com o anfitrião. Você ainda não criou uma sala.';
+  let currentPeer;
+  try {
+    currentPeer = vpeer = new Peer();
+  } catch (error) {
+    vpeer = null;
+    showWatchConnectionNotice('O navegador não conseguiu iniciar a conexão com o canal (' + String(error?.message || 'erro') + '). Isso não tem relação com a transmissão de tela. Tente um navegador atualizado.');
+    return;
+  }
+  watchConnectionTimer = window.setTimeout(() => {
+    if (vpeer === currentPeer && (!vconn || !vconn.open)) {
+      showWatchConnectionNotice('Não foi possível conectar ao canal da sala. Isso não tem relação com a transmissão da sua tela. Confira se o anfitrião ainda está online e se sua internet está funcionando; depois tente novamente.');
+    }
+  }, 20000);
 
   currentPeer.on('open', () => {
     if (vpeer !== currentPeer) return;
-    const conn = vconn = currentPeer.connect(PREFIX + code, { reliable: true });
+    let conn;
+    try {
+      conn = vconn = currentPeer.connect(PREFIX + code, {
+        reliable: true,
+        metadata: { lockClientId: LOCK_CLIENT_ID, profile: safeProfileForNetwork(localProfileSnapshot()) }
+      });
+    } catch (error) {
+      if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+      showWatchConnectionNotice('Não foi possível iniciar a conexão com o canal (' + String(error?.message || 'erro') + '). Isso é diferente da limitação de transmissão de tela.');
+      return;
+    }
     conn.on('open', () => {
       if (vconn !== conn) return;
+      if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+      hideWatchConnectionNotice();
+      refreshTools();
       const identity = safeProfileForNetwork(localProfileSnapshot());
       try { conn.send({ type: 'identity', profile: identity }); } catch {}
-      if (micStream) sendViewerVoice();
+      if (micStream) {
+        sendViewerVoice();
+        if (!micMuted) say('chatSubtitle', 'Canal conectado. Seu microfone está ativo na sala.');
+      }
       setRoomStatus('Conectado à sala', true);
+      $('watching').querySelector('.state-topline h1').textContent = 'Você está na sala';
+      $('watching').querySelector('.state-topline .state-description').textContent = 'Conectado à sala do anfitrião. As transmissões e mensagens aparecem aqui.';
       refreshCount();
     });
     conn.on('data', data => receiveFromHost(data));
-    conn.on('close', () => setInfo('A transmissão terminou ou o anfitrião saiu.'));
-    conn.on('error', () => setInfo('A conexão caiu. Tente entrar novamente com o código.'));
+    conn.on('close', () => {
+      if (vconn !== conn) return;
+      if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+      refreshTools();
+      showWatchConnectionNotice('A conexão com o canal foi encerrada. Isso não é causado pela falta de transmissão de tela. Confira se o anfitrião continua na sala e tente novamente.');
+    });
+    conn.on('error', error => {
+      if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+      refreshTools();
+      const detail = error?.type === 'peer-unavailable'
+        ? 'A sala do anfitrião não está disponível. Confira se ele ainda está conectado.'
+        : 'A conexão de dados falhou (' + String(error?.type || 'erro desconhecido') + '). Confira a internet e tente novamente.';
+      showWatchConnectionNotice(detail + ' A limitação de transmissão de tela é independente deste problema.');
+    });
   });
   currentPeer.on('call', call => {
     const metadata = call.metadata || {};
@@ -3606,13 +3980,26 @@ function startWatch(code) {
       if (kind === 'voice') {
         playRemoteVoice(owner, incomingStream, call);
       } else if (kind === 'participant') {
-        showRemoteShareTile(owner, incomingStream);
+        showRemoteShareTile(owner, incomingStream, (call.metadata || {}).mode || 'screen');
       } else {
         const video = $('remote');
         setInfo('', true);
         $('stage').hidden = false;
+        $('watching').querySelector('.state-topline h1').textContent = 'Assistindo à transmissão';
+        $('watching').querySelector('.state-topline .state-description').textContent = 'A tela compartilhada está ao vivo.';
         if (video.srcObject !== incomingStream) video.srcObject = incomingStream;
-        video.play().catch(() => {});
+        video.autoplay = true;
+        video.playsInline = true;
+        video.muted = !!roomSoundMuted;
+        video.setAttribute('autoplay', '');
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
+        video.play().catch(() => {
+          say('info', 'Toque na transmissão para assistir. Se quiser ouvir o áudio, toque também em Ativar som.');
+          const retryPlayback = () => video.play().catch(() => {});
+          $('stage').addEventListener('pointerdown', retryPlayback, { once: true });
+          $('stage').addEventListener('touchstart', retryPlayback, { once: true, passive: true });
+        });
         refreshTools();
         say('roomStatusText', 'Assistindo ao vivo');
       }
@@ -3622,36 +4009,55 @@ function startWatch(code) {
       else if (kind === 'participant') removeRemoteShareTile(owner);
       else {
         $('remote').srcObject = null;
-        if (!remoteShareTiles.size) setInfo('A transmissão foi pausada. Aguarde o anfitrião retomar ou veja outra tela compartilhada.');
+        if (!remoteShareTiles.size) { $('stage').hidden = true; setInfo('', false); $('watching').querySelector('.state-topline h1').textContent = 'Sala de voz'; $('watching').querySelector('.state-topline .state-description').textContent = 'Converse, ligue a câmera ou compartilhe sua tela.'; }
       }
     });
     call.on('error', () => {
       if (kind === 'voice') dropRemoteVoice(owner, call);
       else if (kind === 'participant') removeRemoteShareTile(owner);
-      else if (!remoteShareTiles.size) setInfo('A transmissão foi desconectada.');
+      else if (!remoteShareTiles.size) { $('stage').hidden = true; setInfo('', false); }
     });
   });
+  currentPeer.on('disconnected', () => {
+    if (vpeer !== currentPeer) return;
+    setRoomStatus('Reconectando ao servidor de conexão…', false);
+    try { currentPeer.reconnect(); } catch (error) {
+      showWatchConnectionNotice('A conexão com o servidor caiu (' + String(error?.message || 'erro') + '). Tente novamente.');
+    }
+  });
+  currentPeer.on('close', () => {
+    if (vpeer === currentPeer) showWatchConnectionNotice('A conexão com o canal foi fechada. Tente entrar novamente.');
+  });
   currentPeer.on('error', error => {
-    setInfo(error.type === 'peer-unavailable'
-      ? 'Código não encontrado. Confira o código e veja se o anfitrião já começou a transmitir.'
-      : 'Erro de conexão (' + error.type + ').');
-    if (error.type === 'peer-unavailable') setRoomStatus('Sala não encontrada', false);
+    if (vpeer !== currentPeer) return;
+    if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+    const detail = error?.type === 'peer-unavailable'
+      ? 'Não encontrei a sala do anfitrião. Confira o link e veja se ele ainda está online.'
+      : error?.type === 'browser-incompatible'
+        ? 'Este navegador não conseguiu iniciar a conexão WebRTC necessária para entrar no canal. Tente um navegador atualizado.'
+        : 'Falha no servidor de conexão (' + String(error?.type || 'erro desconhecido') + '). Confira a internet e tente novamente.';
+    showWatchConnectionNotice(detail + ' Isso é separado da permissão para transmitir a própria tela.');
   });
   if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {});
 }
 
 function leaveWatch() {
+  if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+  sendLocalTypingState(false);
   stopLocalVoice();
   if (viewerShareCall || (vpeer && stream && !peer)) stopViewerShare('', true);
   const currentPeer = vpeer;
   vpeer = null;
   vconn = null;
   viewerCode = '';
+  window.lockSocialPublishPresence?.();
   remoteRoster.clear();
   if (currentPeer) currentPeer.destroy();
   if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
   $('remote').srcObject = null;
-  $('remote').muted = true;
+  if ($('selfSharePreview')) $('selfSharePreview').srcObject = null;
+  if ($('selfSharePreviewTile')) $('selfSharePreviewTile').hidden = true;
+  $('remote').muted = false;
   $('stage').hidden = false;
   history.replaceState(null, '', location.pathname + location.search);
   chatHistory = [];
@@ -3679,6 +4085,10 @@ function route() {
 
 /* ---------- chat P2P ---------- */
 function resetChatDisplay() {
+  roomTypingUsers.forEach(entry => { if (entry.timer) clearTimeout(entry.timer); });
+  roomTypingUsers.clear();
+  renderChatTypingIndicator();
+  sendLocalTypingState(false);
   $('chatMessages').replaceChildren();
   const empty = document.createElement('div');
   empty.className = 'chat-empty';
@@ -3693,11 +4103,76 @@ function resetChatDisplay() {
   $('chatMessages').append(empty);
 }
 
+function renderChatTypingIndicator() {
+  const indicator = $('chatTypingIndicator');
+  if (!indicator) return;
+  const names = Array.from(roomTypingUsers.values()).map(entry => entry.name).filter(Boolean);
+  if (!names.length) { indicator.hidden = true; indicator.textContent = ''; return; }
+  indicator.hidden = false;
+  if (names.length === 1) indicator.textContent = `${names[0]} está digitando…`;
+  else if (names.length === 2) indicator.textContent = `${names[0]} e ${names[1]} estão digitando…`;
+  else indicator.textContent = `${names[0]}, ${names[1]} e mais ${names.length - 2} estão digitando…`;
+}
+
+function setRoomTyping(userId, name, active) {
+  const id = String(userId || '').slice(0, 100);
+  if (!id || id === 'self') return;
+  const previous = roomTypingUsers.get(id);
+  if (previous?.timer) clearTimeout(previous.timer);
+  if (!active) roomTypingUsers.delete(id);
+  else {
+    const timer = window.setTimeout(() => { roomTypingUsers.delete(id); renderChatTypingIndicator(); }, 3200);
+    roomTypingUsers.set(id, { name: String(name || 'Alguém').slice(0, 32), timer });
+  }
+  renderChatTypingIndicator();
+}
+
+function sendLocalTypingState(active) {
+  const isRoomActive = !!((peer && !peer.destroyed && peer.open) || (vpeer && !vpeer.destroyed && vconn && vconn.open));
+  if (!isRoomActive) return;
+  const now = Date.now();
+  if (active) {
+    if (!localTypingActive || now - localTypingLastSentAt > 1000) {
+      const profile = localProfileSnapshot();
+      const packet = { type: 'typing', active: true, id: peer && !peer.destroyed ? 'host' : vpeer.id, name: profile.name || 'Alguém' };
+      if (peer && !peer.destroyed) connections.forEach(conn => { if (conn.open) { try { conn.send(packet); } catch {} } });
+      else if (vconn?.open) { try { vconn.send({ type: 'typing', active: true }); } catch {} }
+      localTypingLastSentAt = now;
+    }
+    localTypingActive = true;
+    if (localTypingStopTimer) clearTimeout(localTypingStopTimer);
+    localTypingStopTimer = window.setTimeout(() => sendLocalTypingState(false), 1900);
+    return;
+  }
+  if (!localTypingActive) return;
+  localTypingActive = false;
+  if (localTypingStopTimer) clearTimeout(localTypingStopTimer);
+  localTypingStopTimer = null;
+  const profile = localProfileSnapshot();
+  const packet = { type: 'typing', active: false, id: peer && !peer.destroyed ? 'host' : (vpeer?.id || 'self'), name: profile.name || 'Alguém' };
+  if (peer && !peer.destroyed) connections.forEach(conn => { if (conn.open) { try { conn.send(packet); } catch {} } });
+  else if (vconn?.open) { try { vconn.send({ type: 'typing', active: false }); } catch {} }
+}
+
+function handleChatTypingInput() {
+  const input = $('chatInput');
+  if (!input || !input.value.trim()) { sendLocalTypingState(false); return; }
+  sendLocalTypingState(true);
+}
+
 function addChatMessage(message, displayName = null, persist = true) {
+  const safeReply = message.replyTo && typeof message.replyTo === 'object' ? {
+    id: String(message.replyTo.id || '').slice(0, 100),
+    name: String(message.replyTo.name || 'Participante').slice(0, 40),
+    text: String(message.replyTo.text || '').slice(0, 180)
+  } : null;
   const normalized = {
     type: 'chat',
+    id: String(message.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2))).slice(0, 100),
     text: String(message.text || '').slice(0, 500),
     name: String(message.name || 'Participante').slice(0, 40),
+    photo: String(message.photo || '').slice(0, 600000),
+    replyTo: safeReply,
     time: String(message.time || clock()).slice(0, 12)
   };
   if (!normalized.text) return;
@@ -3708,31 +4183,86 @@ function addChatMessage(message, displayName = null, persist = true) {
   const container = $('chatMessages');
   const empty = container.querySelector('.chat-empty');
   if (empty) empty.remove();
-  const row = document.createElement('div');
+  const row = document.createElement('article');
   row.className = 'chat-message';
+  row.dataset.messageId = normalized.id;
   const avatar = document.createElement('span');
-  avatar.className = `avatar ${displayName === 'Você' ? 'avatar-blue' : 'avatar-green'}`;
-  avatar.textContent = (displayName || normalized.name).slice(0, 1).toUpperCase();
+  avatar.className = 'avatar avatar-blue chat-message-avatar';
+  avatar.style.background = nameGradient(normalized.name);
+  avatar.textContent = normalized.name.slice(0, 1).toUpperCase();
+  if (/^(data:image\/|https:\/\/)/i.test(normalized.photo)) {
+    const image = document.createElement('img');
+    image.src = normalized.photo; image.alt = ''; image.loading = 'lazy';
+    image.onerror = () => { image.remove(); avatar.textContent = normalized.name.slice(0, 1).toUpperCase(); };
+    avatar.replaceChildren(image);
+  }
   const body = document.createElement('div');
   body.className = 'chat-message-body';
   const meta = document.createElement('div');
   meta.className = 'chat-message-meta';
   const name = document.createElement('strong');
-  name.textContent = displayName || normalized.name;
+  name.textContent = normalized.name;
+  name.style.color = nameColor(normalized.name);
   const time = document.createElement('time');
   time.textContent = normalized.time;
   meta.append(name, time);
-  const text = document.createElement('p');
+  if (displayName === 'Você') {
+    const self = document.createElement('span'); self.className = 'chat-self-tag'; self.textContent = 'Você'; meta.append(self);
+  }
+  if (normalized.replyTo) {
+    const quote = document.createElement('div'); quote.className = 'chat-reply-quote';
+    const quoteName = document.createElement('strong'); quoteName.textContent = normalized.replyTo.name;
+    const quoteText = document.createElement('span'); quoteText.textContent = normalized.replyTo.text;
+    quote.append(quoteName, quoteText); body.append(quote);
+  }
+  const text = document.createElement('div');
   text.className = 'chat-message-text';
-  text.textContent = normalized.text;
-  body.append(meta, text);
+  appendLockChatText(text, normalized.text);
+  const actions = document.createElement('div'); actions.className = 'chat-message-actions';
+  const reply = document.createElement('button'); reply.type = 'button'; reply.className = 'chat-reply-action'; reply.textContent = '↩ Responder';
+  reply.addEventListener('click', () => window.dispatchEvent(new CustomEvent('lock-chat-reply', { detail: { id: normalized.id, name: normalized.name, text: normalized.text } })));
+  actions.append(reply);
+  body.append(meta, text, actions);
   row.append(avatar, body);
   container.append(row);
   container.scrollTop = container.scrollHeight;
 }
 
+function appendLockChatText(target, value) {
+  const raw = String(value || '');
+  const tokens = raw.split(/(https?:\/\/[^\s<>]+|@[\p{L}\p{N}_.-]{1,40})/gu);
+  const localName = String(localProfileSnapshot().name || '').toLocaleLowerCase();
+  for (let token of tokens) {
+    if (!token) continue;
+    if (/^https?:\/\//i.test(token)) {
+      let url = token, tail = '';
+      while (/[.,!?)]$/.test(url)) { tail = url.slice(-1) + tail; url = url.slice(0, -1); }
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') { target.append(document.createTextNode(token)); continue; }
+        const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.className = 'chat-link';
+        if (/\.(gif|png|jpe?g|webp|apng)(\?.*)?$/i.test(parsed.pathname + parsed.search)) {
+          const img = document.createElement('img'); img.src = url; img.alt = 'GIF compartilhado'; img.loading = 'lazy'; img.className = 'chat-gif-preview'; img.onerror = () => img.remove(); link.append(img);
+        } else link.textContent = url;
+        target.append(link); if (tail) target.append(document.createTextNode(tail));
+      } catch { target.append(document.createTextNode(token)); }
+    } else if (token.startsWith('@')) {
+      const mention = document.createElement('span'); mention.className = 'chat-mention';
+      if (localName && token.slice(1).toLocaleLowerCase() === localName) mention.classList.add('chat-mention-self');
+      mention.textContent = token; target.append(mention);
+    } else target.append(document.createTextNode(token));
+  }
+}
 function receiveFromViewer(data, sourceConn) {
   if (!data || typeof data !== 'object') return;
+  if (data.type === 'typing') {
+    if (!sourceConn || !connections.has(sourceConn.peer)) return;
+    const profile = participantProfiles.get(sourceConn.peer) || {};
+    const packet = { type: 'typing', id: sourceConn.peer, name: profile.name || 'Participante', active: !!data.active };
+    setRoomTyping(sourceConn.peer, packet.name, packet.active);
+    connections.forEach(conn => { if (conn !== sourceConn && conn.open) { try { conn.send(packet); } catch {} } });
+    return;
+  }
   if (data.type === 'identity') {
     if (!sourceConn || !connections.has(sourceConn.peer)) return;
     participantProfiles.set(sourceConn.peer, safeProfileForNetwork(data.profile || {}));
@@ -3741,8 +4271,9 @@ function receiveFromViewer(data, sourceConn) {
   }
   if (data.type !== 'chat' || typeof data.text !== 'string') return;
   const savedProfile = sourceConn ? participantProfiles.get(sourceConn.peer) : null;
-  const packet = { type: 'chat', text: data.text.slice(0, 500), name: String(savedProfile?.name || data.name || 'Participante').slice(0, 32), time: data.time || clock() };
+  const packet = { type: 'chat', id: String(data.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2))), senderId: sourceConn?.peer || '', text: data.text.slice(0, 500), name: String(savedProfile?.name || data.name || 'Participante').slice(0, 32), photo: String(savedProfile?.photo || data.photo || '').slice(0, 600000), replyTo: data.replyTo && typeof data.replyTo === 'object' ? { id: String(data.replyTo.id || '').slice(0,100), name: String(data.replyTo.name || '').slice(0,40), text: String(data.replyTo.text || '').slice(0,180) } : null, time: data.time || clock() };
   if (!packet.text.trim()) return;
+  if (sourceConn?.peer) setRoomTyping(sourceConn.peer, packet.name, false);
   addChatMessage(packet);
   connections.forEach(conn => {
     if (conn !== sourceConn && conn.open) {
@@ -3753,9 +4284,20 @@ function receiveFromViewer(data, sourceConn) {
 
 function receiveFromHost(data) {
   if (!data || typeof data !== 'object') return;
+  if (data.type === 'typing') { setRoomTyping(data.id || 'host', data.name || 'Participante', !!data.active); return; }
+  if (data.type === 'room-closed') {
+    say('info', 'O anfitrião encerrou a sala. Você será desconectado.');
+    window.setTimeout(() => { if (vpeer) leaveWatch(); }, 350);
+    return;
+  }
+  if (data.type === 'duplicate-session') {
+    say('info', 'Este navegador já está conectado à sala em outra aba. Fechando a entrada duplicada…');
+    window.setTimeout(() => { if (vpeer) leaveWatch(); }, 550);
+    return;
+  }
   if (data.type === 'roster') { applyRemoteRoster(data); return; }
-  if (data.type === 'share-limit') { stopViewerShare(data.message || 'A sala permite no máximo duas transmissões simultâneas.'); return; }
-  if (data.type === 'host-share-ended') { if (!$('remote').srcObject && !remoteShareTiles.size) setInfo('A transmissão principal foi pausada. Aguarde ela voltar ou veja outra tela compartilhada.'); return; }
+  if (data.type === 'share-limit') { stopViewerShare(data.message || 'A sala permite no máximo três transmissões simultâneas.'); return; }
+  if (data.type === 'host-share-ended') { if (!$('remote').srcObject && !remoteShareTiles.size) { $('stage').hidden = true; setInfo('', false); $('watching').querySelector('.state-topline h1').textContent = 'Sala de voz'; $('watching').querySelector('.state-topline .state-description').textContent = 'Converse, ligue a câmera ou compartilhe sua tela.'; } return; }
   if (data.type === 'history' && Array.isArray(data.messages)) {
     data.messages.slice(-30).forEach(message => {
       if (message && message.type === 'chat' && typeof message.text === 'string') addChatMessage(message);
@@ -3763,7 +4305,8 @@ function receiveFromHost(data) {
     return;
   }
   if (data.type === 'chat' && typeof data.text === 'string') {
-    addChatMessage({ type: 'chat', text: data.text.slice(0, 500), name: String(data.name || 'Participante').slice(0, 32), time: data.time || clock() });
+    if (data.senderId) setRoomTyping(data.senderId, data.name || 'Participante', false);
+    addChatMessage({ type: 'chat', id: data.id, text: data.text.slice(0, 500), name: String(data.name || 'Participante').slice(0, 32), photo: String(data.photo || '').slice(0,600000), replyTo: data.replyTo || null, time: data.time || clock() });
   }
 }
 
@@ -3772,25 +4315,35 @@ function sendChat(event) {
   const input = $('chatInput');
   const text = input.value.trim().slice(0, 500);
   if (!text) return;
-  const packet = { type: 'chat', text, time: clock() };
+  const profile = localProfileSnapshot();
+  const replyTo = window.lockReplyTarget && typeof window.lockReplyTarget === 'object' ? {
+    id: String(window.lockReplyTarget.id || '').slice(0,100),
+    name: String(window.lockReplyTarget.name || '').slice(0,40),
+    text: String(window.lockReplyTarget.text || '').slice(0,180)
+  } : null;
+  const packet = { type: 'chat', id: crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2), senderId: peer && !peer.destroyed ? 'host' : (vpeer?.id || ''), text, name: profile.name || 'Participante', photo: String(profile.photo || '').slice(0,600000), replyTo, time: clock() };
+  sendLocalTypingState(false);
   if (peer && !peer.destroyed) {
-    packet.name = localProfileSnapshot().name || 'Anfitrião';
     addChatMessage(packet, 'Você');
     connections.forEach(conn => { if (conn.open) { try { conn.send(packet); } catch {} } });
   } else if (vpeer && vconn && vconn.open) {
-    packet.name = localProfileSnapshot().name || 'Participante';
     addChatMessage(packet, 'Você');
-    try { vconn.send(packet); } catch { say('chatSubtitle', 'Não foi possível enviar. Verifique a conexão.'); }
+    try { vconn.send(packet); } catch { say('chatSubtitle', 'Não foi possível enviar. Verifique a conexão.'); return; }
   } else {
-    say('chatSubtitle', 'Entre em uma sala ou inicie uma transmissão para conversar.');
+    say('chatSubtitle', 'Entre em uma sala para conversar.');
     return;
   }
   input.value = '';
+  window.dispatchEvent(new CustomEvent('lock-chat-sent'));
   input.focus();
 }
-
 /* ---------- convite e opções de envio ---------- */
+function isConnectedToRoom() {
+  return !!((peer && !peer.destroyed && peer.open && shareCode) || (vpeer && !vpeer.destroyed && vpeer.open && viewerCode));
+}
 function openInviteModal() {
+  if (vpeer && !peer) { say('homeMsg', 'Somente o anfitrião pode convidar pessoas para esta sala.'); return; }
+  if (!isConnectedToRoom()) { say('homeMsg', 'Crie ou entre em uma sala antes de convidar alguém.'); return; }
   renderShare();
   $('inviteStatus').textContent = currentRoomCode()
     ? (getShareLink() ? 'O convite inclui o link clicável do site e o código desta sala.' : 'O código já existe, mas falta configurar o endereço público do site. Configure uma vez para gerar links que abrem para outras pessoas.')
@@ -3820,6 +4373,8 @@ function openExternal(url) {
 }
 
 function requirePublicInvite() {
+  if (vpeer && !peer) { say('homeMsg', 'Somente o anfitrião pode convidar pessoas para esta sala.'); return false; }
+  if (!peer || peer.destroyed || !shareCode) { openInviteModal(); return false; }
   if (!currentRoomCode()) { openInviteModal(); return false; }
   if (!getShareLink()) {
     openInviteModal();
@@ -3896,12 +4451,10 @@ function toggleSharedAudio() {
 }
 
 function toggleRemoteAudio() {
-  const video = $('remote');
-  video.muted = !video.muted;
-  $('muteBtn').innerHTML = video.muted
-    ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6"/></svg>Ativar som'
-    : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/></svg>Silenciar';
+  roomSoundMuted = !roomSoundMuted;
+  applyRoomSoundState();
   refreshTools();
+  say('chatSubtitle', roomSoundMuted ? 'Som da sala silenciado neste dispositivo.' : 'Som da sala ativado neste dispositivo.');
 }
 
 function configurePublicLink() {
@@ -3923,6 +4476,33 @@ function saveBase() {
   say('inviteStatus', 'O convite usa o link fixo do site e o código da sala.');
 }
 
+const lockCoarsePointer = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+let roomSoundMuted = lockCoarsePointer;
+function applyRoomSoundState() {
+  const muted = !!roomSoundMuted;
+  const mainVideo = $('remote'); if (mainVideo) mainVideo.muted = muted;
+  const selfPreview = $('selfSharePreview'); if (selfPreview) selfPreview.muted = true;
+  document.querySelectorAll('audio[data-lock-remote-voice]').forEach(audio => {
+    audio.muted = muted;
+    if (!muted && audio.srcObject) audio.play().catch(() => {});
+  });
+  remoteShareTiles.forEach(entry => {
+    if (!entry.video) return;
+    entry.video.muted = muted;
+    if (entry.video.srcObject) entry.video.play().catch(() => {});
+  });
+  const mainRemoteVideo = $('remote');
+  if (mainRemoteVideo && mainRemoteVideo.srcObject) {
+    mainRemoteVideo.muted = muted;
+    mainRemoteVideo.play().catch(() => {});
+  }
+  if ($('toolMute')) {
+    $('toolMute').classList.toggle('tool-red', muted);
+    $('toolMute').title = muted ? 'Ativar som recebido da sala' : 'Silenciar som recebido da sala';
+    $('toolMute').setAttribute('aria-pressed', String(!muted));
+  }
+}
+
 /* ---------- voz em grupo via WebRTC/PeerJS ---------- */
 let micStream = null;
 let micMuted = false;
@@ -3933,6 +4513,15 @@ const voiceRelayCalls = new Map();
 const voicePlaybackCalls = new Map();
 const voiceAudioElements = new Map();
 
+function retryRoomMediaPlayback() {
+  const mainVideo = $('remote');
+  if (mainVideo && mainVideo.srcObject) mainVideo.play().catch(() => {});
+  remoteShareTiles.forEach(entry => { if (entry.video && entry.video.srcObject) entry.video.play().catch(() => {}); });
+  voiceAudioElements.forEach(audio => { if (audio.srcObject && !audio.muted) audio.play().catch(() => {}); });
+}
+document.addEventListener('pointerdown', retryRoomMediaPlayback, { passive: true });
+document.addEventListener('touchstart', retryRoomMediaPlayback, { passive: true });
+
 function playRemoteVoice(owner, incomingStream, call) {
   const previous = voicePlaybackCalls.get(owner);
   if (previous && previous !== call) { try { previous.close(); } catch {} }
@@ -3942,14 +4531,15 @@ function playRemoteVoice(owner, incomingStream, call) {
     audio = document.createElement('audio');
     audio.autoplay = true;
     audio.playsInline = true;
+    audio.dataset.lockRemoteVoice = 'true';
     audio.setAttribute('aria-label', 'Áudio de ' + (displayNameForPeer(owner) || 'participante'));
     audio.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-10px;bottom:-10px';
     document.body.append(audio);
     voiceAudioElements.set(owner, audio);
   }
   audio.srcObject = incomingStream;
-  audio.muted = false;
-  audio.volume = 1;
+  audio.muted = !!roomSoundMuted;
+  audio.volume = window.lockGetSettings ? window.lockGetSettings().volume : 1;
   audio.play().catch(() => {
     say('chatSubtitle', 'A voz está conectada. Clique uma vez na página para liberar o áudio do navegador.');
   });
@@ -4033,28 +4623,53 @@ function sendViewerVoice() {
 function refreshMicControl() {
   const button = $('toolMic');
   if (!button) return;
-  const inRoom = !!((peer && !peer.destroyed) || (vpeer && !vpeer.destroyed));
-  button.disabled = !inRoom || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia;
+  const hostReady = !!(peer && !peer.destroyed && peer.open);
+  // A guest may authorize the mic while the room DataConnection is still opening.
+  // The existing startWatch connection-open handler sends this stream as soon as it is ready.
+  const guestSession = !!(vpeer && !vpeer.destroyed && viewerCode);
+  const inRoom = hostReady || guestSession;
+  const hasMicApi = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  const waitingForChannel = guestSession && !(vconn && vconn.open);
+  button.disabled = !inRoom || !hasMicApi;
   const active = !!micStream;
   button.classList.toggle('tool-red', !active || micMuted);
   button.classList.toggle('mic-active', active && !micMuted);
-  button.title = !active ? 'Entrar na voz' : micMuted ? 'Ativar microfone' : 'Silenciar microfone';
+  button.classList.toggle('mic-pending', active && waitingForChannel);
+  button.title = !active
+    ? (waitingForChannel ? 'Ativar microfone enquanto conecta' : 'Entrar na voz')
+    : waitingForChannel
+      ? 'Microfone autorizado; será conectado quando a sala abrir'
+      : micMuted ? 'Ativar microfone' : 'Silenciar microfone';
   button.setAttribute('aria-label', button.title);
   button.setAttribute('aria-pressed', String(active && !micMuted));
 }
 
 async function toggleVoice() {
-  if (!(peer && !peer.destroyed) && !(vpeer && !vpeer.destroyed)) {
-    say('homeMsg', 'Crie uma sala ou entre com um código antes de ligar a voz.');
+  const hostReady = !!(peer && !peer.destroyed && peer.open);
+  const guestSession = !!(vpeer && !vpeer.destroyed && viewerCode);
+  if (!hostReady && !guestSession) {
+    say('homeMsg', 'Entre em uma sala antes de ligar o microfone. A transmissão da sua tela não é necessária.');
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    say('chatSubtitle', 'Este navegador não disponibiliza acesso ao microfone. A limitação é independente da transmissão de tela.');
     return;
   }
   if (!micStream) {
     try {
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: window.lockMicConstraints ? window.lockMicConstraints() : { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
       micMuted = false;
-      if (peer && !peer.destroyed) connections.forEach(conn => sendHostVoiceTo(conn));
-      else sendViewerVoice();
-      say('chatSubtitle', 'Microfone conectado. A voz será ouvida por todos na sala.');
+      if (hostReady) {
+        connections.forEach(conn => sendHostVoiceTo(conn));
+        say('chatSubtitle', 'Microfone conectado. A voz será ouvida por todos na sala.');
+      } else if (vconn && vconn.open) {
+        sendViewerVoice();
+        say('chatSubtitle', 'Microfone conectado. A voz será ouvida por todos na sala.');
+      } else {
+        // Do not discard the microphone just because the channel handshake is still in progress.
+        // startWatch sends it automatically when vconn emits "open".
+        say('chatSubtitle', 'Microfone autorizado. Ele será conectado automaticamente assim que você entrar no canal.');
+      }
     } catch (error) {
       say('homeMsg', error.name === 'NotAllowedError' ? 'Permita o acesso ao microfone para entrar na voz.' : 'Não consegui ativar a voz: ' + error.message);
       say('chatSubtitle', 'Não foi possível conectar o microfone. Verifique as permissões do navegador.');
@@ -4062,7 +4677,8 @@ async function toggleVoice() {
   } else {
     micMuted = micStream.getAudioTracks().some(track => track.enabled);
     micStream.getAudioTracks().forEach(track => { track.enabled = !micMuted; });
-    say('chatSubtitle', micMuted ? 'Microfone silenciado' : 'Microfone ativado');
+    if (!micMuted && guestSession && vconn && vconn.open && !viewerVoiceCall) sendViewerVoice();
+    say('chatSubtitle', micMuted ? 'Microfone silenciado' : (guestSession && !(vconn && vconn.open) ? 'Microfone ativado; será conectado quando a sala abrir.' : 'Microfone ativado'));
   }
   refreshMicControl();
 }
@@ -4092,7 +4708,13 @@ document.querySelectorAll('[data-screen-layout]').forEach(button => button.addEv
   document.body.dataset.screenLayout = button.dataset.screenLayout;
   document.querySelectorAll('[data-screen-layout]').forEach(item => item.classList.toggle('selected', item.dataset.screenLayout === button.dataset.screenLayout));
 }));
-$('noShare').hidden = canCapture;
+// Screen-capture support controls only the local screen-share buttons.
+// Joining, receiving other people's video, chat, and microphone voice are independent.
+if (!canCapture) {
+  showScreenShareWarning('unsupported');
+  $('startShare').title = screenShareUnavailableMessage;
+  $('toolScreen').title = screenShareUnavailableMessage;
+}
 $('startShare').addEventListener('click', startShare);
 $('startCamera').addEventListener('click', startCamera);
 $('stopBtn').addEventListener('click', () => stopShare(''));
@@ -4101,7 +4723,7 @@ $('toolCamera').addEventListener('click', startCamera);
 $('toolAudio').addEventListener('click', toggleSharedAudio);
 $('toolMic').addEventListener('click', toggleVoice);
 $('toolMute').addEventListener('click', toggleRemoteAudio);
-$('toolSettings').addEventListener('click', () => { if (typeof window.openLockProfile === 'function') window.openLockProfile(); else configurePublicLink(); });
+$('toolSettings').addEventListener('click', () => { if (typeof window.openLockSettings === 'function') window.openLockSettings(); });
 $('topLink').addEventListener('click', handleTopLink);
 $('configureInviteLink').addEventListener('click', () => { closeInviteModal(); configurePublicLink(); });
 $('toolInvite').addEventListener('click', openInviteModal);
@@ -4131,10 +4753,13 @@ $('chatForm').addEventListener('submit', sendChat);
 $('chatPlus').addEventListener('click', () => {
   say('chatSubtitle', 'O chat aceita mensagens de até 500 caracteres e funciona entre as pessoas conectadas à sala.');
 });
-$('clearChat').addEventListener('click', () => {
-  chatHistory = [];
-  resetChatDisplay();
-  say('chatSubtitle', 'Histórico local limpo');
+$('toggleChat').addEventListener('click', () => {
+  const shell = document.querySelector('.app-shell');
+  const collapsed = shell.classList.toggle('chat-collapsed');
+  $('toggleChat').textContent = collapsed ? '‹' : '›';
+  $('toggleChat').title = collapsed ? 'Expandir chat' : 'Recolher chat';
+  $('toggleChat').setAttribute('aria-label', $('toggleChat').title);
+  try { localStorage.setItem('lock-chat-collapsed', collapsed ? 'true' : 'false'); } catch {}
 });
 $('muteBtn').addEventListener('click', toggleRemoteAudio);
 $('fsBtn').addEventListener('click', () => {
@@ -4153,16 +4778,24 @@ document.addEventListener('click', event => {
   if (request) Promise.resolve(request.call(tile)).catch(() => {});
 });
 $('leaveBtn').addEventListener('click', leaveWatch);
+$('watchRetryButton').addEventListener('click', () => {
+  const code = viewerCode || clean(location.hash);
+  if (!code) { show('home'); say('homeMsg', 'Cole o link ou código da sala para entrar novamente.'); return; }
+  const retry = $('watchRetryButton');
+  retry.disabled = true;
+  retry.textContent = 'Conectando…';
+  if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+  if (vpeer) { try { vpeer.destroy(); } catch {} vpeer = null; }
+  vconn = null;
+  window.setTimeout(() => startWatch(code), 180);
+});
 $('toolExit').addEventListener('click', () => {
-  if (peer && stream) stopShare('Transmissão encerrada.');
-  else if (vpeer && viewerShareCall) stopViewerShare('Você parou de compartilhar a tela.');
+  if (peer && !peer.destroyed) leaveHostRoom();
   else if (vpeer) leaveWatch();
-  else if (peer) leaveHostRoom();
   else openInviteModal();
 });
 $('footerExit').addEventListener('click', () => {
   if (peer) leaveHostRoom();
-  else if (vpeer && viewerShareCall) stopViewerShare('Você parou de compartilhar a tela.');
   else if (vpeer) leaveWatch();
   else show('home');
 });
@@ -4172,6 +4805,7 @@ $('homeBtn').addEventListener('click', () => {
   else if (vpeer || (peer && incomingShares.size)) show('watching');
   else show('home');
 });
+// Joining a room never depends on screen capture support.
 $('watchBtn').addEventListener('click', () => {
   const code = clean($('codeIn').value);
   if (!code) return $('codeIn').focus();
@@ -4182,7 +4816,10 @@ $('watchBtn').addEventListener('click', () => {
 $('codeIn').addEventListener('keydown', event => { if (event.key === 'Enter') $('watchBtn').click(); });
 $('baseIn').addEventListener('keydown', event => { if (event.key === 'Enter') saveBase(); });
 $('chatInput').addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); $('chatForm').requestSubmit(); } });
+$('chatInput').addEventListener('input', handleChatTypingInput);
+$('chatInput').addEventListener('blur', () => sendLocalTypingState(false));
 addEventListener('pagehide', () => {
+  try { if (peer && shareCode && localStorage.getItem(ACTIVE_HOST_ROOM_KEY) === shareCode) localStorage.removeItem(ACTIVE_HOST_ROOM_KEY); } catch {}
   if (micStream) micStream.getTracks().forEach(track => track.stop());
   if (peer) peer.destroy();
   if (vpeer) vpeer.destroy();
@@ -4194,6 +4831,13 @@ addEventListener('hashchange', route);
 renderShare();
 refreshTools();
 renderParticipants();
+try {
+  const chatCollapsed = localStorage.getItem('lock-chat-collapsed') === 'true';
+  document.querySelector('.app-shell').classList.toggle('chat-collapsed', chatCollapsed);
+  $('toggleChat').textContent = chatCollapsed ? '‹' : '›';
+  $('toggleChat').title = chatCollapsed ? 'Expandir chat' : 'Recolher chat';
+  $('toggleChat').setAttribute('aria-label', $('toggleChat').title);
+} catch {}
 route();
 
 </script>
@@ -4225,6 +4869,8 @@ body[data-screen-layout="grid"] .remote-share-grid:not([hidden]){grid-template-c
 .remote-share-tile{position:relative;overflow:hidden;min-height:170px;background:#08090d;border:1px solid #343744;border-radius:12px;}
 .remote-share-tile video{display:block;width:100%;height:100%;min-height:170px;max-height:360px;object-fit:contain;background:#000;}
 .remote-share-label{position:absolute;left:9px;bottom:8px;padding:5px 8px;border-radius:6px;background:rgba(0,0,0,.72);color:#fff;font-size:11px;}
+.self-share-preview{border-color:#2e9d7c;box-shadow:inset 0 0 0 1px #2e9d7c55;}
+.self-share-preview video{transform:none;}
 @media(max-width:560px){.remote-share-grid:not([hidden]){grid-template-columns:1fr}.remote-share-tile,.remote-share-tile video{min-height:150px}}
 
 /* Lock call stage: participant cards inspired by a compact voice-room grid. */
@@ -4242,7 +4888,7 @@ body[data-screen-layout="focus"] .call-person-avatar{width:90px;height:90px;}
 @media(max-width:780px){.call-people-grid{grid-template-columns:1fr}.call-person-card{min-height:145px}.call-person-avatar{width:60px;height:60px}}
 
 </style>
-<div id="lockProfileOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="lockProfileTitle"><section class="lock-profile-card"><div class="lock-profile-row"><img id="lockProfilePreview" class="lock-profile-avatar" alt="Foto de perfil" hidden><div id="lockProfileInitial" class="lock-profile-avatar">L</div><div><h2 id="lockProfileTitle">Seu perfil Lock</h2><p style="margin:4px 0 0">Seu nome e sua foto ficam salvos neste navegador e aparecem apenas para quem estiver conectado à mesma sala.</p></div></div><label for="lockProfileName">Nome de exibição</label><input id="lockProfileName" type="text" maxlength="32" placeholder="Seu nome" autocomplete="nickname"><label for="lockProfilePhoto">Foto de perfil</label><input id="lockProfilePhoto" type="file" accept="image/*"><div class="lock-setting-line"><span>Notificações sonoras</span><label style="margin:0;display:flex;align-items:center;gap:8px"><input id="lockSoundsEnabled" type="checkbox" checked> Ativadas</label></div><p class="lock-profile-hint">Seu nome e sua foto só são compartilhados com as pessoas da mesma sala. Eles não ficam públicos no site. A preferência de som fica salva neste navegador.</p><div class="lock-profile-actions"><button id="lockProfileSave" class="save">Salvar perfil</button><button id="lockProfileClose">Fechar</button></div></section></div>
+<div id="lockProfileOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="lockProfileTitle"><section class="lock-profile-card"><div class="lock-profile-row"><img id="lockProfilePreview" class="lock-profile-avatar" alt="Foto de perfil" hidden><div id="lockProfileInitial" class="lock-profile-avatar">L</div><div><h2 id="lockProfileTitle">Seu perfil Lock</h2><p style="margin:4px 0 0">Seu nome e sua foto ficam salvos neste navegador e aparecem apenas para quem estiver conectado à mesma sala.</p></div></div><label for="lockProfileName">Nome de exibição</label><input id="lockProfileName" type="text" maxlength="32" placeholder="Seu nome" autocomplete="nickname"><label for="lockProfilePhoto">Foto de perfil</label><input id="lockProfilePhoto" type="file" accept="image/*,.gif"><div class="lock-setting-line"><span>Notificações sonoras</span><label style="margin:0;display:flex;align-items:center;gap:8px"><input id="lockSoundsEnabled" type="checkbox" checked> Ativadas</label></div><p class="lock-profile-hint">Seu nome e sua foto só são compartilhados com as pessoas da mesma sala. Eles não ficam públicos no site. A preferência de som fica salva neste navegador.</p><div class="lock-profile-actions"><button id="lockProfileSave" class="save">Salvar perfil</button><button id="lockProfileClose">Fechar</button></div></section></div>
 <script>
 (()=>{
  const byId=id=>document.getElementById(id);
@@ -4257,6 +4903,9 @@ body[data-screen-layout="focus"] .call-person-avatar{width:90px;height:90px;}
    byId('lockProfileName').value=profile.name||'';
    byId('lockProfileInitial').textContent=(profile.name||'L').slice(0,1).toUpperCase();
    const img=byId('lockProfilePreview');img.hidden=!profile.photo;img.src=profile.photo||'';byId('lockProfileInitial').hidden=!!profile.photo;
+   const homeAvatar=document.querySelector('.home-profile-top-avatar');
+   if(homeAvatar){homeAvatar.replaceChildren();if(profile.photo){const image=document.createElement('img');image.src=profile.photo;image.alt='';image.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%';homeAvatar.append(image)}else homeAvatar.textContent=(profile.name||'V').slice(0,1).toUpperCase();}
+   const homeCopy=document.querySelector('.home-profile-top-copy');if(homeCopy){homeCopy.innerHTML='';const strong=document.createElement('strong');strong.textContent=profile.name||'Seu perfil';const small=document.createElement('small');small.textContent='Editar perfil';homeCopy.append(strong,small);}
    // Keep this profile local to this browser: show it in the local participant row and footer only.
    document.querySelectorAll('.user-mini strong').forEach(el=>el.textContent=profile.name||'Lock · Você');
    document.querySelectorAll('.user-mini .avatar').forEach(el=>{
@@ -4272,8 +4921,10 @@ body[data-screen-layout="focus"] .call-person-avatar{width:90px;height:90px;}
  overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
  byId('lockProfilePhoto').addEventListener('change',e=>{
    const file=e.target.files&&e.target.files[0];if(!file)return;
-   if(!file.type.startsWith('image/')){alert('Escolha uma imagem.');return}
+   if(!file.type.startsWith('image/')){alert('Escolha uma imagem ou GIF.');return}
+   if(file.size>400*1024){alert('Escolha uma imagem de até 400 KB para manter o perfil leve e permitir sincronizar com a sala.');e.target.value='';return}
    const reader=new FileReader();reader.onload=()=>{
+     if(file.type==='image/gif'){ profile.photo=String(reader.result||''); draw(); return; }
      const img=new Image();img.onload=()=>{
        const canvas=document.createElement('canvas');const scale=Math.min(1,256/Math.max(img.width,img.height));
        canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
@@ -4347,6 +4998,919 @@ body[data-screen-layout="focus"] .call-person-avatar{width:90px;height:90px;}
 .screen-tile:fullscreen video,.screen-tile:-webkit-full-screen video{width:100%;height:100%;max-height:none;object-fit:contain}
 .screen-tile:fullscreen .tile-fullscreen,.screen-tile:-webkit-full-screen .tile-fullscreen{opacity:1;pointer-events:auto}
 @media(hover:none){.tile-fullscreen{opacity:1;pointer-events:auto;transform:none}}
+</style>
+
+
+<style id="lock-v1-9-layout">
+/* Landing: keep join-by-code on the initial page, never in the participant sidebar. */
+.home-join-card{display:block;width:min(100%,390px);margin:22px auto 0;text-align:left;padding:13px 10px 11px}
+.app-shell[data-current-view="home"] .home-join-card{display:block}
+.participants-panel>.join-card,.participants-panel>.sidebar-spacer{display:none!important}
+/* A room's left column is only the roster; right column is only the collapsible chat. */
+.right-panel .room-actions,.right-panel #hostBox,.right-panel .user-footer{display:none!important}
+.right-panel{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.chat-heading-actions{display:flex;align-items:center;gap:5px}
+.chat-message{display:block;min-width:0}
+.chat-message-body{width:100%}
+.chat-heading-actions #toggleChat{font-size:18px;line-height:1}
+.app-shell:not([data-current-view="home"]) .workspace{padding-bottom:86px!important;grid-template-columns:minmax(205px,22.2%) minmax(0,1fr) minmax(260px,25.6%)}
+.app-shell:not([data-current-view="home"]) .topbar .top-tools{position:fixed;z-index:60;left:50%;top:auto;bottom:12px;transform:translateX(-50%);gap:3px;padding:5px;border:1px solid #383a45;background:#24252c;box-shadow:0 8px 28px #0008}
+.app-shell:not([data-current-view="home"]) .tool-btn{width:39px;height:37px}
+.app-shell.chat-collapsed:not([data-current-view="home"]) .workspace{grid-template-columns:minmax(205px,22.2%) minmax(0,1fr) 42px!important}
+.app-shell.chat-collapsed .right-panel{width:42px;min-width:42px;padding:0;overflow:hidden}
+.app-shell.chat-collapsed .chat-heading{min-height:46px;justify-content:center;padding:5px 0;border-bottom:1px solid #292a32}
+.app-shell.chat-collapsed .chat-heading>div,.app-shell.chat-collapsed .chat-messages,.app-shell.chat-collapsed .chat-composer{display:none!important}
+.app-shell.chat-collapsed .chat-heading-actions{display:flex;flex-direction:column;gap:0}
+.app-shell.chat-collapsed #toggleChat{width:30px;height:32px;font-size:20px}
+body.light-theme .app-shell:not([data-current-view="home"]) .topbar .top-tools{background:#e4e6ed;border-color:#c7cbd6;box-shadow:0 8px 28px #20243635}
+@media(max-width:850px){
+  .app-shell:not([data-current-view="home"]) .topbar .top-tools{position:fixed;top:auto;bottom:10px;left:50%;transform:translateX(-50%);width:auto;max-width:calc(100vw - 12px);flex-wrap:nowrap;overflow-x:auto}
+  .app-shell:not([data-current-view="home"]) .workspace{padding-bottom:82px!important}
+  .app-shell.chat-collapsed:not([data-current-view="home"]) .workspace{grid-template-columns:minmax(0,1fr) 42px!important;grid-template-rows:minmax(440px,auto) minmax(220px,auto)}
+  .app-shell.chat-collapsed .participants-panel{grid-column:1;grid-row:2}
+  .app-shell.chat-collapsed .center-panel{grid-column:1 / -1;grid-row:1}
+  .app-shell.chat-collapsed .right-panel{grid-column:2;grid-row:2;min-height:120px}
+}
+@media(max-width:560px){
+  .home-join-card{margin-top:18px}
+  .home-join-card .join-fields{align-items:stretch}
+  .app-shell:not([data-current-view="home"]) .topbar .top-tools .tool-btn{width:33px;min-width:33px}
+  .app-shell:not([data-current-view="home"]) .workspace{padding-bottom:82px!important}
+}
+</style>
+
+
+<style id="lockcall-v2-layout">
+/* LockCall v2: clean room layout, bottom controls, and a reliable collapsed-chat reopen affordance. */
+.app-shell[data-current-view="home"] > .topbar { display:none !important; }
+.app-shell[data-current-view="home"] .home-state { position:relative; }
+.home-profile-top { position:fixed; z-index:100; top:16px; right:18px; display:none; align-items:center; gap:8px; padding:8px 12px; border:1px solid #3a3c48; border-radius:10px; color:#e8eaf2; background:#202129; font:600 12px/1 var(--text-font); cursor:pointer; box-shadow:0 5px 20px #0003; }
+.home-profile-top:hover { border-color:#0bb58a; background:#202b29; }
+.home-profile-top-avatar { display:grid; place-items:center; width:23px; height:23px; border-radius:50%; background:#087e63; color:#fff; font-size:15px; }
+.app-shell[data-current-view="home"] ~ #homeProfileTop { display:flex; }
+body:has(.app-shell[data-current-view="home"]) .home-profile-top { display:flex; }
+#lockProfileFromHome, #lockProfileBtn, #toolSettings, #manageRoom { display:none !important; }
+.app-shell:not([data-current-view="home"]) { grid-template-rows:0 minmax(0,1fr) !important; }
+.app-shell:not([data-current-view="home"]) > .topbar { height:0 !important; min-height:0 !important; padding:0 !important; overflow:visible !important; border:0 !important; background:transparent !important; }
+.app-shell:not([data-current-view="home"]) > .topbar > .top-left,
+.app-shell:not([data-current-view="home"]) > .topbar > .top-actions { display:none !important; }
+.app-shell:not([data-current-view="home"]) .topbar .top-tools { position:fixed; z-index:100; left:50%; top:auto; bottom:8px; transform:translateX(-50%); display:flex; align-items:center; gap:3px; max-width:calc(100vw - 14px); padding:3px 4px; border:1px solid #353742; border-radius:13px; background:#202129f2; box-shadow:0 8px 28px #0009; }
+.app-shell:not([data-current-view="home"]) .tool-btn { width:33px !important; min-width:33px !important; height:31px !important; min-height:31px !important; padding:5px !important; border-radius:8px !important; }
+.app-shell:not([data-current-view="home"]) .tool-btn svg { width:15px; height:15px; }
+.app-shell:not([data-current-view="home"]) .tool-divider { margin:0 1px; }
+.app-shell:not([data-current-view="home"]) .workspace { padding-bottom:52px !important; }
+.app-shell:not([data-current-view="home"]) .center-panel { min-height:0; }
+.app-shell:not([data-current-view="home"]) .right-panel { position:relative; min-width:0; }
+.app-shell:not([data-current-view="home"]) .right-panel .chat-heading { flex:0 0 auto; }
+.app-shell:not([data-current-view="home"]) #chatMessages { flex:1 1 auto; min-height:0; }
+.app-shell.chat-collapsed:not([data-current-view="home"]) .workspace { grid-template-columns:minmax(205px,22.2%) minmax(0,1fr) 42px !important; }
+.app-shell.chat-collapsed .right-panel { width:42px !important; min-width:42px !important; padding:0 !important; overflow:hidden !important; }
+.app-shell.chat-collapsed .chat-heading { min-height:48px; justify-content:center; padding:4px 0; }
+.app-shell.chat-collapsed .chat-heading>div, .app-shell.chat-collapsed .chat-messages, .app-shell.chat-collapsed .chat-reply-bar, .app-shell.chat-collapsed .chat-extras, .app-shell.chat-collapsed .chat-composer { display:none !important; }
+.app-shell.chat-collapsed .chat-heading-actions { display:flex; flex-direction:column; gap:0; }
+.app-shell.chat-collapsed #toggleChat { display:grid !important; place-items:center; width:32px; height:36px; font-size:20px; cursor:pointer; }
+.reopen-chat { position:fixed; z-index:120; right:7px; top:50%; transform:translateY(-50%); width:33px; height:66px; padding:0; border:1px solid #393b47; border-radius:11px 0 0 11px; color:#e9ebf3; background:#252630; font-size:11px; font-weight:800; writing-mode:vertical-rl; cursor:pointer; box-shadow:0 4px 18px #0005; }
+.reopen-chat:hover { background:#087e63; border-color:#0ca981; }
+.chat-composer { flex:0 0 auto; gap:4px; margin:0 7px 7px; padding:4px; }
+.chat-input { flex:1 1 auto; min-width:0; }
+.composer-tool, .composer-gif { display:inline-grid; flex:0 0 auto; place-items:center; width:29px; height:29px; border:0; border-radius:7px; background:transparent; color:#c3c7d5; cursor:pointer; font-weight:750; }
+.composer-tool { font-size:19px; }
+.composer-gif { font-size:10px; border:1px solid #4a4c59; background:#282a34; }
+.composer-tool:hover,.composer-gif:hover { color:#fff; background:#30323d; }
+.chat-reply-bar { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 8px 6px; padding:6px 9px; border-left:2px solid #08b889; border-radius:5px; background:#202a29; color:#b9c8ca; font-size:10px; }
+.chat-reply-bar span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chat-reply-bar button,.tiny-close { border:0; background:transparent; color:#a9adbb; font-size:19px; cursor:pointer; }
+.chat-extras { position:absolute; z-index:90; left:8px; right:8px; bottom:57px; max-height:min(310px,45vh); overflow:auto; padding:10px; border:1px solid #383a45; border-radius:11px; background:#1d1f26; box-shadow:0 12px 35px #0009; }
+.emoji-picker { display:grid; grid-template-columns:repeat(8,minmax(26px,1fr)); gap:3px; }
+.emoji-pick { display:grid; place-items:center; min-width:26px; height:30px; border:0; border-radius:6px; background:transparent; font-size:18px; cursor:pointer; }
+.emoji-pick:hover { background:#343642; }
+.gif-panel { display:flex; flex-direction:column; gap:9px; }
+.gif-panel-head { display:flex; align-items:center; justify-content:space-between; font-size:12px; }
+.gif-search-row { display:flex; gap:5px; }
+.gif-search-row .field { min-width:0; flex:1; height:34px; font-size:11px; }
+.gif-panel p { color:#9399aa; font-size:10px; line-height:1.45; }
+.mention-picker { display:flex; flex-direction:column; gap:3px; }
+.mention-option { display:flex; align-items:center; gap:8px; padding:7px; border:0; border-radius:7px; background:transparent; text-align:left; color:#e6e8ef; cursor:pointer; font-size:11px; }
+.mention-option:hover { background:#30323d; }
+.mention-option small { margin-left:auto; color:#7d8497; }
+.chat-message { display:grid !important; grid-template-columns:28px minmax(0,1fr) !important; gap:8px !important; align-items:start !important; padding:3px 0; }
+.chat-message-avatar { width:27px !important; height:27px !important; min-width:27px; min-height:27px; overflow:hidden; }
+.chat-message-avatar img { display:block; width:100%; height:100%; border-radius:50%; object-fit:cover; }
+.chat-message-meta { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px; }
+.chat-message-meta strong { max-width:75%; overflow-wrap:anywhere; }
+.chat-self-tag { padding:1px 4px; border-radius:4px; background:#163e34; color:#61dfbc; font-size:8px; }
+.chat-message-text { margin-top:3px; font-size:12px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; }
+.chat-mention { padding:1px 3px; border-radius:4px; color:#a8b7ff; background:#38345f; font-weight:650; }
+.chat-mention-self { color:#68e4be; background:#134737; }
+.chat-link { color:#8fb6ff; text-decoration:underline; overflow-wrap:anywhere; }
+.chat-gif-preview { display:block; max-width:min(230px,100%); max-height:180px; margin-top:6px; border:1px solid #363946; border-radius:8px; object-fit:contain; }
+.chat-reply-quote { display:flex; flex-direction:column; gap:2px; margin-bottom:5px; padding:5px 7px; border-left:2px solid #707caa; border-radius:3px; background:#20222a; color:#a6abbb; font-size:10px; }
+.chat-reply-quote strong { color:#cfd3e2; }
+.chat-reply-quote span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chat-message-actions { display:flex; justify-content:flex-end; min-height:15px; opacity:0; transition:opacity .12s ease; }
+.chat-message:hover .chat-message-actions,.chat-message:focus-within .chat-message-actions { opacity:1; }
+.chat-reply-action { padding:2px 5px; border:0; border-radius:5px; background:transparent; color:#838ba0; font-size:9px; cursor:pointer; }
+.chat-reply-action:hover { background:#30323d; color:#e7e9f1; }
+#muteBtn, .viewer-controls { display:none !important; } /* the bottom toolbar is the only place for call controls */
+#toolAudio .slash { display:none; }
+#toolAudio.tool-red .slash { display:block; }
+@media (max-width:850px) {
+ .app-shell:not([data-current-view="home"]) .topbar .top-tools { bottom:6px; padding:3px; max-width:calc(100vw - 8px); }
+ .app-shell:not([data-current-view="home"]) .tool-btn { width:30px !important; min-width:30px !important; height:29px !important; min-height:29px !important; }
+ .app-shell:not([data-current-view="home"]) .workspace { padding-bottom:46px !important; }
+ .app-shell.chat-collapsed:not([data-current-view="home"]) .workspace { grid-template-columns:minmax(0,1fr) 42px !important; grid-template-rows:minmax(440px,auto) minmax(220px,auto); }
+ .app-shell.chat-collapsed .participants-panel { grid-column:1; grid-row:2; }
+ .app-shell.chat-collapsed .center-panel { grid-column:1 / -1; grid-row:1; }
+ .app-shell.chat-collapsed .right-panel { grid-column:2; grid-row:2; min-height:120px; }
+ .chat-message-actions { opacity:1; }
+}
+</style>
+
+
+<script id="lockcall-v2-chat-ui">
+(()=>{
+ const $=id=>document.getElementById(id);
+ const shell=document.querySelector('.app-shell');
+ const homeProfile=$('homeProfileTop');
+ homeProfile?.addEventListener('click',()=>{ if(typeof window.openLockProfile==='function')window.openLockProfile(); });
+ // Profile edit is only available from the home-screen corner.
+ const syncHomeButton=()=>{ if(homeProfile) homeProfile.style.display=(shell?.dataset.currentView==='home')?'flex':'none'; };
+ const observer=new MutationObserver(syncHomeButton); if(shell)observer.observe(shell,{attributes:true,attributeFilter:['data-current-view']}); syncHomeButton();
+ const showExtras=(panel)=>{const extras=$('chatExtras'); if(!extras)return; extras.hidden=false; ['emojiPicker','gifPanel','mentionPicker'].forEach(id=>{const el=$(id);if(el&&id!==panel)el.hidden=true;}); if(panel&&$(panel))$(panel).hidden=false;};
+ const hideExtras=()=>{if($('chatExtras'))$('chatExtras').hidden=true; ['emojiPicker','gifPanel','mentionPicker'].forEach(id=>{if($(id))$(id).hidden=true;});};
+ const emojiList=['😀','😃','😄','😁','😆','😅','😂','🤣','🥹','😊','😍','🥰','😘','😎','🤔','🙄','😭','💀','🤡','👀','🔥','💯','✨','🎉','❤️','💜','👍','👎','🙏','👏','🤝','✅','❌','🚀','🎮','🐱','🐶','👻','🤖','💻','🫶','🤍','😴','😡','😱','🥳','😈','🫡','🧠','🤯','🍿','🎃','☕','🖤','🗿','🤌','📸','🎵','🔒','💬','🟢','⚡','🫠'];
+ const picker=$('emojiPicker'); if(picker){picker.replaceChildren();emojiList.forEach(emoji=>{const b=document.createElement('button');b.type='button';b.className='emoji-pick';b.textContent=emoji;b.title=emoji;b.addEventListener('click',()=>{const input=$('chatInput');if(!input)return;const start=input.selectionStart??input.value.length,end=input.selectionEnd??input.value.length;input.value=input.value.slice(0,start)+emoji+input.value.slice(end);input.focus();input.setSelectionRange(start+emoji.length,start+emoji.length);});picker.append(b);});}
+ $('emojiToggle')?.addEventListener('click',()=>{const isOpen=$('chatExtras')&&!$('chatExtras').hidden&&!$('emojiPicker').hidden;if(isOpen)hideExtras();else showExtras('emojiPicker');});
+ $('gifToggle')?.addEventListener('click',()=>{const isOpen=$('chatExtras')&&!$('chatExtras').hidden&&!$('gifPanel').hidden;if(isOpen)hideExtras();else{showExtras('gifPanel');$('gifSearchQuery')?.focus();}});
+ $('closeGifPanel')?.addEventListener('click',hideExtras);
+ $('tenorSearchBtn')?.addEventListener('click',()=>{const q=($('gifSearchQuery')?.value||'').trim()||'reaction';window.open('https://tenor.com/search/'+encodeURIComponent(q)+'-gifs','_blank','noopener,noreferrer');});
+ $('insertGifUrl')?.addEventListener('click',()=>{const url=($('gifDirectUrl')?.value||'').trim();if(!/^https?:\/\//i.test(url)){alert('Cole o link público do GIF começando com http:// ou https://.');return;}const input=$('chatInput');input.value=(input.value?input.value+' ':'')+url.slice(0,450);hideExtras();$('chatForm').requestSubmit();});
+ const replyBar=$('chatReplyBar');
+ const setReply=target=>{window.lockReplyTarget=target||null;if(!replyBar)return;if(!target){replyBar.hidden=true;$('chatReplyLabel').textContent='';return;}replyBar.hidden=false;$('chatReplyLabel').textContent='Respondendo a '+target.name+': '+target.text; $('chatInput')?.focus();};
+ window.addEventListener('lock-chat-reply',e=>setReply(e.detail));
+ $('cancelChatReply')?.addEventListener('click',()=>setReply(null));
+ window.addEventListener('lock-chat-sent',()=>{setReply(null);hideExtras();});
+ const getNames=()=>{try{if(typeof window.getLockChatMentionNames==='function')return window.getLockChatMentionNames();}catch{}return [...document.querySelectorAll('.participant-name')].map(el=>(el.textContent||'').split('·')[0].trim()).filter(Boolean);};
+ const mentionPicker=$('mentionPicker'),input=$('chatInput');
+ const updateMentions=()=>{if(!input||!mentionPicker)return;const pos=input.selectionStart??input.value.length;const before=input.value.slice(0,pos);const match=before.match(/(^|\s)@([\p{L}\p{N}_.-]{0,32})$/u);if(!match){if(!mentionPicker.hidden){mentionPicker.hidden=true;if($('chatExtras')&&$('emojiPicker').hidden&&(!$('gifPanel')||$('gifPanel').hidden))$('chatExtras').hidden=true;}return;}const query=(match[2]||'').toLocaleLowerCase();const names=[...new Set(getNames().filter(n=>n&&!/^(você|participante)$/i.test(n)))].filter(n=>n.toLocaleLowerCase().includes(query)).slice(0,8);if(!names.length){mentionPicker.hidden=true;return;}mentionPicker.replaceChildren();names.forEach(name=>{const b=document.createElement('button');b.type='button';b.className='mention-option';const av=document.createElement('span');av.className='avatar avatar-blue';av.textContent=name.slice(0,1).toUpperCase();const label=document.createElement('span');label.textContent=name;const suffix=document.createElement('small');suffix.textContent='mencionar';b.append(av,label,suffix);b.addEventListener('click',()=>{const start=pos-match[2].length-1;input.value=input.value.slice(0,start)+'@'+name+' '+input.value.slice(pos);const caret=start+name.length+2;input.focus();input.setSelectionRange(caret,caret);hideExtras();});mentionPicker.append(b);});showExtras('mentionPicker');};
+ input?.addEventListener('input',updateMentions); input?.addEventListener('keyup',updateMentions); input?.addEventListener('click',updateMentions);
+ // Keep the collapse button operable and show a persistent reopen tab outside the narrow panel.
+ const reopen=$('reopenChat'),toggle=$('toggleChat');
+ const syncChat=()=>{const collapsed=shell?.classList.contains('chat-collapsed');if(reopen)reopen.hidden=!collapsed;if(toggle){toggle.textContent=collapsed?'‹':'›';toggle.title=collapsed?'Expandir chat':'Recolher chat';toggle.setAttribute('aria-label',toggle.title);}};
+ const toggleChat=()=>{if(!shell)return;shell.classList.toggle('chat-collapsed');const collapsed=shell.classList.contains('chat-collapsed');try{localStorage.setItem('lock-chat-collapsed',collapsed?'true':'false')}catch{}syncChat();};
+ toggle?.addEventListener('click',()=>{setTimeout(syncChat,0);});
+ reopen?.addEventListener('click',()=>{if(shell?.classList.contains('chat-collapsed'))shell.classList.remove('chat-collapsed');try{localStorage.setItem('lock-chat-collapsed','false')}catch{}syncChat();});
+ syncChat();
+ // A single microphone button remains. The other media control is clearly a speaker for shared-screen audio.
+ const toolAudio=$('toolAudio'); if(toolAudio){toolAudio.title='Áudio da tela compartilhada';toolAudio.setAttribute('aria-label','Áudio da tela compartilhada');}
+ // Audio notifications default to on, except when the user explicitly switched them off in profile settings.
+ try { if(localStorage.getItem('lock-sounds-enabled')===null)localStorage.setItem('lock-sounds-enabled','true'); if($('lockSoundsEnabled'))$('lockSoundsEnabled').checked=localStorage.getItem('lock-sounds-enabled')!=='false'; } catch{}
+})();
+</script>
+
+
+<div id="lockSettingsOverlay" class="lock-settings-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="lockSettingsTitle">
+  <section class="lock-settings-card">
+    <div class="lock-settings-head"><div><h2 id="lockSettingsTitle">Configurações da chamada</h2><p>Ajustes locais para este navegador.</p></div><button id="lockSettingsClose" type="button" aria-label="Fechar configurações">×</button></div>
+    <div class="lock-settings-grid">
+      <label>Resolução da tela e câmera<select id="lockResolution"><option value="auto">Automática</option><option value="720">HD · 720p</option><option value="1080">Full HD · 1080p</option><option value="1440">QHD · 1440p</option></select><small>A captura pode ser limitada pelo navegador, computador ou tela escolhida.</small></label>
+      <label>Qualidade do microfone<select id="lockMicQuality"><option value="standard">Padrão · menor consumo</option><option value="high">Alta · 48 kHz quando disponível</option></select></label>
+      <label class="lock-setting-check"><input id="lockNoiseReduction" type="checkbox" checked><span><strong>Redução de ruído</strong><small>Filtra ruídos de fundo, se suportado pelo navegador.</small></span></label>
+      <label class="lock-setting-check"><input id="lockEchoCancel" type="checkbox" checked><span><strong>Cancelamento de eco</strong><small>Ajuda a evitar que o áudio dos alto-falantes volte pelo microfone.</small></span></label>
+      <label class="lock-setting-check"><input id="lockAutoGain" type="checkbox" checked><span><strong>Volume automático do microfone</strong><small>Ajusta o nível do microfone quando o dispositivo oferece suporte.</small></span></label>
+      <label>Volume recebido<select id="lockSpeakerVolume"><option value="0.5">50%</option><option value="0.75">75%</option><option value="1">100%</option></select></label>
+      <label>Tema<select id="lockThemeChoice"><option value="dark">Escuro</option><option value="light">Claro</option><option value="system">Seguir o sistema</option></select></label>
+    </div>
+    <p id="lockSettingsStatus" class="lock-settings-status" aria-live="polite"></p>
+    <div class="lock-settings-actions"><button id="lockSettingsSave" type="button">Salvar ajustes</button><button id="lockSettingsCancel" type="button">Cancelar</button></div>
+  </section>
+</div>
+<style id="lockcall-v2-1-style">
+/* Keep the home profile card visually prominent while preserving the single edit entry point. */
+.home-profile-top{min-width:170px;max-width:min(280px,calc(100vw - 24px));gap:10px;padding:8px 13px;border-radius:14px;border-color:#2e6658;background:linear-gradient(145deg,#202b2a,#171b22);box-shadow:0 10px 32px #0005}
+.home-profile-top-avatar{width:40px;height:40px;flex:0 0 40px;border:2px solid #16b889;overflow:hidden;font-size:18px}
+.home-profile-top-avatar img{width:100%;height:100%;object-fit:cover}
+.home-profile-top-copy{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}.home-profile-top-copy strong{font-size:12px;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f4f8f7}.home-profile-top-copy small{font-size:10px;color:#7bd9bd}
+/* No stale empty/capturing placeholders when nobody is sharing. */
+.lobby-placeholder{display:none!important}.lobby-share-info,.sharing-state>.share-info-card,#qr{display:none!important}
+#stage[hidden]{display:none!important}
+/* Avatar and message ergonomics */
+.chat-message{display:flex!important;align-items:flex-start;gap:9px;margin:12px 8px;}
+.chat-message-avatar{width:32px;height:32px;flex:0 0 32px;overflow:hidden;display:grid;place-items:center;border-radius:50%;}
+.chat-message-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.chat-message-body{min-width:0;flex:1}.chat-message-meta{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}.chat-message-meta time{font-size:10px;color:#777f90}.chat-message-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}.chat-gif-preview{display:block;max-width:min(260px,100%);max-height:220px;object-fit:contain;border-radius:9px;margin-top:6px}
+/* The old GIF picker is removed: direct GIF/image URLs typed in chat still render inline. */
+#gifToggle,#gifPanel{display:none!important}.chat-composer .composer-tool{flex:0 0 auto}
+#toolSettings{display:grid!important;place-items:center!important}
+#toolSettings svg{width:17px;height:17px}
+.tool-active{background:#087e63!important;border-color:#0aa77f!important;color:#fff!important}
+.lock-settings-backdrop{position:fixed;inset:0;z-index:11000;display:grid;place-items:center;padding:16px;background:#05060bcc;backdrop-filter:blur(7px)}.lock-settings-backdrop[hidden]{display:none!important}
+.lock-settings-card{width:min(560px,100%);max-height:min(88dvh,760px);overflow:auto;padding:21px;border:1px solid #373a48;border-radius:18px;background:#191b23;color:#f2f3f9;box-shadow:0 26px 90px #000b}
+.lock-settings-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:17px}.lock-settings-head h2{margin:0;font-size:20px}.lock-settings-head p{margin:5px 0 0;color:#999fb0;font-size:12px}.lock-settings-head button{width:32px;height:32px;border:1px solid #414453;border-radius:9px;background:#272a35;color:#fff;font-size:23px;cursor:pointer}
+.lock-settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.lock-settings-grid>label{display:flex;flex-direction:column;gap:7px;min-width:0;color:#c4c9d8;font-size:12px}.lock-settings-grid select{width:100%;min-height:39px;padding:8px 10px;border:1px solid #3c404e;border-radius:9px;background:#101218;color:#f3f5fb;font:inherit}.lock-settings-grid small{color:#8b91a3;font-size:10px;line-height:1.45}.lock-settings-grid .lock-setting-check{display:flex;flex-direction:row;align-items:flex-start;gap:9px;padding:10px;border:1px solid #333642;border-radius:10px;background:#20222b}.lock-setting-check input{margin:2px 0 0;accent-color:#0db58a}.lock-setting-check span{display:flex;flex-direction:column;gap:4px}.lock-setting-check strong{font-size:11px;color:#e4e7f0}.lock-settings-status{min-height:16px;color:#6ce0bd;font-size:11px}.lock-settings-actions{display:flex;gap:8px;justify-content:flex-end}.lock-settings-actions button{padding:10px 15px;border:1px solid #3b3e4c;border-radius:9px;background:#262933;color:#fff;font-weight:700;cursor:pointer}.lock-settings-actions #lockSettingsSave{background:#078768;border-color:#078768}
+@media(max-width:560px){.lock-settings-grid{grid-template-columns:1fr}.home-profile-top{top:10px;right:10px}}
+</style>
+<script id="lockcall-v2-1-settings-and-controls">
+(()=>{
+ const $=id=>document.getElementById(id);
+ const KEY='lock-call-settings-v1';
+ const defaults={resolution:'auto',micQuality:'standard',noiseReduction:true,echoCancellation:true,autoGain:true,volume:1,theme:'dark'};
+ let settings={...defaults};
+ try{settings={...defaults,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{}
+ const overlay=$('lockSettingsOverlay');
+ const applyTheme=theme=>{const choice=theme||settings.theme||'dark';let light=choice==='light';if(choice==='system')light=!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches);document.body.classList.toggle('light-theme',light);const toggle=$('themeToggle');if(toggle)toggle.classList.toggle('selected',!light)};
+ const fill=()=>{ $('lockResolution').value=settings.resolution; $('lockMicQuality').value=settings.micQuality; $('lockNoiseReduction').checked=!!settings.noiseReduction; $('lockEchoCancel').checked=!!settings.echoCancellation; $('lockAutoGain').checked=!!settings.autoGain; $('lockSpeakerVolume').value=String(settings.volume); $('lockThemeChoice').value=settings.theme; };
+ const read=()=>({resolution:$('lockResolution').value,micQuality:$('lockMicQuality').value,noiseReduction:$('lockNoiseReduction').checked,echoCancellation:$('lockEchoCancel').checked,autoGain:$('lockAutoGain').checked,volume:Number($('lockSpeakerVolume').value)||1,theme:$('lockThemeChoice').value});
+ window.lockGetSettings=()=>({...settings});
+ window.lockMicConstraints=()=>({echoCancellation:!!settings.echoCancellation,noiseSuppression:!!settings.noiseReduction,autoGainControl:!!settings.autoGain, ...(settings.micQuality==='high'?{sampleRate:{ideal:48000},channelCount:{ideal:1}}:{sampleRate:{ideal:44100},channelCount:{ideal:1}})});
+ window.openLockSettings=()=>{fill();$('lockSettingsStatus').textContent='';overlay.hidden=false;$('lockSettingsClose').focus()};
+ const close=()=>{overlay.hidden=true};
+ $('lockSettingsClose').addEventListener('click',close);$('lockSettingsCancel').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
+ $('lockSettingsSave').addEventListener('click',async()=>{
+   settings=read();try{localStorage.setItem(KEY,JSON.stringify(settings))}catch{}
+   applyTheme(settings.theme);
+   if(typeof micStream!=='undefined'&&micStream){for(const track of micStream.getAudioTracks()){try{await track.applyConstraints(window.lockMicConstraints())}catch{}}}
+   if(typeof voiceAudioElements!=='undefined'&&voiceAudioElements&&voiceAudioElements.forEach){voiceAudioElements.forEach(audio=>{audio.volume=settings.volume})}
+   document.querySelectorAll('audio[data-lock-remote-voice]').forEach(audio=>{audio.volume=settings.volume});
+   const remoteVideo=$('remote');if(remoteVideo)remoteVideo.volume=settings.volume;
+   if(typeof remoteShareTiles!=='undefined'&&remoteShareTiles&&remoteShareTiles.forEach){remoteShareTiles.forEach(entry=>{if(entry.video)entry.video.volume=settings.volume})}
+   $('lockSettingsStatus').textContent='Ajustes salvos neste navegador. Alguns dispositivos podem ignorar opções não suportadas.';
+   setTimeout(close,900);
+ });
+ // Persist theme changes made by the existing quick theme buttons.
+ ['themeToggle','rightTheme'].forEach(id=>$(id)?.addEventListener('click',()=>setTimeout(()=>{settings.theme=document.body.classList.contains('light-theme')?'light':'dark';try{localStorage.setItem(KEY,JSON.stringify(settings))}catch{}fill();},0)));
+ const originalToggle=window.toggleTheme;
+ if(typeof originalToggle==='function'){
+   window.toggleTheme=function(){originalToggle();settings.theme=document.body.classList.contains('light-theme')?'light':'dark';try{localStorage.setItem(KEY,JSON.stringify(settings))}catch{}fill();};
+ }
+ // Always expose the room settings, never the profile editor from inside the call.
+ // Apply sound level and theme defaults; room audio is unmuted unless the user toggles it locally.
+ applyTheme(settings.theme);
+ const originalNotify=window.notifyLockSound;
+ // Profile-avatar display is refreshed by profile.js; refresh again after local settings load if available.
+ if(typeof window.openLockProfile==='function'){
+   const previousOpen=window.openLockProfile;
+   window.openLockProfile=function(){previousOpen();setTimeout(()=>{const avatar=document.querySelector('.home-profile-top-avatar');if(avatar){avatar.replaceChildren();const profile=window.getLockLocalProfile?.()||{};if(profile.photo){const img=document.createElement('img');img.src=profile.photo;img.alt='';avatar.append(img)}else avatar.textContent=(profile.name||'V').slice(0,1).toUpperCase();}},50)};
+ }
+ // Recompute controls after room joins/roster updates, with a little retry for WebRTC setup.
+ const refresh=()=>{try{if(typeof refreshTools==='function')refreshTools()}catch{}};
+ document.addEventListener('visibilitychange',refresh);
+ setTimeout(refresh,0);
+})();
+</script>
+
+<style id="lock-social-v2-5-style">
+.lock-sidebar-tabs{display:flex;flex:0 0 auto;gap:5px;padding:8px 10px;border-bottom:1px solid var(--panel-border,#30323d);background:var(--panel-bg,#171920)}
+.lock-sidebar-tab{display:flex;align-items:center;justify-content:center;gap:7px;flex:1;min-width:0;padding:8px 10px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted,#a0a5b5);font:700 12px/1.2 var(--text-font,Inter,system-ui,sans-serif);cursor:pointer}
+.lock-sidebar-tab:hover{background:#ffffff08;color:var(--text,#f4f5fb)}.lock-sidebar-tab.active{border-color:#187e68;background:#10352d;color:#e6fff6}
+.lock-social-badge{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:#0aa77f;color:#fff;font-size:10px;font-weight:800}
+.lock-social-badge[hidden]{display:none!important}
+.right-panel[data-panel-view="friends"] .chat-heading,.right-panel[data-panel-view="friends"] #chatMessages,.right-panel[data-panel-view="friends"] #chatReplyBar,.right-panel[data-panel-view="friends"] #chatExtras,.right-panel[data-panel-view="friends"] #chatForm{display:none!important}
+.right-panel[data-panel-view="friends"] #lockFriendsPanel{display:flex!important;flex:1 1 auto;min-height:0;flex-direction:column;gap:12px;padding:13px 12px 10px;overflow:auto}
+.right-panel[data-panel-view="chat"] #lockFriendsPanel{display:none!important}
+.lock-friends-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.lock-friends-head h2{margin:0;color:var(--text,#f4f5fb);font-size:16px}.lock-friends-head p{margin:5px 0 0;color:var(--muted,#a0a5b5);font-size:10px;line-height:1.45}
+.lock-copy-code{flex:0 0 auto;padding:8px 9px;border:1px solid #3c4050;border-radius:8px;background:#22252e;color:#eef0f7;font-size:10px;font-weight:800;cursor:pointer}.lock-copy-code:hover{border-color:#0aa77f}
+.lock-own-code{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border:1px solid #303843;border-radius:9px;background:#11161b}.lock-own-code span{color:#8c96a9;font-size:9px;font-weight:800;letter-spacing:.12em}.lock-own-code strong{color:#65e0bd;font:800 12px/1.1 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.09em;overflow-wrap:anywhere}
+.lock-add-friend-form{display:flex;gap:6px}.lock-add-friend-form .field{min-width:0;flex:1;height:36px;padding:8px 10px;font-size:11px}.lock-add-friend-form .btn{flex:0 0 auto;padding:7px 10px;font-size:11px}
+.lock-social-status{margin:-5px 0 0;color:#8d98aa;font-size:10px;line-height:1.4}.lock-social-status[data-kind="error"]{color:#ff9caa}.lock-social-status[data-kind="success"]{color:#6ee7c5}
+.lock-social-section{display:flex;flex-direction:column;gap:7px;min-height:0}.lock-social-section h3{display:flex;align-items:center;gap:6px;margin:0;color:var(--muted,#a0a5b5);font-size:10px;letter-spacing:.07em;text-transform:uppercase}.lock-social-list{display:flex;flex-direction:column;gap:6px}.lock-social-empty{margin:0;padding:7px 0;color:#7e8496;font-size:11px;line-height:1.45}
+.lock-social-person{display:flex;align-items:center;gap:8px;min-width:0;padding:8px;border:1px solid #30333e;border-radius:10px;background:#1d1f28}.lock-social-avatar{display:grid;place-items:center;flex:0 0 31px;width:31px;height:31px;overflow:hidden;border:1px solid #ffffff16;border-radius:50%;background:#2e6d80;color:white;font-size:12px;font-weight:800}.lock-social-avatar img{width:100%;height:100%;object-fit:cover}.lock-social-person-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.lock-social-name{overflow:hidden;color:#e8eaf3;font-size:11px;font-weight:800;text-overflow:ellipsis;white-space:nowrap}.lock-social-meta{color:#8991a4;font-size:9px;line-height:1.35;overflow-wrap:anywhere}.lock-social-meta.online{color:#65dcb7}.lock-social-meta.in-room{color:#b7a9ff}.lock-social-actions{display:flex;flex:0 0 auto;flex-direction:column;gap:4px;align-items:stretch}.lock-social-action{max-width:104px;padding:6px 7px;border:1px solid #3b4050;border-radius:7px;background:#282b36;color:#f0f2f8;font-size:9px;font-weight:800;white-space:nowrap;cursor:pointer}.lock-social-action.primary{border-color:#0a9774;background:#087e63;color:#fff}.lock-social-action.danger{border-color:#7d3948;background:#3b2029;color:#ffbec8}.lock-social-action:disabled{opacity:.5;cursor:default}
+.participant-row{position:relative;overflow:visible;padding-right:8px}.participant-add-friend{position:absolute;z-index:3;top:-5px;right:-5px;display:grid;place-items:center;flex:0 0 auto;width:21px;height:21px;padding:0;border:1px solid #3c655b;border-radius:50%;background:#103a30;color:#8cf0d0;font-size:15px;font-weight:900;line-height:1;box-shadow:0 3px 9px #0008;cursor:pointer}.participant-add-friend:hover{border-color:#0aa77f;background:#103a30}.participant-add-friend:disabled{opacity:.6;cursor:default}
+.app-shell[data-current-view="home"] .right-panel .lock-sidebar-tabs{margin-bottom:0}
+.app-shell[data-current-view="home"] .right-panel[data-panel-view="friends"] .lock-friends-panel{display:flex!important}
+.app-shell[data-current-view="home"].chat-collapsed .right-panel{width:auto!important;min-width:0!important;padding:12px!important;overflow:hidden!important}
+@media(max-width:560px){.lock-friends-head{align-items:flex-start}.lock-friends-head h2{font-size:15px}.lock-social-person{padding:7px}.lock-social-action{max-width:86px;font-size:8px}.lock-own-code strong{font-size:11px}}
+body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}body.light-theme .lock-social-name{color:#252838}body.light-theme .lock-social-meta{color:#737a8d}body.light-theme .lock-sidebar-tab{color:#60677b}body.light-theme .lock-sidebar-tab.active{background:#d9f7ed;color:#075e48;border-color:#72cdb3}body.light-theme .lock-own-code{background:#f2f7f7;border-color:#dbe6e7}body.light-theme .lock-own-code span{color:#727b8e}body.light-theme .lock-copy-code,body.light-theme .lock-social-action{background:#f0f1f6;color:#242737;border-color:#d5d9e3}
+/* Toasts de pedidos para entrar: canto inferior, com fechamento automático em 8 s. */
+#lockJoinToastStack{position:fixed;z-index:2000;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));display:flex;flex-direction:column-reverse;gap:9px;width:min(360px,calc(100vw - 24px));pointer-events:none}
+.lock-join-toast{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:10px;padding:13px 14px 15px;border:1px solid #3a665b;border-radius:13px;background:#171e22;color:#eefaf6;box-shadow:0 14px 48px #0008;pointer-events:auto;animation:lockToastIn .18s ease-out both}
+.lock-join-toast-head{display:flex;align-items:flex-start;gap:10px}.lock-join-toast-icon{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:#123b30;color:#6ce4c2;font-size:17px;font-weight:900}.lock-join-toast-copy{flex:1;min-width:0}.lock-join-toast-copy strong{display:block;color:#f2fff9;font-size:12px;line-height:1.35}.lock-join-toast-copy span{display:block;margin-top:3px;color:#aab9b6;font-size:10px;line-height:1.4}.lock-join-toast-close{flex:0 0 auto;width:25px;height:25px;border:0;border-radius:6px;background:#ffffff0c;color:#aebcb8;font-size:17px;line-height:1;cursor:pointer}.lock-join-toast-actions{display:flex;gap:7px;justify-content:flex-end}.lock-join-toast-actions button{min-width:82px;padding:7px 11px;border:1px solid #46534f;border-radius:7px;background:#272e2d;color:#e7efeb;font-size:10px;font-weight:800;cursor:pointer}.lock-join-toast-actions .accept{border-color:#0b9972;background:#087b5e;color:#fff}.lock-join-toast-progress{position:absolute;bottom:0;left:0;width:100%;height:3px;background:#2c3735}.lock-join-toast-progress:after{display:block;width:100%;height:100%;background:#4ad5af;content:"";transform-origin:left;animation:lockToastProgress 8s linear forwards}
+@keyframes lockToastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}@keyframes lockToastProgress{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@media(max-width:560px){#lockJoinToastStack{right:12px;bottom:max(12px,env(safe-area-inset-bottom));width:calc(100vw - 24px)}.lock-join-toast{padding:11px 12px 14px}}
+.lock-room-invite-toast{border-color:#405a83;background:#171b25}
+.lock-room-invite-toast .lock-join-toast-icon{background:#1d2c4a;color:#9fc4ff}
+.lock-room-invite-toast .lock-join-toast-progress:after{background:#80aaff}
+.lock-social-notice-toast{min-height:62px;justify-content:center;border-color:#3d5f55}
+/* Painel de amigos na página inicial: dock no canto esquerdo, oposto ao layout anterior. */
+.app-shell[data-current-view="home"] .center-panel{width:calc(100% - 316px)!important;max-width:none!important;margin:0 0 0 302px!important}
+.app-shell[data-current-view="home"] .home-state{width:min(100%,980px)!important;margin:0 auto!important}
+.app-shell[data-current-view="home"] .right-panel{display:flex!important;position:fixed!important;z-index:45!important;top:14px!important;left:14px!important;right:auto!important;bottom:14px!important;width:286px!important;min-width:260px!important;max-width:calc(100vw - 28px)!important;height:auto!important;min-height:0!important;border:1px solid var(--line,#30323d)!important;border-radius:13px!important;box-shadow:0 12px 34px #0003!important;overflow:hidden!important}
+.app-shell[data-current-view="home"] .right-panel .chat-heading,.app-shell[data-current-view="home"] .right-panel #chatMessages,.app-shell[data-current-view="home"] .right-panel #chatReplyBar,.app-shell[data-current-view="home"] .right-panel #chatExtras,.app-shell[data-current-view="home"] .right-panel #chatForm{display:none!important}
+.app-shell[data-current-view="home"] .right-panel .lock-sidebar-tabs{display:flex!important}
+#lockHomeFriendsLauncher{display:none;align-items:center;gap:7px;position:fixed;z-index:1500;top:12px;left:12px;right:auto;padding:10px 13px;border:1px solid #187e68;border-radius:10px;background:#10352d;color:#e6fff6;font-size:12px;font-weight:800;box-shadow:0 8px 24px #0005;cursor:pointer}
+#lockHomeFriendsLauncher[hidden]{display:none!important}
+@media(max-width:760px){
+ .app-shell[data-current-view="home"] .center-panel{width:100%!important;margin:0!important}
+ .app-shell[data-current-view="home"] .home-state{width:100%!important}
+ .app-shell[data-current-view="home"]:not(.home-friends-open) .right-panel{display:none!important}
+ .app-shell[data-current-view="home"].home-friends-open .right-panel{display:flex!important;top:58px!important;left:10px!important;right:auto!important;bottom:10px!important;width:min(340px,calc(100vw - 20px))!important;max-width:calc(100vw - 20px)!important;height:auto!important;box-shadow:0 16px 50px #0009!important}
+ #lockHomeFriendsLauncher{display:inline-flex}
+}
+/* Na página inicial, amigos ficam disponíveis, mas ações de convite só aparecem dentro de uma sala ativa. */
+.app-shell[data-current-view="home"] #toolInvite,.app-shell[data-current-view="home"] #quickCopy,.app-shell[data-current-view="home"] #invitePeople,.app-shell[data-current-view="home"] #inviteBtn,.app-shell[data-current-view="home"] #footerInvite,.app-shell[data-current-view="home"] #copyInviteHome,.app-shell[data-current-view="home"] #moreBtn{display:none!important}
+
+
+/* LockCall v2.6: social actions and mobile share viewing fixes. */
+.participant-add-friend.is-friend{border-color:#76505a;background:#3b2029;color:#ffc1cb;font-size:19px}
+.lock-join-toast-avatar{display:block;flex:0 0 38px;width:38px;height:38px;overflow:hidden;border:1px solid #ffffff2a;border-radius:50%;background:#30404a;color:#fff;text-align:center;font-size:15px;font-weight:800;line-height:38px}
+.lock-join-toast-avatar img{display:block;width:100%;height:100%;object-fit:cover}
+@media(max-width:760px){
+  #watching,#lobby,#sharing{width:100%;max-width:100%;min-width:0}
+  #watching .remote-share-grid,#remoteGrid,.remote-share-grid{width:100%;max-width:100%;min-width:0;grid-template-columns:minmax(0,1fr)!important;gap:9px}
+  .remote-share-tile{width:100%;min-width:0;min-height:190px;height:auto;max-height:none;overflow:hidden}
+  .remote-share-tile video{width:100%;height:auto;min-height:190px;max-height:70vh;object-fit:contain;-webkit-transform:translateZ(0);transform:translateZ(0)}
+  #watching video,#remote video{max-width:100%}
+}
+</style>
+<script id="lock-social-v2-5">
+(() => {
+  'use strict';
+  const byId = id => document.getElementById(id);
+  const SOCIAL_PREFIX = 'lock-user-';
+  const SOCIAL_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const ID_KEY = 'lock-social-user-id-v1';
+  const FRIENDS_KEY = 'lock-social-friends-v1';
+  const INCOMING_KEY = 'lock-social-incoming-v1';
+  const OUTGOING_KEY = 'lock-social-outgoing-v1';
+  const socialId = getOrCreateId();
+  window.lockSocialUserId = socialId;
+  let socialPeer = null;
+  const socialConnections = new Map();
+  const connecting = new Set();
+  const socialOutbox = new Map();
+  const socialPresence = new Map();
+  const knownProfiles = new Map();
+  const incomingJoinRequests = new Map();
+  const incomingRoomInvites = new Map();
+  const sentJoinRequests = new Map();
+  let friends = loadArray(FRIENDS_KEY).filter(x => x && validId(x.id) && x.id !== socialId);
+  let incomingRequests = loadArray(INCOMING_KEY).filter(x => x && validId(x.id) && x.id !== socialId);
+  let outgoingRequests = loadArray(OUTGOING_KEY).filter(x => x && validId(x.id) && x.id !== socialId);
+  let socialMessage = '';
+  let socialMessageKind = '';
+  const joinToastTimers = new Map();
+  const joinToastNodes = new Map();
+  const inviteToastTimers = new Map();
+  const inviteToastNodes = new Map();
+  const noticeToastTimers = new Map();
+  const noticeToastNodes = new Map();
+
+  function getOrCreateId() {
+    try {
+      let id = String(localStorage.getItem(ID_KEY) || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (/^[A-Z0-9]{12}$/.test(id)) return id;
+      const bytes = crypto.getRandomValues(new Uint8Array(12));
+      id = Array.from(bytes, b => SOCIAL_ALPHABET[b % SOCIAL_ALPHABET.length]).join('');
+      localStorage.setItem(ID_KEY, id);
+      return id;
+    } catch {
+      return Array.from(crypto.getRandomValues(new Uint8Array(12)), b => SOCIAL_ALPHABET[b % SOCIAL_ALPHABET.length]).join('');
+    }
+  }
+  function validId(id) { return /^[A-Z0-9]{8,16}$/.test(String(id || '').toUpperCase()); }
+  function normalizeId(id) { return String(id || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0,16); }
+  function idFromPeer(peerId) { const value=String(peerId||''); return value.startsWith(SOCIAL_PREFIX) ? normalizeId(value.slice(SOCIAL_PREFIX.length)) : ''; }
+  function loadArray(key) { try { const v=JSON.parse(localStorage.getItem(key)||'[]'); return Array.isArray(v)?v:[]; } catch { return []; } }
+  function persist() {
+    try {
+      localStorage.setItem(FRIENDS_KEY, JSON.stringify(friends.slice(0,500)));
+      localStorage.setItem(INCOMING_KEY, JSON.stringify(incomingRequests.slice(0,100)));
+      localStorage.setItem(OUTGOING_KEY, JSON.stringify(outgoingRequests.slice(0,100)));
+    } catch {}
+  }
+  function cleanProfile(profile, id='') {
+    return { id: normalizeId(id || profile?.socialId || profile?.id), name: String(profile?.name || 'Amigo').slice(0,32), photo: String(profile?.photo || '').slice(0,600000) };
+  }
+  function localProfile() {
+    const p = typeof window.getLockLocalProfile === 'function' ? window.getLockLocalProfile() : {};
+    return { socialId, name: String(p?.name || 'Lock user').slice(0,32), photo: String(p?.photo || '').slice(0,600000) };
+  }
+  function isFriend(id) { return friends.some(f => f.id === normalizeId(id)); }
+  function findFriend(id) { return friends.find(f => f.id === normalizeId(id)); }
+  function setMessage(message, kind='') {
+    socialMessage = String(message || ''); socialMessageKind = kind;
+    const el=byId('lockSocialStatus'); if(el){el.textContent=socialMessage;el.dataset.kind=kind;}
+  }
+  function addFriend(id, profile) {
+    id=normalizeId(id); if(!validId(id)||id===socialId) return;
+    const p=cleanProfile(profile,id);
+    const index=friends.findIndex(f=>f.id===id);
+    if(index>=0) friends[index]={...friends[index],...p}; else friends.unshift({...p,addedAt:Date.now()});
+    friends=friends.slice(0,500);
+    persist(); render(); try { if (typeof renderParticipants === 'function') renderParticipants(); } catch {}
+    try { connectToFriend(id); } catch {}
+    publishPresence();
+  }
+  function removeById(list,id){return list.filter(x=>x.id!==normalizeId(id));}
+  function sendOnConnection(conn, packet) { try { if(conn && conn.open){conn.send(packet);return true;} } catch {} return false; }
+  function queuePacket(id, packet) {
+    id=normalizeId(id); if(!validId(id)||id===socialId) return;
+    const old=socialOutbox.get(id)||[];
+    if(packet.type==='friend-request' && old.some(p=>p.type==='friend-request')) return;
+    old.push(packet); socialOutbox.set(id,old.slice(-20));
+  }
+  function sendSocial(id, packet, queueIfOffline=true) {
+    id=normalizeId(id); if(!validId(id)||id===socialId) return false;
+    const conn=socialConnections.get(id);
+    if(sendOnConnection(conn,packet)) return true;
+    if(queueIfOffline) queuePacket(id,packet);
+    connectToFriend(id);
+    return false;
+  }
+  function flushOutbox(id, conn) {
+    const queued=socialOutbox.get(id)||[];
+    if(!conn?.open || !queued.length) return;
+    const remain=[];
+    for(const packet of queued){
+      if(packet.expiresAt && Number(packet.expiresAt)<Date.now()) continue;
+      if(!sendOnConnection(conn,packet)) remain.push(packet);
+    }
+    if(remain.length) socialOutbox.set(id,remain); else socialOutbox.delete(id);
+  }
+  function currentPresence() {
+    let roomCode='', hostUserId='';
+    try {
+      if (typeof peer!=='undefined' && peer && !peer.destroyed && peer.open && shareCode) { roomCode=String(shareCode); hostUserId=socialId; }
+      else if (typeof vpeer!=='undefined' && vpeer && !vpeer.destroyed && viewerCode) {
+        roomCode=String(viewerCode);
+        const host=typeof remoteRoster!=='undefined' ? remoteRoster.get('host') : null;
+        hostUserId=normalizeId(host?.socialId || '');
+      }
+    } catch {}
+    return {online:true, roomCode:roomCode.slice(0,80), hostUserId, inRoom:!!roomCode, updatedAt:Date.now()};
+  }
+  function publishPresenceTo(id, conn) {
+    if(!isFriend(id)||!conn?.open) return;
+    sendOnConnection(conn,{type:'presence',presence:currentPresence()});
+  }
+  function publishPresence() {
+    const presence=currentPresence();
+    friends.forEach(friend=>{
+      const conn=socialConnections.get(friend.id);
+      if(conn?.open) sendOnConnection(conn,{type:'presence',presence});
+      else connectToFriend(friend.id);
+    });
+    render();
+  }
+  function attachConnection(conn, knownId='') {
+    const id=normalizeId(knownId || idFromPeer(conn?.peer));
+    if(!validId(id)||id===socialId||!conn) { try{conn.close();}catch{} return; }
+    const onOpen=()=>{
+      connecting.delete(id);
+      socialConnections.set(id,conn);
+      const profile=localProfile();
+      sendOnConnection(conn,{type:'social-hello',profile,friendConfirmed:isFriend(id)});
+      publishPresenceTo(id,conn);
+      flushOutbox(id,conn);
+      render();
+    };
+    conn.on('open',onOpen);
+    conn.on('data',data=>handleMessage(id,conn,data));
+    const disconnected=()=>{
+      if(socialConnections.get(id)===conn) socialConnections.delete(id);
+      connecting.delete(id);
+      socialPresence.delete(id);
+      render();
+    };
+    conn.on('close',disconnected);
+    conn.on('error',()=>{disconnected();});
+    if(conn.open) window.setTimeout(onOpen,0);
+  }
+  function connectToFriend(id) {
+    id=normalizeId(id); if(!validId(id)||id===socialId||!socialPeer||!socialPeer.open) return null;
+    const existing=socialConnections.get(id); if(existing?.open) {flushOutbox(id,existing); return existing;}
+    if(connecting.has(id)) return null;
+    connecting.add(id);
+    try {
+      const conn=socialPeer.connect(SOCIAL_PREFIX+id,{reliable:true,metadata:{purpose:'lock-social'}});
+      attachConnection(conn,id);
+      return conn;
+    } catch { connecting.delete(id); return null; }
+  }
+  function getJoinToastStack() {
+    let stack=byId('lockJoinToastStack');
+    if(!stack){stack=document.createElement('div');stack.id='lockJoinToastStack';stack.setAttribute('aria-live','polite');stack.setAttribute('aria-label','Solicitações para entrar');document.body.append(stack);}
+    return stack;
+  }
+  function removeJoinToast(id) {
+    id=normalizeId(id);
+    const timer=joinToastTimers.get(id); if(timer) window.clearTimeout(timer);
+    joinToastTimers.delete(id);
+    const node=joinToastNodes.get(id); if(node) node.remove();
+    joinToastNodes.delete(id);
+  }
+  function showJoinRequestToast(req) {
+    const id=normalizeId(req?.id); if(!validId(id)) return;
+    removeJoinToast(id);
+    const card=document.createElement('section'); card.className='lock-join-toast'; card.setAttribute('role','status');
+    const head=document.createElement('div'); head.className='lock-join-toast-head';
+    const icon=document.createElement('span'); icon.className='lock-join-toast-avatar';
+    if(req.photo && /^(data:image\/|https:\/\/)/i.test(req.photo)){const img=document.createElement('img');img.src=req.photo;img.alt='';img.onerror=()=>{img.remove();icon.textContent=(req.name||'?').slice(0,1).toUpperCase();};icon.append(img);}else icon.textContent=(req.name||'?').slice(0,1).toUpperCase();
+    const copy=document.createElement('div'); copy.className='lock-join-toast-copy';
+    const title=document.createElement('strong'); title.textContent=`${req.name||'Alguém'} quer entrar na sua sala`;
+    const detail=document.createElement('span'); detail.textContent=`Sala ${req.roomCode} · Você decide se a pessoa pode entrar.`;
+    copy.append(title,detail);
+    const close=document.createElement('button'); close.type='button'; close.className='lock-join-toast-close'; close.setAttribute('aria-label','Fechar aviso'); close.textContent='×'; close.addEventListener('click',()=>removeJoinToast(id));
+    head.append(icon,copy,close);
+    const actions=document.createElement('div'); actions.className='lock-join-toast-actions';
+    const decline=document.createElement('button'); decline.type='button'; decline.textContent='Recusar'; decline.addEventListener('click',()=>{answerJoinRequest(id,false);removeJoinToast(id);});
+    const accept=document.createElement('button'); accept.type='button'; accept.className='accept'; accept.textContent='Aceitar'; accept.addEventListener('click',()=>{answerJoinRequest(id,true);removeJoinToast(id);});
+    actions.append(decline,accept);
+    const progress=document.createElement('span'); progress.className='lock-join-toast-progress'; progress.setAttribute('aria-hidden','true');
+    card.append(head,actions,progress); getJoinToastStack().append(card); joinToastNodes.set(id,card);
+    joinToastTimers.set(id,window.setTimeout(()=>removeJoinToast(id),8000));
+  }
+  function removeRoomInviteToast(id) {
+    id=normalizeId(id);
+    const timer=inviteToastTimers.get(id); if(timer) window.clearTimeout(timer);
+    inviteToastTimers.delete(id);
+    const node=inviteToastNodes.get(id); if(node) node.remove();
+    inviteToastNodes.delete(id);
+  }
+  function showRoomInviteToast(invite) {
+    const id=normalizeId(invite?.id); if(!validId(id)) return;
+    removeRoomInviteToast(id);
+    const card=document.createElement('section'); card.className='lock-join-toast lock-room-invite-toast'; card.setAttribute('role','status');
+    const head=document.createElement('div'); head.className='lock-join-toast-head';
+    const icon=document.createElement('span'); icon.className='lock-join-toast-avatar';
+    if(invite.photo && /^(data:image\/|https:\/\/)/i.test(invite.photo)){const img=document.createElement('img');img.src=invite.photo;img.alt='';img.onerror=()=>{img.remove();icon.textContent=(invite.name||'?').slice(0,1).toUpperCase();};icon.append(img);}else icon.textContent=(invite.name||'?').slice(0,1).toUpperCase();
+    const copy=document.createElement('div'); copy.className='lock-join-toast-copy';
+    const title=document.createElement('strong'); title.textContent=`${invite.name||'Um amigo'} convidou você para a sala`;
+    const detail=document.createElement('span'); detail.textContent=`Sala ${invite.roomCode} · Aceite para entrar automaticamente.`;
+    copy.append(title,detail);
+    const close=document.createElement('button'); close.type='button'; close.className='lock-join-toast-close'; close.setAttribute('aria-label','Fechar aviso'); close.textContent='×'; close.addEventListener('click',()=>removeRoomInviteToast(id));
+    head.append(icon,copy,close);
+    const actions=document.createElement('div'); actions.className='lock-join-toast-actions';
+    const decline=document.createElement('button'); decline.type='button'; decline.textContent='Agora não'; decline.addEventListener('click',()=>{incomingRoomInvites.delete(id);removeRoomInviteToast(id);render();});
+    const accept=document.createElement('button'); accept.type='button'; accept.className='accept'; accept.textContent='Entrar na sala'; accept.addEventListener('click',()=>acceptRoomInvite(id));
+    actions.append(decline,accept);
+    const progress=document.createElement('span'); progress.className='lock-join-toast-progress'; progress.setAttribute('aria-hidden','true');
+    card.append(head,actions,progress); getJoinToastStack().append(card); inviteToastNodes.set(id,card);
+    inviteToastTimers.set(id,window.setTimeout(()=>removeRoomInviteToast(id),8000));
+  }
+  function showSocialNotice(key,titleText,detailText) {
+    key=String(key||'notice');
+    const oldTimer=noticeToastTimers.get(key); if(oldTimer) window.clearTimeout(oldTimer);
+    noticeToastNodes.get(key)?.remove();
+    const card=document.createElement('section'); card.className='lock-join-toast lock-social-notice-toast'; card.setAttribute('role','status');
+    const head=document.createElement('div'); head.className='lock-join-toast-head';
+    const icon=document.createElement('span'); icon.className='lock-join-toast-icon'; icon.textContent='✓';
+    const copy=document.createElement('div'); copy.className='lock-join-toast-copy';
+    const title=document.createElement('strong'); title.textContent=String(titleText||'Lock');
+    const detail=document.createElement('span'); detail.textContent=String(detailText||'');
+    copy.append(title,detail); head.append(icon,copy);
+    card.append(head); getJoinToastStack().append(card); noticeToastNodes.set(key,card);
+    noticeToastTimers.set(key,window.setTimeout(()=>{card.remove();noticeToastNodes.delete(key);noticeToastTimers.delete(key);},6000));
+  }
+  function startInvitedRoom(code, inviterId) {
+    code=String(code||'').replace(/[^A-Z0-9]/gi,'').toUpperCase();
+    if(!code){setMessage('O convite contém um código de sala inválido.','error');return false;}
+    if((typeof peer!=='undefined'&&peer&&!peer.destroyed)||(typeof vpeer!=='undefined'&&vpeer&&!vpeer.destroyed)){
+      setMessage('Saia da sala atual antes de entrar na sala do convite.','error');
+      return false;
+    }
+    try {
+      history.replaceState(null,'',location.pathname+location.search+'#'+code);
+      startWatch(code);
+      if(typeof window.notifyLockSound==='function') window.notifyLockSound('share');
+      return true;
+    } catch {
+      setMessage('Não consegui abrir a sala. Use o código '+code+'.','error');
+      return false;
+    }
+  }
+
+  function handleMessage(id, conn, data) {
+    if(!data||typeof data!=='object') return;
+    if(data.type==='social-hello') {
+      const profile=cleanProfile(data.profile||{},id); knownProfiles.set(id,profile);
+      if(data.friendConfirmed===true && outgoingRequests.some(r=>r.id===id)) {
+        addFriend(id,profile); outgoingRequests=removeById(outgoingRequests,id); persist();
+        sendOnConnection(conn,{type:'friend-confirm',profile:localProfile()});
+        setMessage(`${profile.name} confirmou a amizade.`, 'success');
+      } else if(isFriend(id)) { addFriend(id,profile); publishPresenceTo(id,conn); }
+      render(); return;
+    }
+    if(data.type==='presence') {
+      if(!isFriend(id)) return;
+      const p=data.presence||{};
+      socialPresence.set(id,{online:!!p.online,inRoom:!!p.inRoom,roomCode:String(p.roomCode||'').slice(0,80),hostUserId:normalizeId(p.hostUserId||''),updatedAt:Number(p.updatedAt)||Date.now()});
+      render(); return;
+    }
+    if(data.type==='friend-request') {
+      const profile=cleanProfile(data.profile||{},id); knownProfiles.set(id,profile);
+      if(isFriend(id)) { sendOnConnection(conn,{type:'friend-accepted',profile:localProfile()}); return; }
+      if(!incomingRequests.some(r=>r.id===id)) incomingRequests.unshift({...profile,requestedAt:Date.now()});
+      incomingRequests=incomingRequests.slice(0,100); persist(); setMessage(`${profile.name} enviou um pedido de amizade.`, 'success'); render();
+      if(typeof window.notifyLockSound==='function') window.notifyLockSound('message');
+      return;
+    }
+    if(data.type==='friend-request-received') {
+      outgoingRequests=outgoingRequests.map(r=>r.id===id?{...r,status:'sent'}:r); persist(); setMessage(`Pedido enviado para ${String(data.name||id).slice(0,32)}.`, 'success'); render(); return;
+    }
+    if(data.type==='friend-accepted') {
+      const profile=cleanProfile(data.profile||knownProfiles.get(id)||{},id);
+      addFriend(id,profile); outgoingRequests=removeById(outgoingRequests,id); incomingRequests=removeById(incomingRequests,id); persist();
+      sendOnConnection(conn,{type:'friend-confirm',profile:localProfile()});
+      setMessage(`${profile.name} aceitou sua amizade.`, 'success'); render(); publishPresence(); return;
+    }
+    if(data.type==='friend-confirm') {
+      addFriend(id,cleanProfile(data.profile||knownProfiles.get(id)||{},id)); incomingRequests=removeById(incomingRequests,id); outgoingRequests=removeById(outgoingRequests,id); persist(); render(); publishPresence(); return;
+    }
+    if(data.type==='friend-declined') {
+      outgoingRequests=removeById(outgoingRequests,id); persist(); setMessage(`${String(data.name||'A pessoa').slice(0,32)} recusou o pedido de amizade.`, 'error'); render(); return;
+    }
+    if(data.type==='friend-removed') {
+      friends=removeById(friends,id); socialPresence.delete(id); persist(); render();
+      setMessage(`${String(data.name||knownProfiles.get(id)?.name||'A pessoa').slice(0,32)} removeu você dos amigos.`); return;
+    }
+    if(data.type==='room-invite') {
+      if(data.expiresAt && Number(data.expiresAt)<Date.now()) return;
+      if(!isFriend(id)) return;
+      // Somente o anfitrião pode emitir convites para a sala; convidados não redistribuem acesso.
+      if(normalizeId(data.hostUserId||'')!==id) return;
+      const inviteCode=String(data.roomCode||'').replace(/[^A-Z0-9]/gi,'').toUpperCase();
+      const hostUserId=normalizeId(data.hostUserId||'');
+      if(!inviteCode||!validId(hostUserId)) return;
+      const mine=currentPresence();
+      if(mine.inRoom && mine.roomCode===inviteCode) return;
+      const invite={id,name:String(data.fromName||knownProfiles.get(id)?.name||'Amigo').slice(0,32),photo:String(knownProfiles.get(id)?.photo||''),roomCode:inviteCode,hostUserId,inviteId:String(data.inviteId||''),invitedAt:Date.now(),expiresAt:Number(data.expiresAt)||Date.now()+60000};
+      incomingRoomInvites.set(id,invite);
+      render();showRoomInviteToast(invite);setMessage(`${String(data.fromName||'Um amigo').slice(0,32)} convidou você para uma sala.`, 'success');
+      if(typeof window.notifyLockSound==='function')window.notifyLockSound('message');
+      return;
+    }
+    if(data.type==='room-invite-accepted') {
+      const profile=cleanProfile(data.profile||knownProfiles.get(id)||{},id);
+      setMessage(`${profile.name} aceitou seu convite e está entrando na sala.`, 'success');
+      showSocialNotice('invite-accepted-'+id, 'Convite aceito', `${profile.name} está entrando na sua sala.`);
+      return;
+    }
+    if(data.type==='join-request') {
+      let activeRoom=false; try{activeRoom=!!(typeof peer!=='undefined'&&peer&&!peer.destroyed&&peer.open&&shareCode&&String(data.roomCode||'')===String(shareCode));}catch{}
+      if(!activeRoom) {sendOnConnection(conn,{type:'join-rejected',reason:'Esta sala não está mais disponível.'});return;}
+      if(data.expiresAt && Number(data.expiresAt)<Date.now()){sendOnConnection(conn,{type:'join-rejected',reason:'Esse pedido expirou. Peça para entrar novamente.'});return;}
+      const reqProfile=cleanProfile(data.profile||{},id);
+      const incomingRequest={id,...reqProfile,roomCode:String(data.roomCode||''),conn,requestedAt:Date.now(),expiresAt:Number(data.expiresAt)||Date.now()+60000};
+      incomingJoinRequests.set(id,incomingRequest);
+      render(); showJoinRequestToast(incomingRequest);
+      setMessage(`${reqProfile.name} pediu para entrar na sua sala.`, 'success');
+      if(typeof window.notifyLockSound==='function') window.notifyLockSound('message');
+      return;
+    }
+    if(data.type==='join-approved') {
+      if(data.expiresAt && Number(data.expiresAt)<Date.now()){setMessage('A aprovação chegou tarde demais. Peça para entrar novamente.','error');return;}
+      const matchingRequest=[...sentJoinRequests.entries()].find(([friendId,request])=>friendId===id||request.hostUserId===id);
+      if(!matchingRequest){setMessage('Esta aprovação não corresponde a um pedido ativo. Peça para entrar novamente.','error');return;}
+      const code=String(data.roomCode||'').replace(/[^A-Z0-9]/gi,'').toUpperCase();
+      for(const [friendId,request] of sentJoinRequests){if(friendId===id||request.hostUserId===id)sentJoinRequests.delete(friendId);}
+      render();
+      if(!code) {setMessage('O anfitrião enviou um código inválido.','error');return;}
+      if((typeof peer!=='undefined'&&peer&&!peer.destroyed)||(typeof vpeer!=='undefined'&&vpeer&&!vpeer.destroyed)) {
+        setMessage('Pedido aprovado, mas você já está em uma sala. Saia dela antes de entrar na outra.','error'); return;
+      }
+      setMessage('Pedido aprovado! Entrando na sala…','success');
+      try { history.replaceState(null,'',location.pathname+location.search+'#'+code); startWatch(code); }
+      catch { setMessage('Não consegui abrir a sala aprovada. Use o código '+code+'.','error'); }
+      return;
+    }
+    if(data.type==='join-rejected') {
+      if(data.expiresAt && Number(data.expiresAt)<Date.now()) return;
+      for(const [friendId,request] of sentJoinRequests){if(friendId===id||request.hostUserId===id)sentJoinRequests.delete(friendId);}
+      render(); setMessage(String(data.reason||'O anfitrião recusou ou não pôde aceitar o pedido.').slice(0,160),'error'); return;
+    }
+  }
+  function sendFriendRequest(id, profile={}) {
+    id=normalizeId(id);
+    if(!validId(id)||id===socialId) {setMessage('Código de amigo inválido.','error');return;}
+    if(isFriend(id)) {setMessage('Essa pessoa já está na sua lista.','success');return;}
+    if(outgoingRequests.some(r=>r.id===id)) {setMessage('O pedido já está pendente para essa pessoa.');return;}
+    const p=cleanProfile({...profile,socialId:id},id);
+    outgoingRequests.unshift({...p,status:'waiting',requestedAt:Date.now()}); outgoingRequests=outgoingRequests.slice(0,100); persist();
+    queuePacket(id,{type:'friend-request',profile:localProfile()});
+    connectToFriend(id); setMessage(`Pedido de amizade preparado para ${p.name||id}.`, 'success'); render(); try { if (typeof renderParticipants === 'function') renderParticipants(); } catch {}
+  }
+  window.lockSendFriendRequest=sendFriendRequest;
+  window.lockFriendActionState=id=>isFriend(id)?'friend':(outgoingRequests.some(r=>r.id===normalizeId(id))?'pending':'add');
+  function removeFriend(id) {
+    id=normalizeId(id); if(!isFriend(id)) return;
+    const friend=findFriend(id); friends=removeById(friends,id); socialPresence.delete(id); persist();
+    sendSocial(id,{type:'friend-removed',name:localProfile().name},false);
+    setMessage(`${friend?.name||'Amigo'} removido da sua lista.`); render();
+    try { if(typeof renderParticipants==='function') renderParticipants(); } catch {}
+  }
+  window.lockRemoveFriend=removeFriend;
+  function acceptFriend(id) {
+    id=normalizeId(id); const request=incomingRequests.find(r=>r.id===id); if(!request) return;
+    addFriend(id,request); incomingRequests=removeById(incomingRequests,id); persist();
+    const conn=socialConnections.get(id);
+    if(!sendOnConnection(conn,{type:'friend-accepted',profile:localProfile()})) sendSocial(id,{type:'friend-accepted',profile:localProfile()},true);
+    setMessage(`${request.name} foi adicionado aos amigos.`, 'success'); render(); publishPresence();
+  }
+  function declineFriend(id) {
+    id=normalizeId(id); const req=incomingRequests.find(r=>r.id===id); incomingRequests=removeById(incomingRequests,id); persist();
+    const conn=socialConnections.get(id);
+    if(!sendOnConnection(conn,{type:'friend-declined',name:localProfile().name})) sendSocial(id,{type:'friend-declined',name:localProfile().name},true);
+    setMessage(`Pedido de ${req?.name||'amizade'} recusado.`); render();
+  }
+  function requestToJoin(friend) {
+    const id=normalizeId(friend.id); const p=socialPresence.get(id);
+    if(!p?.online||!p.inRoom||!validId(p.hostUserId)) {setMessage('Esse amigo não está em uma sala acessível agora.');return;}
+    if((typeof peer!=='undefined'&&peer&&!peer.destroyed)||(typeof vpeer!=='undefined'&&vpeer&&!vpeer.destroyed)) {setMessage('Saia da sala atual antes de pedir para entrar em outra.','error');return;}
+    const already=sentJoinRequests.get(id);
+    if(already&&already.roomCode===p.roomCode){setMessage('Seu pedido já está aguardando o anfitrião.');return;}
+    const requestedAt=Date.now();
+    sentJoinRequests.set(id,{roomCode:p.roomCode,hostUserId:p.hostUserId,requestedAt});
+    sendSocial(p.hostUserId,{type:'join-request',roomCode:p.roomCode,profile:localProfile(),expiresAt:requestedAt+60000},true);
+    window.setTimeout(()=>{const current=sentJoinRequests.get(id);if(current&&current.requestedAt===requestedAt){sentJoinRequests.delete(id);setMessage('O pedido expirou sem resposta. Você pode pedir para entrar novamente.','error');render();}},61000);
+    setMessage(`Pedido enviado ao anfitrião da sala de ${friend.name}. Ele precisa aprovar sua entrada.`, 'success');
+    showSocialNotice('join-sent-'+id,'Pedido enviado',`Aguardando aprovação do anfitrião da sala de ${friend.name}.`); render();
+  }
+  function acceptRoomInvite(id) {
+    id=normalizeId(id);
+    const invite=incomingRoomInvites.get(id);
+    if(!invite||!invite.roomCode||!validId(invite.hostUserId)) return;
+    if(invite.expiresAt && invite.expiresAt<Date.now()){
+      incomingRoomInvites.delete(id);removeRoomInviteToast(id);render();setMessage('Esse convite expirou. Peça para seu amigo enviar outro.','error');return;
+    }
+    const code=String(invite.roomCode).replace(/[^A-Z0-9]/gi,'').toUpperCase();
+    if((typeof peer!=='undefined'&&peer&&!peer.destroyed)||(typeof vpeer!=='undefined'&&vpeer&&!vpeer.destroyed)){
+      setMessage('Saia da sala atual antes de entrar na sala do convite.','error');return;
+    }
+    incomingRoomInvites.delete(id);removeRoomInviteToast(id);render();
+    sendSocial(id,{type:'room-invite-accepted',roomCode:code,inviteId:invite.inviteId,profile:localProfile()},false);
+    setMessage('Convite aceito! Entrando na sala…','success');
+    startInvitedRoom(code,id);
+  }
+  function requestRoomInvite(invite) { if(invite?.id) acceptRoomInvite(invite.id); }
+  function answerJoinRequest(id, allow) {
+    const req=incomingJoinRequests.get(id); if(!req) return;
+    if(req.expiresAt && req.expiresAt<Date.now()){incomingJoinRequests.delete(id);removeJoinToast(id);render();setMessage('Esse pedido expirou. Peça para a pessoa solicitar novamente.','error');return;}
+    const active=!!(typeof peer!=='undefined'&&peer&&!peer.destroyed&&peer.open&&shareCode===req.roomCode&&!closingHostRoom);
+    if(allow&&!active){sendOnConnection(req.conn,{type:'join-rejected',reason:'A sala foi encerrada antes da aprovação.'});incomingJoinRequests.delete(id);render();setMessage('A sala não está mais ativa.','error');return;}
+    const response=allow?{type:'join-approved',roomCode:req.roomCode,expiresAt:Date.now()+60000}:{type:'join-rejected',reason:'O anfitrião recusou seu pedido.',expiresAt:Date.now()+60000};
+    const ok=sendOnConnection(req.conn,response);
+    if(!ok) sendSocial(id,response,true);
+    incomingJoinRequests.delete(id); removeJoinToast(id); render();
+    setMessage(allow?`Pedido de ${req.name} aprovado.`:`Pedido de ${req.name} recusado.`,allow?'success':'');
+  }
+  function makeAction(label, callback, cls='') {
+    const btn=document.createElement('button'); btn.type='button'; btn.className='lock-social-action'+(cls?' '+cls:''); btn.textContent=label; btn.addEventListener('click',callback); return btn;
+  }
+  function renderPerson(container, profile, options={}) {
+    const row=document.createElement('div'); row.className='lock-social-person';
+    const avatar=document.createElement('span'); avatar.className='lock-social-avatar';
+    if(profile.photo && /^(data:image\/|https:\/\/)/i.test(profile.photo)){const img=document.createElement('img');img.src=profile.photo;img.alt='';img.loading='lazy';img.onerror=()=>{img.remove();avatar.textContent=(profile.name||'?').slice(0,1).toUpperCase();};avatar.append(img);} else avatar.textContent=(profile.name||'?').slice(0,1).toUpperCase();
+    const main=document.createElement('div');main.className='lock-social-person-main';
+    const name=document.createElement('div');name.className='lock-social-name';name.textContent=profile.name||'Amigo';
+    const meta=document.createElement('div');meta.className='lock-social-meta';meta.textContent=options.meta||''; if(options.online)meta.classList.add('online');if(options.inRoom)meta.classList.add('in-room');
+    main.append(name,meta);const actions=document.createElement('div');actions.className='lock-social-actions';
+    (options.actions||[]).forEach(action=>actions.append(action));
+    row.append(avatar,main,actions);container.append(row);
+  }
+  function setEmpty(container, text) { const p=document.createElement('p');p.className='lock-social-empty';p.textContent=text;container.append(p); }
+  function render() {
+    const code=byId('lockMyFriendCode'); if(code) code.textContent=socialId;
+    const friendsBox=byId('lockFriendList'), reqBox=byId('lockFriendRequests'), joinBox=byId('lockJoinRequests');
+    if(!friendsBox||!reqBox||!joinBox)return;
+    friendsBox.replaceChildren();reqBox.replaceChildren();joinBox.replaceChildren();
+    const mine=currentPresence();
+    if(!friends.length)setEmpty(friendsBox,'Ainda não há amigos adicionados. Entre numa sala e use o + ao lado do nome de alguém.');
+    friends.forEach(friend=>{
+      const p=socialPresence.get(friend.id)||{online:false,inRoom:false};
+      const listedInCurrentRoom=!!(mine.inRoom && (
+        (typeof peer!=='undefined' && peer && !peer.destroyed && Array.from(connections.values()).some(conn => participantProfiles.get(conn.peer)?.socialId===friend.id)) ||
+        (typeof vpeer!=='undefined' && vpeer && !vpeer.destroyed && Array.from(remoteRoster.values()).some(person => person?.socialId===friend.id))
+      ));
+      const sameRoom=!!(mine.inRoom && (listedInCurrentRoom || (p.inRoom && p.roomCode && p.roomCode===mine.roomCode)));
+      const meta=!p.online?(sameRoom?'Na sua sala':'Offline'):(sameRoom?'Na sua sala':(p.inRoom?'Em uma sala':'Online'));
+      const actions=[];
+      if(!sameRoom&&mine.inRoom&&mine.hostUserId===socialId&&validId(mine.hostUserId)&&!p.inRoom) actions.push(makeAction('Convidar',()=>{
+        const inviteId=socialId+'-'+Date.now().toString(36);
+        const delivered=sendSocial(friend.id,{type:'room-invite',inviteId,roomCode:mine.roomCode,hostUserId:mine.hostUserId,fromName:localProfile().name,expiresAt:Date.now()+60000},true);
+        const detail=delivered?'O amigo pode aceitar e entrará diretamente na sala.':'O convite foi colocado na fila até o amigo se reconectar.';
+        setMessage(`Convite enviado para ${friend.name}. ${detail}`,'success');
+        showSocialNotice('invite-sent-'+friend.id,'Convite enviado',`${friend.name} poderá aceitar e entrar diretamente na sala.`);
+      },''));
+      if(!sameRoom && p.online && p.inRoom && validId(p.hostUserId)){
+        const pending=sentJoinRequests.get(friend.id);
+        const action=makeAction(pending&&pending.roomCode===p.roomCode?'Pedido enviado':'Pedir para entrar',()=>requestToJoin(friend),'primary');
+        action.disabled=!!(pending&&pending.roomCode===p.roomCode);
+        actions.push(action);
+      }
+      renderPerson(friendsBox,friend,{meta,online:p.online,inRoom:p.online&&p.inRoom,actions});
+    });
+    const inviteBox=byId('lockRoomInvites'); if(inviteBox){inviteBox.replaceChildren();incomingRoomInvites.forEach(invite=>renderPerson(inviteBox,invite,{meta:`Convite para a sala ${invite.roomCode}.`,actions:[makeAction('Entrar na sala',()=>acceptRoomInvite(invite.id),'primary'),makeAction('Ignorar',()=>{incomingRoomInvites.delete(invite.id);removeRoomInviteToast(invite.id);render();},'danger')]}));}
+    incomingRequests.forEach(req=>renderPerson(reqBox,req,{meta:'Quer adicionar você?',actions:[makeAction('Aceitar',()=>acceptFriend(req.id),'primary'),makeAction('Recusar',()=>declineFriend(req.id),'danger')]}));
+    incomingJoinRequests.forEach(req=>renderPerson(joinBox,req,{meta:`Quer entrar na sala ${req.roomCode}.`,actions:[makeAction('Aceitar',()=>answerJoinRequest(req.id,true),'primary'),makeAction('Recusar',()=>answerJoinRequest(req.id,false),'danger')]}));
+    const inviteSection=byId('lockRoomInviteSection'), joinSection=byId('lockJoinRequestSection'), friendRequestSection=byId('lockFriendRequestSection');
+    if(inviteSection)inviteSection.hidden=incomingRoomInvites.size===0;
+    if(joinSection)joinSection.hidden=incomingJoinRequests.size===0;
+    if(friendRequestSection)friendRequestSection.hidden=incomingRequests.length===0;
+    const badge=(id,n)=>{const e=byId(id);if(e){e.textContent=String(n);e.hidden=!n;}};
+    badge('lockFriendsBadge',incomingRequests.length+incomingJoinRequests.size+incomingRoomInvites.size);badge('lockJoinBadge',incomingJoinRequests.size);badge('lockFriendRequestBadge',incomingRequests.length);badge('lockRoomInviteBadge',incomingRoomInvites.size);
+    if(byId('lockFriendsCount'))byId('lockFriendsCount').textContent=String(friends.length);
+    const btn=byId('lockChatTab');if(btn)btn.disabled=document.querySelector('.app-shell')?.dataset.currentView==='home';
+    const status=byId('lockSocialStatus');if(status){status.textContent=socialMessage||'Seu código é pessoal. Mantenha esta página aberta para aparecer online.';status.dataset.kind=socialMessageKind;}
+  }
+  function setSidebarView(view) {
+    const panel=document.querySelector('.right-panel'); if(!panel)return;
+    if(view==='friends') document.querySelector('.app-shell')?.classList.remove('chat-collapsed');
+    if(view==='chat' && document.querySelector('.app-shell')?.dataset.currentView==='home') view='friends';
+    panel.dataset.panelView=view;
+    byId('lockFriendsPanel').hidden=view!=='friends';
+    byId('lockFriendsTab').classList.toggle('active',view==='friends');
+    byId('lockChatTab').classList.toggle('active',view==='chat');
+    byId('lockFriendsTab').setAttribute('aria-selected',String(view==='friends'));
+    byId('lockChatTab').setAttribute('aria-selected',String(view==='chat'));
+  }
+  const homeFriendsLauncher=document.createElement('button');
+  homeFriendsLauncher.id='lockHomeFriendsLauncher'; homeFriendsLauncher.type='button'; homeFriendsLauncher.textContent='♙ Amigos'; homeFriendsLauncher.setAttribute('aria-label','Abrir lista de amigos');
+  homeFriendsLauncher.addEventListener('click',()=>{
+    const app=document.querySelector('.app-shell'); if(!app)return;
+    const opening=!app.classList.contains('home-friends-open');
+    app.classList.toggle('home-friends-open',opening);
+    homeFriendsLauncher.textContent=opening?'× Fechar':'♙ Amigos';
+    if(opening)setSidebarView('friends');
+  });
+  document.body.append(homeFriendsLauncher);
+  window.lockSocialPublishPresence=publishPresence;
+  byId('lockFriendsTab')?.addEventListener('click',()=>setSidebarView('friends'));
+  byId('lockChatTab')?.addEventListener('click',()=>setSidebarView('chat'));
+  byId('lockCopyFriendCode')?.addEventListener('click',async()=>{
+    try{await navigator.clipboard.writeText(socialId);setMessage('Código de amigo copiado.','success');}
+    catch{const temp=document.createElement('textarea');temp.value=socialId;document.body.append(temp);temp.select();let ok=false;try{ok=document.execCommand('copy')}catch{}temp.remove();setMessage(ok?'Código de amigo copiado.':'Seu código é '+socialId,ok?'success':'');}
+  });
+  byId('lockAddFriendForm')?.addEventListener('submit',event=>{
+    event.preventDefault();const id=normalizeId(byId('lockFriendCodeInput').value);
+    if(!validId(id)){setMessage('Digite um código de amigo válido.','error');return;}
+    if(id===socialId){setMessage('Esse é o seu próprio código. Não dá para adicionar a si mesmo.','error');return;}
+    const existing=knownProfiles.get(id)||{id,name:'Amigo '+id.slice(0,4),photo:''};
+    sendFriendRequest(id,existing);byId('lockFriendCodeInput').value='';
+  });
+  function resumeSocial() {
+    if(!socialPeer?.open)return;
+    friends.forEach(friend=>connectToFriend(friend.id));
+    outgoingRequests.forEach(req=>{queuePacket(req.id,{type:'friend-request',profile:localProfile()});connectToFriend(req.id);});
+    flushAll();
+  }
+  function flushAll() { for(const [id,queue] of socialOutbox){ if(queue.length)connectToFriend(id); } }
+  function startSocial() {
+    if(typeof window.Peer!=='function'){setMessage('O serviço de conexão não carregou. Atualize a página.','error');return;}
+    try{socialPeer=new window.Peer(SOCIAL_PREFIX+socialId);}catch{setMessage('Não foi possível iniciar a lista de amigos.','error');return;}
+    socialPeer.on('open',()=>{setMessage('Conectado. Sua lista fica salva neste navegador.','success');resumeSocial();publishPresence();});
+    socialPeer.on('connection',conn=>attachConnection(conn,idFromPeer(conn.peer)));
+    socialPeer.on('error',err=>{
+      if(err?.type==='unavailable-id')setMessage('Este código de amigo já está ativo em outra aba. Feche a outra aba do Lock e recarregue.','error');
+      else if(err?.type==='network'||err?.type==='socket-error')setMessage('Conexão de amigos instável. Tentando reconectar…','error');
+    });
+    socialPeer.on('disconnected',()=>{setMessage('Reconectando ao serviço de amigos…');window.setTimeout(()=>{try{if(socialPeer&&!socialPeer.destroyed&&socialPeer.disconnected)socialPeer.reconnect();}catch{}},1200);});
+  }
+  byId('lockFriendsTab')?.setAttribute('title','Mostrar amigos, pedidos de amizade e pedidos para entrar');
+  byId('lockMyFriendCode')?.setAttribute('title','Compartilhe este código para receber pedidos de amizade');
+  // Home opens on Friends; calls open on Chat. Join requests use a temporary toast and remain in Friends until answered or expired.
+  const app=document.querySelector('.app-shell');
+  const chooseDefaultView=()=>{
+    const isHome=app?.dataset.currentView==='home';
+    homeFriendsLauncher.hidden=!isHome;
+    if(!isHome){app?.classList.remove('home-friends-open');homeFriendsLauncher.textContent='♙ Amigos';}
+    setSidebarView(isHome?'friends':'chat');
+  };
+  if(app && typeof MutationObserver==='function')new MutationObserver(records=>{if(records.some(r=>r.attributeName==='data-current-view')){chooseDefaultView();publishPresence();}}).observe(app,{attributes:true,attributeFilter:['data-current-view']});
+  chooseDefaultView();render();
+  try { if (typeof renderParticipants === 'function') renderParticipants(); } catch {}
+  startSocial();
+  window.setInterval(()=>{
+    if(!socialPeer)return;
+    if(socialPeer.disconnected&&!socialPeer.destroyed){try{socialPeer.reconnect();}catch{}}
+    friends.forEach(friend=>{
+      const conn=socialConnections.get(friend.id);
+      if(conn?.open)publishPresenceTo(friend.id,conn); else connectToFriend(friend.id);
+    });
+    for(const [id,request] of incomingJoinRequests){if(request.expiresAt && request.expiresAt<Date.now()){incomingJoinRequests.delete(id);removeJoinToast(id);}}
+    for(const [id,invite] of incomingRoomInvites){if((invite.expiresAt&&invite.expiresAt<Date.now())||(invite.invitedAt&&Date.now()-invite.invitedAt>60000)){incomingRoomInvites.delete(id);removeRoomInviteToast(id);}}
+    // Pending friendship requests retry as the recipient comes online, as long as this page remains open.
+    outgoingRequests.forEach(req=>{if(!socialConnections.get(req.id)?.open){queuePacket(req.id,{type:'friend-request',profile:localProfile()});connectToFriend(req.id);}});
+    flushAll();
+    for(const [id,p] of socialPresence){if(Date.now()-(p.updatedAt||0)>25000){socialPresence.delete(id);}}
+    render();
+  },6000);
+  window.addEventListener('pagehide',()=>{try{if(socialPeer)socialPeer.destroy();}catch{}});
+})();
+</script>
+
+
+<style id="lockcall-v2-7">
+.chat-typing-indicator{min-height:18px;padding:0 14px 3px;color:#8e98aa;font-size:11px;font-style:italic;line-height:18px}
+.chat-typing-indicator[hidden]{display:none!important}
+.remote-share-tile.needs-play-tap:after{content:'Toque para reproduzir';position:absolute;left:10px;top:10px;padding:6px 9px;border-radius:7px;background:#111c;color:#fff;font-size:11px;pointer-events:none}
+.remote-share-tile{position:relative}
+@media(max-width:760px){
+  #watching .state-topline h1{font-size:20px}
+  #watching .state-topline .state-description{font-size:12px;line-height:1.45}
+  .remote-share-tile video{display:block!important;width:100%!important;height:auto!important;min-height:200px!important;max-height:72vh!important;object-fit:contain!important;background:#08090d}
+  .chat-typing-indicator{padding-left:10px}
+}
 </style>
 
 </body>
