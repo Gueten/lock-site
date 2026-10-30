@@ -460,6 +460,20 @@ body.popup .preview-wrap { margin-top: 8px; }
         <div class="setting-fields"><input id="baseIn" class="field" placeholder="https://seu-site.netlify.app/" aria-label="Endereço do site"><button id="saveBase" class="btn primary compact">Salvar</button></div>
         <p id="baseStatus" class="setting-status"></p>
       </details>
+      <div class="lock-sidebar-tabs" role="tablist" aria-label="Painel lateral">
+        <button id="lockFriendsTab" class="lock-sidebar-tab" type="button" role="tab" aria-controls="lockFriendsPanel">Amigos <span id="lockFriendsBadge" class="lock-social-badge" hidden>0</span></button>
+        <button id="lockChatTab" class="lock-sidebar-tab" type="button" role="tab" aria-controls="chatMessages">Chat</button>
+      </div>
+      <section id="lockFriendsPanel" class="lock-friends-panel" hidden aria-label="Amigos e pedidos">
+        <div class="lock-friends-head"><div><h2>Seus amigos</h2><p>Adicione pessoas da sala ou use um código de amigo.</p></div><button id="lockCopyFriendCode" class="lock-copy-code" type="button" title="Copiar seu código de amigo">Copiar código</button></div>
+        <div class="lock-own-code"><span>SEU CÓDIGO</span><strong id="lockMyFriendCode">GERANDO…</strong></div>
+        <form id="lockAddFriendForm" class="lock-add-friend-form"><input id="lockFriendCodeInput" class="field" type="text" maxlength="24" placeholder="Código de amigo" autocomplete="off" spellcheck="false" aria-label="Código de amigo"><button type="submit" class="btn primary compact">Adicionar</button></form>
+        <p id="lockSocialStatus" class="lock-social-status" role="status">Conectando ao serviço de amigos…</p>
+        <div class="lock-social-section"><h3>Convites de sala <span id="lockRoomInviteBadge" class="lock-social-badge" hidden>0</span></h3><div id="lockRoomInvites" class="lock-social-list"><p class="lock-social-empty">Nenhum convite de sala.</p></div></div>
+        <div class="lock-social-section"><h3>Pedidos para entrar <span id="lockJoinBadge" class="lock-social-badge" hidden>0</span></h3><div id="lockJoinRequests" class="lock-social-list"><p class="lock-social-empty">Nenhum pedido para entrar.</p></div></div>
+        <div class="lock-social-section"><h3>Pedidos de amizade <span id="lockFriendRequestBadge" class="lock-social-badge" hidden>0</span></h3><div id="lockFriendRequests" class="lock-social-list"><p class="lock-social-empty">Nenhum pedido de amizade.</p></div></div>
+        <div class="lock-social-section lock-friends-list-section"><h3>Amigos <span id="lockFriendsCount">0</span></h3><div id="lockFriendList" class="lock-social-list"><p class="lock-social-empty">Ainda não há amigos adicionados.</p></div></div>
+      </section>
       <div class="chat-heading"><div><h2>Chat</h2><span id="chatSubtitle">Mensagens da sala</span></div><div class="chat-heading-actions"><button class="mini-icon" id="toggleChat" title="Recolher chat" aria-label="Recolher chat">›</button></div></div>
       <div id="chatMessages" class="chat-messages" aria-live="polite"><div class="chat-empty"><span class="chat-bubble-icon">✦</span><strong>Nenhuma mensagem ainda.</strong><span>As mensagens enviadas aqui aparecem para quem está na sala.</span></div></div>
       <div id="chatReplyBar" class="chat-reply-bar" hidden><span id="chatReplyLabel"></span><button type="button" id="cancelChatReply" aria-label="Cancelar resposta" title="Cancelar resposta">×</button></div>
@@ -2952,7 +2966,7 @@ function nameHue(name) {
 function nameColor(name) { return `hsl(${nameHue(name)} 76% 70%)`; }
 function nameGradient(name) { const hue = nameHue(name); return `linear-gradient(145deg, hsl(${hue} 78% 66%), hsl(${(hue + 35) % 360} 72% 45%))`; }
 
-function participantRow(initial, name, role, stateClass = 'green-dot', photo = '') {
+function participantRow(initial, name, role, stateClass = 'green-dot', photo = '', socialId = '') {
   const row = document.createElement('div');
   row.className = 'participant-row';
   const avatar = document.createElement('span');
@@ -2973,14 +2987,32 @@ function participantRow(initial, name, role, stateClass = 'green-dot', photo = '
   label.append(detail);
   const state = document.createElement('span');
   state.className = stateClass;
-  row.append(avatar, label, state);
+  row.append(avatar, label);
+  if (socialId && socialId !== String(window.lockSocialUserId || '') && typeof window.lockSendFriendRequest === 'function') {
+    const add = document.createElement('button');
+    add.type = 'button';
+    add.className = 'participant-add-friend';
+    add.title = 'Adicionar aos amigos';
+    add.setAttribute('aria-label', 'Adicionar ' + name + ' aos amigos');
+    const friendState = typeof window.lockFriendActionState === 'function' ? window.lockFriendActionState(socialId) : 'add';
+    add.textContent = friendState === 'friend' ? '✓' : (friendState === 'pending' ? '…' : '+');
+    add.disabled = friendState === 'friend' || friendState === 'pending';
+    if (friendState === 'friend') add.title = 'Já está nos amigos';
+    else if (friendState === 'pending') add.title = 'Pedido de amizade enviado';
+    add.addEventListener('click', event => {
+      event.preventDefault(); event.stopPropagation();
+      window.lockSendFriendRequest(socialId, { name, photo });
+    });
+    row.append(add);
+  }
+  row.append(state);
   return row;
 }
 
 function localProfileSnapshot() {
   try {
     const p = typeof window.getLockLocalProfile === 'function' ? window.getLockLocalProfile() : {};
-    return { name: String(p.name || 'Lock user').slice(0, 32), photo: String(p.photo || '').slice(0, 600000) };
+    return { name: String(p.name || 'Lock user').slice(0, 32), photo: String(p.photo || '').slice(0, 600000), socialId: String(window.lockSocialUserId || '').slice(0, 16) };
   } catch { return { name: 'Lock user', photo: '' }; }
 }
 
@@ -3008,14 +3040,14 @@ function renderParticipants() {
     for (const conn of connections.values()) {
       const remote = profileForPeer(conn.peer);
       const sharing = !!(incomingShares.get(conn.peer) && incomingShares.get(conn.peer).stream);
-      if (conn.open || conn.peer) list.append(participantRow((remote.name || 'P').slice(0, 1).toUpperCase(), remote.name || 'Participante', sharing ? 'compartilhando tela' : 'na sala', 'green-dot', remote.photo || ''));
+      if (conn.open || conn.peer) list.append(participantRow((remote.name || 'P').slice(0, 1).toUpperCase(), remote.name || 'Participante', sharing ? 'compartilhando tela' : 'na sala', 'green-dot', remote.photo || '', remote.socialId || ''));
     }
   } else if (vpeer) {
     const host = remoteRoster.get('host') || { name: 'Anfitrião', photo: '', status: 'na sala' };
-    list.append(participantRow((host.name || 'A').slice(0, 1).toUpperCase(), host.name || 'Anfitrião', host.sharing ? 'transmitindo' : 'na sala', 'green-dot', host.photo || ''));
+    list.append(participantRow((host.name || 'A').slice(0, 1).toUpperCase(), host.name || 'Anfitrião', host.sharing ? 'transmitindo' : 'na sala', 'green-dot', host.photo || '', host.socialId || ''));
     for (const [id, remote] of remoteRoster) {
       if (id === 'host' || id === vpeer.id) continue;
-      list.append(participantRow((remote.name || 'P').slice(0, 1).toUpperCase(), remote.name || 'Participante', remote.sharing ? 'compartilhando tela' : 'na sala', 'green-dot', remote.photo || ''));
+      list.append(participantRow((remote.name || 'P').slice(0, 1).toUpperCase(), remote.name || 'Participante', remote.sharing ? 'compartilhando tela' : 'na sala', 'green-dot', remote.photo || '', remote.socialId || ''));
     }
     list.append(participantRow(ownName.slice(0, 1).toUpperCase(), ownName, stream ? 'compartilhando tela' : 'você · na sala', 'green-dot', ownPhoto));
   } else {
@@ -3028,7 +3060,8 @@ function renderParticipants() {
 function safeProfileForNetwork(profile) {
   return {
     name: String(profile && profile.name || 'Participante').slice(0, 32),
-    photo: String(profile && profile.photo || '').slice(0, 600000)
+    photo: String(profile && profile.photo || '').slice(0, 600000),
+    socialId: String(profile && profile.socialId || '').replace(/[^A-Z0-9]/gi, '').slice(0, 16).toUpperCase()
   };
 }
 
@@ -3051,11 +3084,12 @@ function applyRemoteRoster(packet) {
   if (packet && Array.isArray(packet.participants)) {
     packet.participants.forEach(person => {
       if (!person || !person.id) return;
-      remoteRoster.set(person.id, { name: String(person.name || 'Participante').slice(0, 32), photo: String(person.photo || '').slice(0, 600000), sharing: !!person.sharing, sharingMode: String(person.sharingMode || '').slice(0,16) });
+      remoteRoster.set(person.id, { name: String(person.name || 'Participante').slice(0, 32), photo: String(person.photo || '').slice(0, 600000), socialId: String(person.socialId || '').replace(/[^A-Z0-9]/gi, '').slice(0,16).toUpperCase(), sharing: !!person.sharing, sharingMode: String(person.sharingMode || '').slice(0,16) });
     });
   }
   renderParticipants();
   refreshTools();
+  window.lockSocialPublishPresence?.();
   remoteShareTiles.forEach((entry, owner) => { const label = entry.tile.querySelector('.remote-share-label'); if (label) label.textContent = displayNameForPeer(owner) + ((entry.mode === 'camera') ? ' · câmera' : ' · compartilhando tela'); });
 }
 
@@ -3306,7 +3340,7 @@ function leaveHostRoom() {
     try { if (localStorage.getItem(ACTIVE_HOST_ROOM_KEY) === closedCode) localStorage.removeItem(ACTIVE_HOST_ROOM_KEY); } catch {}
     $('preview').srcObject = null;
     remoteShareTiles.forEach(({video,tile})=>{try{video.srcObject=null;tile.remove()}catch{}}); remoteShareTiles.clear();
-    shareCode = ''; participantProfiles.clear(); remoteRoster.clear(); renderShare(); refreshTools(); refreshCount(); show('home');
+    shareCode = ''; participantProfiles.clear(); remoteRoster.clear(); renderShare(); refreshTools(); refreshCount(); show('home'); window.lockSocialPublishPresence?.();
     setRoomStatus('Sala pronta', false); say('homeMsg','');
     closingHostRoom = false;
   }, 300);
@@ -3341,6 +3375,7 @@ function openPeer(tries = 0) {
     opened = true;
     shareCode = code;
     try { localStorage.setItem(ACTIVE_HOST_ROOM_KEY, code); } catch {}
+    window.lockSocialPublishPresence?.();
     viewerCode = '';
     show(stream ? 'sharing' : 'lobby');
     renderShare();
@@ -3716,6 +3751,7 @@ function startWatch(code) {
   if (viewerCode === code && vpeer) return;
   if (vpeer) vpeer.destroy();
   viewerCode = code;
+  window.lockSocialPublishPresence?.();
   vconn = null;
   chatHistory = [];
   resetChatDisplay();
@@ -3737,7 +3773,7 @@ function startWatch(code) {
     if (vpeer !== currentPeer) return;
     const conn = vconn = currentPeer.connect(PREFIX + code, {
       reliable: true,
-      metadata: { lockClientId: LOCK_CLIENT_ID }
+      metadata: { lockClientId: LOCK_CLIENT_ID, profile: safeProfileForNetwork(localProfileSnapshot()) }
     });
     conn.on('open', () => {
       if (vconn !== conn) return;
@@ -3808,6 +3844,7 @@ function leaveWatch() {
   vpeer = null;
   vconn = null;
   viewerCode = '';
+  window.lockSocialPublishPresence?.();
   remoteRoster.clear();
   if (currentPeer) currentPeer.destroy();
   if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
@@ -4865,6 +4902,450 @@ body:has(.app-shell[data-current-view="home"]) .home-profile-top { display:flex;
  const refresh=()=>{try{if(typeof refreshTools==='function')refreshTools()}catch{}};
  document.addEventListener('visibilitychange',refresh);
  setTimeout(refresh,0);
+})();
+</script>
+
+<style id="lock-social-v2-3-style">
+.lock-sidebar-tabs{display:flex;flex:0 0 auto;gap:5px;padding:8px 10px;border-bottom:1px solid var(--panel-border,#30323d);background:var(--panel-bg,#171920)}
+.lock-sidebar-tab{display:flex;align-items:center;justify-content:center;gap:7px;flex:1;min-width:0;padding:8px 10px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted,#a0a5b5);font:700 12px/1.2 var(--text-font,Inter,system-ui,sans-serif);cursor:pointer}
+.lock-sidebar-tab:hover{background:#ffffff08;color:var(--text,#f4f5fb)}.lock-sidebar-tab.active{border-color:#187e68;background:#10352d;color:#e6fff6}
+.lock-social-badge{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:#0aa77f;color:#fff;font-size:10px;font-weight:800}
+.lock-social-badge[hidden]{display:none!important}
+.right-panel[data-panel-view="friends"] .chat-heading,.right-panel[data-panel-view="friends"] #chatMessages,.right-panel[data-panel-view="friends"] #chatReplyBar,.right-panel[data-panel-view="friends"] #chatExtras,.right-panel[data-panel-view="friends"] #chatForm{display:none!important}
+.right-panel[data-panel-view="friends"] #lockFriendsPanel{display:flex!important;flex:1 1 auto;min-height:0;flex-direction:column;gap:12px;padding:13px 12px 10px;overflow:auto}
+.right-panel[data-panel-view="chat"] #lockFriendsPanel{display:none!important}
+.lock-friends-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.lock-friends-head h2{margin:0;color:var(--text,#f4f5fb);font-size:16px}.lock-friends-head p{margin:5px 0 0;color:var(--muted,#a0a5b5);font-size:10px;line-height:1.45}
+.lock-copy-code{flex:0 0 auto;padding:8px 9px;border:1px solid #3c4050;border-radius:8px;background:#22252e;color:#eef0f7;font-size:10px;font-weight:800;cursor:pointer}.lock-copy-code:hover{border-color:#0aa77f}
+.lock-own-code{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border:1px solid #303843;border-radius:9px;background:#11161b}.lock-own-code span{color:#8c96a9;font-size:9px;font-weight:800;letter-spacing:.12em}.lock-own-code strong{color:#65e0bd;font:800 12px/1.1 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.09em;overflow-wrap:anywhere}
+.lock-add-friend-form{display:flex;gap:6px}.lock-add-friend-form .field{min-width:0;flex:1;height:36px;padding:8px 10px;font-size:11px}.lock-add-friend-form .btn{flex:0 0 auto;padding:7px 10px;font-size:11px}
+.lock-social-status{margin:-5px 0 0;color:#8d98aa;font-size:10px;line-height:1.4}.lock-social-status[data-kind="error"]{color:#ff9caa}.lock-social-status[data-kind="success"]{color:#6ee7c5}
+.lock-social-section{display:flex;flex-direction:column;gap:7px;min-height:0}.lock-social-section h3{display:flex;align-items:center;gap:6px;margin:0;color:var(--muted,#a0a5b5);font-size:10px;letter-spacing:.07em;text-transform:uppercase}.lock-social-list{display:flex;flex-direction:column;gap:6px}.lock-social-empty{margin:0;padding:7px 0;color:#7e8496;font-size:11px;line-height:1.45}
+.lock-social-person{display:flex;align-items:center;gap:8px;min-width:0;padding:8px;border:1px solid #30333e;border-radius:10px;background:#1d1f28}.lock-social-avatar{display:grid;place-items:center;flex:0 0 31px;width:31px;height:31px;overflow:hidden;border:1px solid #ffffff16;border-radius:50%;background:#2e6d80;color:white;font-size:12px;font-weight:800}.lock-social-avatar img{width:100%;height:100%;object-fit:cover}.lock-social-person-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.lock-social-name{overflow:hidden;color:#e8eaf3;font-size:11px;font-weight:800;text-overflow:ellipsis;white-space:nowrap}.lock-social-meta{color:#8991a4;font-size:9px;line-height:1.35;overflow-wrap:anywhere}.lock-social-meta.online{color:#65dcb7}.lock-social-meta.in-room{color:#b7a9ff}.lock-social-actions{display:flex;flex:0 0 auto;flex-direction:column;gap:4px;align-items:stretch}.lock-social-action{max-width:104px;padding:6px 7px;border:1px solid #3b4050;border-radius:7px;background:#282b36;color:#f0f2f8;font-size:9px;font-weight:800;white-space:nowrap;cursor:pointer}.lock-social-action.primary{border-color:#0a9774;background:#087e63;color:#fff}.lock-social-action.danger{border-color:#7d3948;background:#3b2029;color:#ffbec8}.lock-social-action:disabled{opacity:.5;cursor:default}
+.participant-add-friend{display:grid;place-items:center;flex:0 0 auto;width:23px;height:23px;padding:0;border:1px solid #3c4150;border-radius:7px;background:#20232c;color:#7ae7c6;font-size:17px;font-weight:800;line-height:1;cursor:pointer}.participant-add-friend:hover{border-color:#0aa77f;background:#103a30}.participant-add-friend:disabled{opacity:.6;cursor:default}
+.app-shell[data-current-view="home"] .right-panel .lock-sidebar-tabs{margin-bottom:0}
+.app-shell[data-current-view="home"] .right-panel[data-panel-view="friends"] .lock-friends-panel{display:flex!important}
+.app-shell[data-current-view="home"].chat-collapsed .right-panel{width:auto!important;min-width:0!important;padding:12px!important;overflow:hidden!important}
+@media(max-width:560px){.lock-friends-head{align-items:flex-start}.lock-friends-head h2{font-size:15px}.lock-social-person{padding:7px}.lock-social-action{max-width:86px;font-size:8px}.lock-own-code strong{font-size:11px}}
+body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}body.light-theme .lock-social-name{color:#252838}body.light-theme .lock-social-meta{color:#737a8d}body.light-theme .lock-sidebar-tab{color:#60677b}body.light-theme .lock-sidebar-tab.active{background:#d9f7ed;color:#075e48;border-color:#72cdb3}body.light-theme .lock-own-code{background:#f2f7f7;border-color:#dbe6e7}body.light-theme .lock-own-code span{color:#727b8e}body.light-theme .lock-copy-code,body.light-theme .lock-social-action{background:#f0f1f6;color:#242737;border-color:#d5d9e3}
+</style>
+<script id="lock-social-v2-3">
+(() => {
+  'use strict';
+  const byId = id => document.getElementById(id);
+  const SOCIAL_PREFIX = 'lock-user-';
+  const SOCIAL_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const ID_KEY = 'lock-social-user-id-v1';
+  const FRIENDS_KEY = 'lock-social-friends-v1';
+  const INCOMING_KEY = 'lock-social-incoming-v1';
+  const OUTGOING_KEY = 'lock-social-outgoing-v1';
+  const socialId = getOrCreateId();
+  window.lockSocialUserId = socialId;
+  let socialPeer = null;
+  const socialConnections = new Map();
+  const connecting = new Set();
+  const socialOutbox = new Map();
+  const socialPresence = new Map();
+  const knownProfiles = new Map();
+  const incomingJoinRequests = new Map();
+  const incomingRoomInvites = new Map();
+  const sentJoinRequests = new Map();
+  let friends = loadArray(FRIENDS_KEY).filter(x => x && validId(x.id) && x.id !== socialId);
+  let incomingRequests = loadArray(INCOMING_KEY).filter(x => x && validId(x.id) && x.id !== socialId);
+  let outgoingRequests = loadArray(OUTGOING_KEY).filter(x => x && validId(x.id) && x.id !== socialId);
+  let socialMessage = '';
+  let socialMessageKind = '';
+
+  function getOrCreateId() {
+    try {
+      let id = String(localStorage.getItem(ID_KEY) || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (/^[A-Z0-9]{12}$/.test(id)) return id;
+      const bytes = crypto.getRandomValues(new Uint8Array(12));
+      id = Array.from(bytes, b => SOCIAL_ALPHABET[b % SOCIAL_ALPHABET.length]).join('');
+      localStorage.setItem(ID_KEY, id);
+      return id;
+    } catch {
+      return Array.from(crypto.getRandomValues(new Uint8Array(12)), b => SOCIAL_ALPHABET[b % SOCIAL_ALPHABET.length]).join('');
+    }
+  }
+  function validId(id) { return /^[A-Z0-9]{8,16}$/.test(String(id || '').toUpperCase()); }
+  function normalizeId(id) { return String(id || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0,16); }
+  function idFromPeer(peerId) { const value=String(peerId||''); return value.startsWith(SOCIAL_PREFIX) ? normalizeId(value.slice(SOCIAL_PREFIX.length)) : ''; }
+  function loadArray(key) { try { const v=JSON.parse(localStorage.getItem(key)||'[]'); return Array.isArray(v)?v:[]; } catch { return []; } }
+  function persist() {
+    try {
+      localStorage.setItem(FRIENDS_KEY, JSON.stringify(friends.slice(0,500)));
+      localStorage.setItem(INCOMING_KEY, JSON.stringify(incomingRequests.slice(0,100)));
+      localStorage.setItem(OUTGOING_KEY, JSON.stringify(outgoingRequests.slice(0,100)));
+    } catch {}
+  }
+  function cleanProfile(profile, id='') {
+    return { id: normalizeId(id || profile?.socialId || profile?.id), name: String(profile?.name || 'Amigo').slice(0,32), photo: String(profile?.photo || '').slice(0,600000) };
+  }
+  function localProfile() {
+    const p = typeof window.getLockLocalProfile === 'function' ? window.getLockLocalProfile() : {};
+    return { socialId, name: String(p?.name || 'Lock user').slice(0,32), photo: String(p?.photo || '').slice(0,600000) };
+  }
+  function isFriend(id) { return friends.some(f => f.id === normalizeId(id)); }
+  function findFriend(id) { return friends.find(f => f.id === normalizeId(id)); }
+  function setMessage(message, kind='') {
+    socialMessage = String(message || ''); socialMessageKind = kind;
+    const el=byId('lockSocialStatus'); if(el){el.textContent=socialMessage;el.dataset.kind=kind;}
+  }
+  function addFriend(id, profile) {
+    id=normalizeId(id); if(!validId(id)||id===socialId) return;
+    const p=cleanProfile(profile,id);
+    const index=friends.findIndex(f=>f.id===id);
+    if(index>=0) friends[index]={...friends[index],...p}; else friends.unshift({...p,addedAt:Date.now()});
+    friends=friends.slice(0,500);
+    persist(); render(); try { if (typeof renderParticipants === 'function') renderParticipants(); } catch {}
+    try { connectToFriend(id); } catch {}
+    publishPresence();
+  }
+  function removeById(list,id){return list.filter(x=>x.id!==normalizeId(id));}
+  function sendOnConnection(conn, packet) { try { if(conn && conn.open){conn.send(packet);return true;} } catch {} return false; }
+  function queuePacket(id, packet) {
+    id=normalizeId(id); if(!validId(id)||id===socialId) return;
+    const old=socialOutbox.get(id)||[];
+    if(packet.type==='friend-request' && old.some(p=>p.type==='friend-request')) return;
+    old.push(packet); socialOutbox.set(id,old.slice(-20));
+  }
+  function sendSocial(id, packet, queueIfOffline=true) {
+    id=normalizeId(id); if(!validId(id)||id===socialId) return false;
+    const conn=socialConnections.get(id);
+    if(sendOnConnection(conn,packet)) return true;
+    if(queueIfOffline) queuePacket(id,packet);
+    connectToFriend(id);
+    return false;
+  }
+  function flushOutbox(id, conn) {
+    const queued=socialOutbox.get(id)||[];
+    if(!conn?.open || !queued.length) return;
+    const remain=[];
+    for(const packet of queued){
+      if(packet.expiresAt && Number(packet.expiresAt)<Date.now()) continue;
+      if(!sendOnConnection(conn,packet)) remain.push(packet);
+    }
+    if(remain.length) socialOutbox.set(id,remain); else socialOutbox.delete(id);
+  }
+  function currentPresence() {
+    let roomCode='', hostUserId='';
+    try {
+      if (typeof peer!=='undefined' && peer && !peer.destroyed && peer.open && shareCode) { roomCode=String(shareCode); hostUserId=socialId; }
+      else if (typeof vpeer!=='undefined' && vpeer && !vpeer.destroyed && viewerCode) {
+        roomCode=String(viewerCode);
+        const host=typeof remoteRoster!=='undefined' ? remoteRoster.get('host') : null;
+        hostUserId=normalizeId(host?.socialId || '');
+      }
+    } catch {}
+    return {online:true, roomCode:roomCode.slice(0,80), hostUserId, inRoom:!!roomCode, updatedAt:Date.now()};
+  }
+  function publishPresenceTo(id, conn) {
+    if(!isFriend(id)||!conn?.open) return;
+    sendOnConnection(conn,{type:'presence',presence:currentPresence()});
+  }
+  function publishPresence() {
+    const presence=currentPresence();
+    friends.forEach(friend=>{
+      const conn=socialConnections.get(friend.id);
+      if(conn?.open) sendOnConnection(conn,{type:'presence',presence});
+      else connectToFriend(friend.id);
+    });
+    render();
+  }
+  function attachConnection(conn, knownId='') {
+    const id=normalizeId(knownId || idFromPeer(conn?.peer));
+    if(!validId(id)||id===socialId||!conn) { try{conn.close();}catch{} return; }
+    const onOpen=()=>{
+      connecting.delete(id);
+      socialConnections.set(id,conn);
+      const profile=localProfile();
+      sendOnConnection(conn,{type:'social-hello',profile,friendConfirmed:isFriend(id)});
+      publishPresenceTo(id,conn);
+      flushOutbox(id,conn);
+      render();
+    };
+    conn.on('open',onOpen);
+    conn.on('data',data=>handleMessage(id,conn,data));
+    const disconnected=()=>{
+      if(socialConnections.get(id)===conn) socialConnections.delete(id);
+      connecting.delete(id);
+      socialPresence.delete(id);
+      render();
+    };
+    conn.on('close',disconnected);
+    conn.on('error',()=>{disconnected();});
+    if(conn.open) window.setTimeout(onOpen,0);
+  }
+  function connectToFriend(id) {
+    id=normalizeId(id); if(!validId(id)||id===socialId||!socialPeer||!socialPeer.open) return null;
+    const existing=socialConnections.get(id); if(existing?.open) {flushOutbox(id,existing); return existing;}
+    if(connecting.has(id)) return null;
+    connecting.add(id);
+    try {
+      const conn=socialPeer.connect(SOCIAL_PREFIX+id,{reliable:true,metadata:{purpose:'lock-social'}});
+      attachConnection(conn,id);
+      return conn;
+    } catch { connecting.delete(id); return null; }
+  }
+  function handleMessage(id, conn, data) {
+    if(!data||typeof data!=='object') return;
+    if(data.type==='social-hello') {
+      const profile=cleanProfile(data.profile||{},id); knownProfiles.set(id,profile);
+      if(data.friendConfirmed===true && outgoingRequests.some(r=>r.id===id)) {
+        addFriend(id,profile); outgoingRequests=removeById(outgoingRequests,id); persist();
+        sendOnConnection(conn,{type:'friend-confirm',profile:localProfile()});
+        setMessage(`${profile.name} confirmou a amizade.`, 'success');
+      } else if(isFriend(id)) { addFriend(id,profile); publishPresenceTo(id,conn); }
+      render(); return;
+    }
+    if(data.type==='presence') {
+      if(!isFriend(id)) return;
+      const p=data.presence||{};
+      socialPresence.set(id,{online:!!p.online,inRoom:!!p.inRoom,roomCode:String(p.roomCode||'').slice(0,80),hostUserId:normalizeId(p.hostUserId||''),updatedAt:Number(p.updatedAt)||Date.now()});
+      render(); return;
+    }
+    if(data.type==='friend-request') {
+      const profile=cleanProfile(data.profile||{},id); knownProfiles.set(id,profile);
+      if(isFriend(id)) { sendOnConnection(conn,{type:'friend-accepted',profile:localProfile()}); return; }
+      if(!incomingRequests.some(r=>r.id===id)) incomingRequests.unshift({...profile,requestedAt:Date.now()});
+      incomingRequests=incomingRequests.slice(0,100); persist(); setMessage(`${profile.name} enviou um pedido de amizade.`, 'success'); render();
+      if(typeof window.notifyLockSound==='function') window.notifyLockSound('message');
+      return;
+    }
+    if(data.type==='friend-request-received') {
+      outgoingRequests=outgoingRequests.map(r=>r.id===id?{...r,status:'sent'}:r); persist(); setMessage(`Pedido enviado para ${String(data.name||id).slice(0,32)}.`, 'success'); render(); return;
+    }
+    if(data.type==='friend-accepted') {
+      const profile=cleanProfile(data.profile||knownProfiles.get(id)||{},id);
+      addFriend(id,profile); outgoingRequests=removeById(outgoingRequests,id); incomingRequests=removeById(incomingRequests,id); persist();
+      sendOnConnection(conn,{type:'friend-confirm',profile:localProfile()});
+      setMessage(`${profile.name} aceitou sua amizade.`, 'success'); render(); publishPresence(); return;
+    }
+    if(data.type==='friend-confirm') {
+      addFriend(id,cleanProfile(data.profile||knownProfiles.get(id)||{},id)); incomingRequests=removeById(incomingRequests,id); outgoingRequests=removeById(outgoingRequests,id); persist(); render(); publishPresence(); return;
+    }
+    if(data.type==='friend-declined') {
+      outgoingRequests=removeById(outgoingRequests,id); persist(); setMessage(`${String(data.name||'A pessoa').slice(0,32)} recusou o pedido de amizade.`, 'error'); render(); return;
+    }
+    if(data.type==='room-invite') {
+      if(data.expiresAt && Number(data.expiresAt)<Date.now()) return;
+      if(!isFriend(id)) return;
+      const inviteCode=String(data.roomCode||'').replace(/[^A-Z0-9]/gi,'').toUpperCase();
+      const hostUserId=normalizeId(data.hostUserId||'');
+      if(!inviteCode||!validId(hostUserId)) return;
+      incomingRoomInvites.set(id,{id,name:String(data.fromName||knownProfiles.get(id)?.name||'Amigo').slice(0,32),photo:String(knownProfiles.get(id)?.photo||''),roomCode:inviteCode,hostUserId,invitedAt:Date.now()});
+      render();setSidebarView('friends');setMessage(`${String(data.fromName||'Um amigo').slice(0,32)} convidou você para uma sala.`, 'success');
+      if(typeof window.notifyLockSound==='function')window.notifyLockSound('message');
+      return;
+    }
+    if(data.type==='join-request') {
+      let activeRoom=false; try{activeRoom=!!(typeof peer!=='undefined'&&peer&&!peer.destroyed&&peer.open&&shareCode&&String(data.roomCode||'')===String(shareCode));}catch{}
+      if(!activeRoom) {sendOnConnection(conn,{type:'join-rejected',reason:'Esta sala não está mais disponível.'});return;}
+      if(data.expiresAt && Number(data.expiresAt)<Date.now()){sendOnConnection(conn,{type:'join-rejected',reason:'Esse pedido expirou. Peça para entrar novamente.'});return;}
+      const reqProfile=cleanProfile(data.profile||{},id);
+      incomingJoinRequests.set(id,{id,...reqProfile,roomCode:String(data.roomCode||''),conn,requestedAt:Date.now(),expiresAt:Number(data.expiresAt)||Date.now()+60000});
+      render(); setSidebarView('friends');
+      setMessage(`${reqProfile.name} pediu para entrar na sua sala.`, 'success');
+      if(typeof window.notifyLockSound==='function') window.notifyLockSound('message');
+      return;
+    }
+    if(data.type==='join-approved') {
+      if(data.expiresAt && Number(data.expiresAt)<Date.now()){setMessage('A aprovação chegou tarde demais. Peça para entrar novamente.','error');return;}
+      const matchingRequest=[...sentJoinRequests.entries()].find(([friendId,request])=>friendId===id||request.hostUserId===id);
+      if(!matchingRequest){setMessage('Esta aprovação não corresponde a um pedido ativo. Peça para entrar novamente.','error');return;}
+      const code=String(data.roomCode||'').replace(/[^A-Z0-9]/gi,'').toUpperCase();
+      for(const [friendId,request] of sentJoinRequests){if(friendId===id||request.hostUserId===id)sentJoinRequests.delete(friendId);}
+      render();
+      if(!code) {setMessage('O anfitrião enviou um código inválido.','error');return;}
+      if((typeof peer!=='undefined'&&peer&&!peer.destroyed)||(typeof vpeer!=='undefined'&&vpeer&&!vpeer.destroyed)) {
+        setMessage('Pedido aprovado, mas você já está em uma sala. Saia dela antes de entrar na outra.','error'); return;
+      }
+      setMessage('Pedido aprovado! Entrando na sala…','success');
+      try { history.replaceState(null,'',location.pathname+location.search+'#'+code); startWatch(code); }
+      catch { setMessage('Não consegui abrir a sala aprovada. Use o código '+code+'.','error'); }
+      return;
+    }
+    if(data.type==='join-rejected') {
+      if(data.expiresAt && Number(data.expiresAt)<Date.now()) return;
+      for(const [friendId,request] of sentJoinRequests){if(friendId===id||request.hostUserId===id)sentJoinRequests.delete(friendId);}
+      render(); setMessage(String(data.reason||'O anfitrião recusou ou não pôde aceitar o pedido.').slice(0,160),'error'); return;
+    }
+  }
+  function sendFriendRequest(id, profile={}) {
+    id=normalizeId(id);
+    if(!validId(id)||id===socialId) {setMessage('Código de amigo inválido.','error');return;}
+    if(isFriend(id)) {setMessage('Essa pessoa já está na sua lista.','success');return;}
+    if(outgoingRequests.some(r=>r.id===id)) {setMessage('O pedido já está pendente para essa pessoa.');return;}
+    const p=cleanProfile({...profile,socialId:id},id);
+    outgoingRequests.unshift({...p,status:'waiting',requestedAt:Date.now()}); outgoingRequests=outgoingRequests.slice(0,100); persist();
+    queuePacket(id,{type:'friend-request',profile:localProfile()});
+    connectToFriend(id); setMessage(`Pedido de amizade preparado para ${p.name||id}.`, 'success'); render(); try { if (typeof renderParticipants === 'function') renderParticipants(); } catch {}
+  }
+  window.lockSendFriendRequest=sendFriendRequest;
+  window.lockFriendActionState=id=>isFriend(id)?'friend':(outgoingRequests.some(r=>r.id===normalizeId(id))?'pending':'add');
+  function acceptFriend(id) {
+    id=normalizeId(id); const request=incomingRequests.find(r=>r.id===id); if(!request) return;
+    addFriend(id,request); incomingRequests=removeById(incomingRequests,id); persist();
+    const conn=socialConnections.get(id);
+    if(!sendOnConnection(conn,{type:'friend-accepted',profile:localProfile()})) sendSocial(id,{type:'friend-accepted',profile:localProfile()},true);
+    setMessage(`${request.name} foi adicionado aos amigos.`, 'success'); render(); publishPresence();
+  }
+  function declineFriend(id) {
+    id=normalizeId(id); const req=incomingRequests.find(r=>r.id===id); incomingRequests=removeById(incomingRequests,id); persist();
+    const conn=socialConnections.get(id);
+    if(!sendOnConnection(conn,{type:'friend-declined',name:localProfile().name})) sendSocial(id,{type:'friend-declined',name:localProfile().name},true);
+    setMessage(`Pedido de ${req?.name||'amizade'} recusado.`); render();
+  }
+  function requestToJoin(friend) {
+    const id=normalizeId(friend.id); const p=socialPresence.get(id);
+    if(!p?.online||!p.inRoom||!validId(p.hostUserId)) {setMessage('Esse amigo não está em uma sala acessível agora.');return;}
+    if((typeof peer!=='undefined'&&peer&&!peer.destroyed)||(typeof vpeer!=='undefined'&&vpeer&&!vpeer.destroyed)) {setMessage('Saia da sala atual antes de pedir para entrar em outra.','error');return;}
+    const already=sentJoinRequests.get(id);
+    if(already&&already.roomCode===p.roomCode){setMessage('Seu pedido já está aguardando o anfitrião.');return;}
+    const requestedAt=Date.now();
+    sentJoinRequests.set(id,{roomCode:p.roomCode,hostUserId:p.hostUserId,requestedAt});
+    sendSocial(p.hostUserId,{type:'join-request',roomCode:p.roomCode,profile:localProfile(),expiresAt:requestedAt+60000},true);
+    window.setTimeout(()=>{const current=sentJoinRequests.get(id);if(current&&current.requestedAt===requestedAt){sentJoinRequests.delete(id);setMessage('O pedido expirou sem resposta. Você pode pedir para entrar novamente.','error');render();}},61000);
+    setMessage(`Pedido enviado ao anfitrião da sala de ${friend.name}. Ele precisa aprovar sua entrada.`, 'success'); render();
+  }
+  function requestRoomInvite(invite) {
+    if(!invite||!invite.roomCode||!validId(invite.hostUserId)) return;
+    if((typeof peer!=='undefined'&&peer&&!peer.destroyed)||(typeof vpeer!=='undefined'&&vpeer&&!vpeer.destroyed)){setMessage('Saia da sala atual antes de pedir para entrar em outra.','error');return;}
+    const requestedAt=Date.now();
+    sentJoinRequests.set(invite.id,{roomCode:invite.roomCode,hostUserId:invite.hostUserId,requestedAt});
+    sendSocial(invite.hostUserId,{type:'join-request',roomCode:invite.roomCode,profile:localProfile(),expiresAt:requestedAt+60000},true);
+    incomingRoomInvites.delete(invite.id);
+    window.setTimeout(()=>{const current=sentJoinRequests.get(invite.id);if(current&&current.requestedAt===requestedAt){sentJoinRequests.delete(invite.id);setMessage('O pedido expirou sem resposta. Você pode pedir para entrar novamente.','error');render();}},61000);
+    setMessage('Pedido enviado ao anfitrião. Você só entra depois que ele aprovar.','success');render();
+  }
+  function answerJoinRequest(id, allow) {
+    const req=incomingJoinRequests.get(id); if(!req) return;
+    if(req.expiresAt && req.expiresAt<Date.now()){incomingJoinRequests.delete(id);render();setMessage('Esse pedido expirou. Peça para a pessoa solicitar novamente.','error');return;}
+    const active=!!(typeof peer!=='undefined'&&peer&&!peer.destroyed&&peer.open&&shareCode===req.roomCode&&!closingHostRoom);
+    if(allow&&!active){sendOnConnection(req.conn,{type:'join-rejected',reason:'A sala foi encerrada antes da aprovação.'});incomingJoinRequests.delete(id);render();setMessage('A sala não está mais ativa.','error');return;}
+    const response=allow?{type:'join-approved',roomCode:req.roomCode,expiresAt:Date.now()+60000}:{type:'join-rejected',reason:'O anfitrião recusou seu pedido.',expiresAt:Date.now()+60000};
+    const ok=sendOnConnection(req.conn,response);
+    if(!ok) sendSocial(id,response,true);
+    incomingJoinRequests.delete(id); render();
+    setMessage(allow?`Pedido de ${req.name} aprovado.`:`Pedido de ${req.name} recusado.`,allow?'success':'');
+  }
+  function makeAction(label, callback, cls='') {
+    const btn=document.createElement('button'); btn.type='button'; btn.className='lock-social-action'+(cls?' '+cls:''); btn.textContent=label; btn.addEventListener('click',callback); return btn;
+  }
+  function renderPerson(container, profile, options={}) {
+    const row=document.createElement('div'); row.className='lock-social-person';
+    const avatar=document.createElement('span'); avatar.className='lock-social-avatar';
+    if(profile.photo && /^(data:image\/|https:\/\/)/i.test(profile.photo)){const img=document.createElement('img');img.src=profile.photo;img.alt='';img.loading='lazy';img.onerror=()=>{img.remove();avatar.textContent=(profile.name||'?').slice(0,1).toUpperCase();};avatar.append(img);} else avatar.textContent=(profile.name||'?').slice(0,1).toUpperCase();
+    const main=document.createElement('div');main.className='lock-social-person-main';
+    const name=document.createElement('div');name.className='lock-social-name';name.textContent=profile.name||'Amigo';
+    const meta=document.createElement('div');meta.className='lock-social-meta';meta.textContent=options.meta||''; if(options.online)meta.classList.add('online');if(options.inRoom)meta.classList.add('in-room');
+    main.append(name,meta);const actions=document.createElement('div');actions.className='lock-social-actions';
+    (options.actions||[]).forEach(action=>actions.append(action));
+    row.append(avatar,main,actions);container.append(row);
+  }
+  function setEmpty(container, text) { const p=document.createElement('p');p.className='lock-social-empty';p.textContent=text;container.append(p); }
+  function render() {
+    const code=byId('lockMyFriendCode'); if(code) code.textContent=socialId;
+    const friendsBox=byId('lockFriendList'), reqBox=byId('lockFriendRequests'), joinBox=byId('lockJoinRequests');
+    if(!friendsBox||!reqBox||!joinBox)return;
+    friendsBox.replaceChildren();reqBox.replaceChildren();joinBox.replaceChildren();
+    const mine=currentPresence();
+    if(!friends.length)setEmpty(friendsBox,'Ainda não há amigos adicionados. Entre numa sala e use o + ao lado do nome de alguém.');
+    friends.forEach(friend=>{
+      const p=socialPresence.get(friend.id)||{online:false,inRoom:false};
+      const meta=!p.online?'Offline':(p.inRoom?`Em uma sala · ${p.roomCode||'código indisponível'}`:'Online');
+      const actions=[];
+      if(mine.inRoom&&validId(mine.hostUserId)) actions.push(makeAction('Convidar',()=>{
+        sendSocial(friend.id,{type:'room-invite',roomCode:mine.roomCode,hostUserId:mine.hostUserId,fromName:localProfile().name,expiresAt:Date.now()+60000},true);
+        setMessage(`Convite enviado para ${friend.name}. A entrada ainda depende da aprovação do anfitrião.`,'success');
+      },''));
+      if(p.online && p.inRoom && validId(p.hostUserId)){
+        const pending=sentJoinRequests.get(friend.id);
+        const action=makeAction(pending&&pending.roomCode===p.roomCode?'Pedido enviado':'Pedir para entrar',()=>requestToJoin(friend),'primary');
+        action.disabled=!!(pending&&pending.roomCode===p.roomCode);
+        actions.push(action);
+      }
+      renderPerson(friendsBox,friend,{meta,online:p.online,inRoom:p.online&&p.inRoom,actions});
+    });
+    const inviteBox=byId('lockRoomInvites'); if(inviteBox){inviteBox.replaceChildren();if(!incomingRoomInvites.size)setEmpty(inviteBox,'Nenhum convite de sala.');incomingRoomInvites.forEach(invite=>renderPerson(inviteBox,invite,{meta:`Convite para a sala ${invite.roomCode}.`,actions:[makeAction('Pedir para entrar',()=>requestRoomInvite(invite),'primary'),makeAction('Ignorar',()=>{incomingRoomInvites.delete(invite.id);render();},'danger')]}));}
+    if(!incomingRequests.length)setEmpty(reqBox,'Nenhum pedido de amizade recebido.');
+    incomingRequests.forEach(req=>renderPerson(reqBox,req,{meta:'Quer adicionar você?',actions:[makeAction('Aceitar',()=>acceptFriend(req.id),'primary'),makeAction('Recusar',()=>declineFriend(req.id),'danger')]}));
+    if(!incomingJoinRequests.size)setEmpty(joinBox,'Nenhum pedido para entrar.');
+    incomingJoinRequests.forEach(req=>renderPerson(joinBox,req,{meta:`Quer entrar na sala ${req.roomCode}.`,actions:[makeAction('Aceitar',()=>answerJoinRequest(req.id,true),'primary'),makeAction('Recusar',()=>answerJoinRequest(req.id,false),'danger')]}));
+    const badge=(id,n)=>{const e=byId(id);if(e){e.textContent=String(n);e.hidden=!n;}};
+    badge('lockFriendsBadge',incomingRequests.length+incomingJoinRequests.size+incomingRoomInvites.size);badge('lockJoinBadge',incomingJoinRequests.size);badge('lockFriendRequestBadge',incomingRequests.length);badge('lockRoomInviteBadge',incomingRoomInvites.size);
+    if(byId('lockFriendsCount'))byId('lockFriendsCount').textContent=String(friends.length);
+    const btn=byId('lockChatTab');if(btn)btn.disabled=document.querySelector('.app-shell')?.dataset.currentView==='home';
+    const status=byId('lockSocialStatus');if(status){status.textContent=socialMessage||'Seu código é pessoal. Mantenha esta página aberta para aparecer online.';status.dataset.kind=socialMessageKind;}
+  }
+  function setSidebarView(view) {
+    const panel=document.querySelector('.right-panel'); if(!panel)return;
+    if(view==='friends') document.querySelector('.app-shell')?.classList.remove('chat-collapsed');
+    if(view==='chat' && document.querySelector('.app-shell')?.dataset.currentView==='home') view='friends';
+    panel.dataset.panelView=view;
+    byId('lockFriendsPanel').hidden=view!=='friends';
+    byId('lockFriendsTab').classList.toggle('active',view==='friends');
+    byId('lockChatTab').classList.toggle('active',view==='chat');
+    byId('lockFriendsTab').setAttribute('aria-selected',String(view==='friends'));
+    byId('lockChatTab').setAttribute('aria-selected',String(view==='chat'));
+  }
+  window.lockSocialPublishPresence=publishPresence;
+  byId('lockFriendsTab')?.addEventListener('click',()=>setSidebarView('friends'));
+  byId('lockChatTab')?.addEventListener('click',()=>setSidebarView('chat'));
+  byId('lockCopyFriendCode')?.addEventListener('click',async()=>{
+    try{await navigator.clipboard.writeText(socialId);setMessage('Código de amigo copiado.','success');}
+    catch{const temp=document.createElement('textarea');temp.value=socialId;document.body.append(temp);temp.select();let ok=false;try{ok=document.execCommand('copy')}catch{}temp.remove();setMessage(ok?'Código de amigo copiado.':'Seu código é '+socialId,ok?'success':'');}
+  });
+  byId('lockAddFriendForm')?.addEventListener('submit',event=>{
+    event.preventDefault();const id=normalizeId(byId('lockFriendCodeInput').value);
+    if(!validId(id)){setMessage('Digite um código de amigo válido.','error');return;}
+    if(id===socialId){setMessage('Esse é o seu próprio código. Não dá para adicionar a si mesmo.','error');return;}
+    const existing=knownProfiles.get(id)||{id,name:'Amigo '+id.slice(0,4),photo:''};
+    sendFriendRequest(id,existing);byId('lockFriendCodeInput').value='';
+  });
+  function resumeSocial() {
+    if(!socialPeer?.open)return;
+    friends.forEach(friend=>connectToFriend(friend.id));
+    outgoingRequests.forEach(req=>{queuePacket(req.id,{type:'friend-request',profile:localProfile()});connectToFriend(req.id);});
+    flushAll();
+  }
+  function flushAll() { for(const [id,queue] of socialOutbox){ if(queue.length)connectToFriend(id); } }
+  function startSocial() {
+    if(typeof window.Peer!=='function'){setMessage('O serviço de conexão não carregou. Atualize a página.','error');return;}
+    try{socialPeer=new window.Peer(SOCIAL_PREFIX+socialId);}catch{setMessage('Não foi possível iniciar a lista de amigos.','error');return;}
+    socialPeer.on('open',()=>{setMessage('Conectado. Sua lista fica salva neste navegador.','success');resumeSocial();publishPresence();});
+    socialPeer.on('connection',conn=>attachConnection(conn,idFromPeer(conn.peer)));
+    socialPeer.on('error',err=>{
+      if(err?.type==='unavailable-id')setMessage('Este código de amigo já está ativo em outra aba. Feche a outra aba do Lock e recarregue.','error');
+      else if(err?.type==='network'||err?.type==='socket-error')setMessage('Conexão de amigos instável. Tentando reconectar…','error');
+    });
+    socialPeer.on('disconnected',()=>{setMessage('Reconectando ao serviço de amigos…');window.setTimeout(()=>{try{if(socialPeer&&!socialPeer.destroyed&&socialPeer.disconnected)socialPeer.reconnect();}catch{}},1200);});
+  }
+  byId('lockFriendsTab')?.setAttribute('title','Mostrar amigos, pedidos de amizade e pedidos para entrar');
+  byId('lockMyFriendCode')?.setAttribute('title','Compartilhe este código para receber pedidos de amizade');
+  // Home opens on Friends; calls open on Chat. If a join request arrives, it switches back to Friends.
+  const app=document.querySelector('.app-shell');
+  const chooseDefaultView=()=>setSidebarView(app?.dataset.currentView==='home'?'friends':'chat');
+  if(app && typeof MutationObserver==='function')new MutationObserver(records=>{if(records.some(r=>r.attributeName==='data-current-view')){chooseDefaultView();publishPresence();}}).observe(app,{attributes:true,attributeFilter:['data-current-view']});
+  chooseDefaultView();render();
+  try { if (typeof renderParticipants === 'function') renderParticipants(); } catch {}
+  startSocial();
+  window.setInterval(()=>{
+    if(!socialPeer)return;
+    if(socialPeer.disconnected&&!socialPeer.destroyed){try{socialPeer.reconnect();}catch{}}
+    friends.forEach(friend=>{
+      const conn=socialConnections.get(friend.id);
+      if(conn?.open)publishPresenceTo(friend.id,conn); else connectToFriend(friend.id);
+    });
+    for(const [id,request] of incomingJoinRequests){if(request.expiresAt && request.expiresAt<Date.now())incomingJoinRequests.delete(id);}
+    for(const [id,invite] of incomingRoomInvites){if(invite.invitedAt && Date.now()-invite.invitedAt>60000)incomingRoomInvites.delete(id);}
+    // Pending friendship requests retry as the recipient comes online, as long as this page remains open.
+    outgoingRequests.forEach(req=>{if(!socialConnections.get(req.id)?.open){queuePacket(req.id,{type:'friend-request',profile:localProfile()});connectToFriend(req.id);}});
+    flushAll();
+    for(const [id,p] of socialPresence){if(Date.now()-(p.updatedAt||0)>25000){socialPresence.delete(id);}}
+    render();
+  },6000);
+  window.addEventListener('pagehide',()=>{try{if(socialPeer)socialPeer.destroy();}catch{}});
 })();
 </script>
 
