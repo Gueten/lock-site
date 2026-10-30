@@ -2878,12 +2878,22 @@ const $ = id => document.getElementById(id);
 const PREFIX = 'lock-room-';
 const ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const isExt = /-extension:$/.test(location.protocol);
-const canCapture = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
 const isMobileBrowser = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
 const isAndroidBrowser = /Android/i.test(navigator.userAgent || '');
-const screenShareUnavailableMessage = isMobileBrowser
-  ? 'Seu navegador não permite transmitir a própria tela. Isso não impede assistir às telas de outras pessoas nem conversar normalmente no canal de voz, desde que você esteja conectado à sala.'
-  : 'Este navegador não oferece captura de tela. Você continua podendo participar da sala; tente um Chrome ou Edge atualizado usando HTTPS.';
+// The normal browser path uses getDisplayMedia. The Android companion app exposes
+// MediaProjection through a tiny JavaScript bridge and supplies frames to a canvas.
+const canBrowserCapture = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+const hasNativeAndroidCapture = !!(isAndroidBrowser && window.LockScreenBridge &&
+  typeof window.LockScreenBridge.startCapture === 'function' &&
+  typeof window.LockScreenBridge.stopCapture === 'function' &&
+  typeof HTMLCanvasElement !== 'undefined' &&
+  typeof HTMLCanvasElement.prototype.captureStream === 'function');
+const canCapture = canBrowserCapture || hasNativeAndroidCapture;
+const screenShareUnavailableMessage = isAndroidBrowser
+  ? 'Para transmitir a tela neste Android, abra o LockCall pelo aplicativo LockCall Android. O Chrome/kiwi sozinho não disponibiliza a captura nativa neste aparelho.'
+  : isMobileBrowser
+    ? 'Este navegador móvel não oferece captura da própria tela. Você pode entrar na sala, assistir e conversar normalmente.'
+    : 'Este navegador não oferece captura de tela. Você continua podendo participar da sala; tente um Chrome ou Edge atualizado usando HTTPS.';
 const canUseCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 
 function showScreenShareWarning(reason = 'unsupported') {
@@ -2893,7 +2903,9 @@ function showScreenShareWarning(reason = 'unsupported') {
     : 'A tentativa de transmitir sua própria tela falhou. Isso não impede entrar na sala, assistir às transmissões das outras pessoas, conversar no chat ou falar pelo microfone normalmente. A captura da sua tela é uma função separada.';
   let suggestion = '';
   if (isAndroidBrowser) {
-    suggestion = 'No Android, você pode tentar abrir o LockCall no Kiwi Browser:';
+    suggestion = hasNativeAndroidCapture
+      ? 'Captura nativa Android disponível. Toque em Compartilhar tela e confirme a permissão do Android.'
+      : 'Para transmitir a tela do Android, use o aplicativo complementar LockCall Android. O site aberto diretamente no Chrome ou Kiwi pode assistir, mas não consegue iniciar MediaProjection.';
   } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent || '')) {
     suggestion = 'O Kiwi Browser é uma opção para Android e não está disponível para iPhone/iPad. A transmissão depende do suporte do navegador e do sistema.';
   } else {
@@ -2907,14 +2919,103 @@ function showScreenShareWarning(reason = 'unsupported') {
     const kiwiCaution = panel.querySelector('[data-kiwi-caution]');
     if (copyNode) copyNode.textContent = copy;
     if (suggestionNode) suggestionNode.textContent = suggestion;
-    if (kiwiLink) kiwiLink.hidden = !isAndroidBrowser;
-    if (kiwiCaution) kiwiCaution.hidden = !isAndroidBrowser;
+    if (kiwiLink) kiwiLink.hidden = true;
+    if (kiwiCaution) kiwiCaution.hidden = true;
   });
 }
 
 function hideScreenShareWarning() {
   document.querySelectorAll('[data-screen-share-warning]').forEach(panel => { panel.hidden = true; });
 }
+
+// Android companion bridge. MediaProjection frames arrive as JPEG base64 and are
+// painted to a canvas. canvas.captureStream() then feeds the existing PeerJS flow.
+let nativeAndroidCanvas = null;
+let nativeAndroidContext = null;
+let nativeAndroidStream = null;
+let nativeAndroidPending = null;
+let nativeAndroidCaptureActive = false;
+window.__lockAndroidCaptureFrame = function(jpegBase64, width, height) {
+  if (!nativeAndroidCanvas || !nativeAndroidContext || !nativeAndroidCaptureActive) return;
+  const w = Math.max(1, Math.min(1280, Number(width) || 1));
+  const h = Math.max(1, Math.min(1920, Number(height) || 1));
+  if (nativeAndroidCanvas.width !== w || nativeAndroidCanvas.height !== h) {
+    nativeAndroidCanvas.width = w;
+    nativeAndroidCanvas.height = h;
+  }
+  const image = new Image();
+  image.onload = () => {
+    if (nativeAndroidCaptureActive && nativeAndroidContext) {
+      nativeAndroidContext.drawImage(image, 0, 0, nativeAndroidCanvas.width, nativeAndroidCanvas.height);
+    }
+  };
+  image.src = 'data:image/jpeg;base64,' + String(jpegBase64 || '');
+};
+window.__lockAndroidCaptureStarted = function() {
+  if (!nativeAndroidPending) return;
+  const pending = nativeAndroidPending;
+  nativeAndroidPending = null;
+  nativeAndroidCaptureActive = true;
+  pending.resolve(nativeAndroidStream);
+};
+window.__lockAndroidCaptureFailed = function(message) {
+  if (nativeAndroidPending) {
+    const pending = nativeAndroidPending;
+    nativeAndroidPending = null;
+    pending.reject(new Error(String(message || 'O Android não autorizou a captura da tela.')));
+  }
+  stopNativeAndroidCapture(false);
+};
+window.__lockAndroidCaptureStopped = function() {
+  const wasActive = nativeAndroidCaptureActive;
+  stopNativeAndroidCapture(false);
+  if (wasActive && stream) {
+    if (vpeer && viewerShareCall) stopViewerShare('A captura de tela do Android foi encerrada.');
+    else stopShare('A captura de tela do Android foi encerrada.');
+  }
+};
+
+function startNativeAndroidCapture() {
+  if (!hasNativeAndroidCapture) return Promise.reject(new Error('Abra o LockCall pelo aplicativo Android para compartilhar a tela.'));
+  if (nativeAndroidStream) stopNativeAndroidCapture();
+  nativeAndroidCanvas = document.createElement('canvas');
+  nativeAndroidCanvas.width = 640;
+  nativeAndroidCanvas.height = 360;
+  nativeAndroidContext = nativeAndroidCanvas.getContext('2d', { alpha: false });
+  nativeAndroidContext.fillStyle = '#111111';
+  nativeAndroidContext.fillRect(0, 0, nativeAndroidCanvas.width, nativeAndroidCanvas.height);
+  nativeAndroidStream = nativeAndroidCanvas.captureStream(10);
+  nativeAndroidCaptureActive = false;
+  return new Promise((resolve, reject) => {
+    nativeAndroidPending = { resolve, reject };
+    try {
+      window.LockScreenBridge.startCapture();
+    } catch (error) {
+      nativeAndroidPending = null;
+      stopNativeAndroidCapture(false);
+      reject(error);
+    }
+  });
+}
+
+function stopNativeAndroidCapture(notifyNative = true) {
+  if (notifyNative && hasNativeAndroidCapture) {
+    try { window.LockScreenBridge.stopCapture(); } catch {}
+  }
+  nativeAndroidCaptureActive = false;
+  if (nativeAndroidStream) {
+    nativeAndroidStream.getTracks().forEach(track => { try { track.stop(); } catch {} });
+  }
+  nativeAndroidStream = null;
+  nativeAndroidCanvas = null;
+  nativeAndroidContext = null;
+  if (nativeAndroidPending) {
+    const pending = nativeAndroidPending;
+    nativeAndroidPending = null;
+    pending.reject(new Error('A captura de tela foi encerrada.'));
+  }
+}
+
 const selfUrl = 'https://gueten.github.io/lock-site/';
 const LOCK_BASE = 'https://gueten.github.io/lock-site/';
 
@@ -3309,10 +3410,20 @@ async function startShare() {
   const resolution = ({ '720': [1280,720], '1080': [1920,1080], '1440': [2560,1440] })[prefs.resolution] || null;
   const videoConstraints = resolution ? { width: { ideal: resolution[0] }, height: { ideal: resolution[1] }, frameRate: { ideal: 30, max: 60 } } : { frameRate: { ideal: 30, max: 60 } };
   try {
-    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: videoConstraints, audio: !!$('withAudio')?.checked, selfBrowserSurface: 'exclude' });
+    const screenStream = hasNativeAndroidCapture
+      ? await startNativeAndroidCapture()
+      : await navigator.mediaDevices.getDisplayMedia({ video: videoConstraints, audio: !!$('withAudio')?.checked, selfBrowserSurface: 'exclude' });
+    if (hasNativeAndroidCapture && $('withAudio')?.checked) {
+      say('homeMsg', 'Captura Android ativa. O vídeo da tela é transmitido; o áudio interno do aparelho não é capturado por este modo.');
+    }
     const track = screenStream.getVideoTracks()[0];
     if (track && resolution) { try { await track.applyConstraints({ width: { ideal: resolution[0] }, height: { ideal: resolution[1] } }); } catch {} }
-    if (vpeer && (!vconn || !vconn.open || !viewerCode)) { screenStream.getTracks().forEach(track => track.stop()); say('homeMsg', 'A conexão com a sala ainda não está pronta. Tente compartilhar novamente.'); return; }
+    if (vpeer && (!vconn || !vconn.open || !viewerCode)) {
+      if (hasNativeAndroidCapture) stopNativeAndroidCapture();
+      else screenStream.getTracks().forEach(track => track.stop());
+      say('homeMsg', 'A conexão com a sala ainda não está pronta. Tente compartilhar novamente.');
+      return;
+    }
     hideScreenShareWarning();
     if (vpeer && viewerCode) activateViewerStream(screenStream, 'screen');
     else activateStream(screenStream, 'screen');
@@ -3378,6 +3489,7 @@ function activateViewerStream(nextStream, mode = 'screen') {
 }
 
 function stopViewerShare(message = '', closeCall = true) {
+  if (hasNativeAndroidCapture && nativeAndroidStream) stopNativeAndroidCapture();
   const currentStream = stream;
   const currentCall = viewerShareCall;
   stream = null;
@@ -3820,6 +3932,7 @@ function renderShare() {
 
 function stopShare(message = '') {
   if (vpeer && viewerShareCall) return stopViewerShare(message || 'Compartilhamento encerrado.');
+  if (hasNativeAndroidCapture && nativeAndroidStream) stopNativeAndroidCapture();
   const currentStream = stream;
   stream = null;
   if (currentStream) currentStream.getTracks().forEach(track => track.stop());
