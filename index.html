@@ -469,9 +469,9 @@ body.popup .preview-wrap { margin-top: 8px; }
         <div class="lock-own-code"><span>SEU CÓDIGO</span><strong id="lockMyFriendCode">GERANDO…</strong></div>
         <form id="lockAddFriendForm" class="lock-add-friend-form"><input id="lockFriendCodeInput" class="field" type="text" maxlength="24" placeholder="Código de amigo" autocomplete="off" spellcheck="false" aria-label="Código de amigo"><button type="submit" class="btn primary compact">Adicionar</button></form>
         <p id="lockSocialStatus" class="lock-social-status" role="status">Conectando ao serviço de amigos…</p>
-        <div class="lock-social-section" id="lockRoomInviteSection" hidden><h3>Convites de sala <span id="lockRoomInviteBadge" class="lock-social-badge" hidden>0</span></h3><div id="lockRoomInvites" class="lock-social-list"></div></div>
-        <div class="lock-social-section" id="lockJoinRequestSection" hidden><h3>Pedidos para entrar <span id="lockJoinBadge" class="lock-social-badge" hidden>0</span></h3><div id="lockJoinRequests" class="lock-social-list"></div></div>
-        <div class="lock-social-section" id="lockFriendRequestSection" hidden><h3>Pedidos de amizade <span id="lockFriendRequestBadge" class="lock-social-badge" hidden>0</span></h3><div id="lockFriendRequests" class="lock-social-list"></div></div>
+        <div class="lock-social-section"><h3>Convites de sala <span id="lockRoomInviteBadge" class="lock-social-badge" hidden>0</span></h3><div id="lockRoomInvites" class="lock-social-list"><p class="lock-social-empty">Nenhum convite de sala.</p></div></div>
+        <div class="lock-social-section"><h3>Pedidos para entrar <span id="lockJoinBadge" class="lock-social-badge" hidden>0</span></h3><div id="lockJoinRequests" class="lock-social-list"><p class="lock-social-empty">Nenhum pedido para entrar.</p></div></div>
+        <div class="lock-social-section"><h3>Pedidos de amizade <span id="lockFriendRequestBadge" class="lock-social-badge" hidden>0</span></h3><div id="lockFriendRequests" class="lock-social-list"><p class="lock-social-empty">Nenhum pedido de amizade.</p></div></div>
         <div class="lock-social-section lock-friends-list-section"><h3>Amigos <span id="lockFriendsCount">0</span></h3><div id="lockFriendList" class="lock-social-list"><p class="lock-social-empty">Ainda não há amigos adicionados.</p></div></div>
       </section>
       <div class="chat-heading"><div><h2>Chat</h2><span id="chatSubtitle">Mensagens da sala</span></div><div class="chat-heading-actions"><button class="mini-icon" id="toggleChat" title="Recolher chat" aria-label="Recolher chat">›</button></div></div>
@@ -2999,14 +2999,13 @@ function participantRow(initial, name, role, stateClass = 'green-dot', photo = '
     add.title = 'Adicionar aos amigos';
     add.setAttribute('aria-label', 'Adicionar ' + name + ' aos amigos');
     const friendState = typeof window.lockFriendActionState === 'function' ? window.lockFriendActionState(socialId) : 'add';
-    add.textContent = friendState === 'friend' ? '−' : (friendState === 'pending' ? '…' : '+');
-    add.disabled = friendState === 'pending';
-    if (friendState === 'friend') { add.title = 'Remover dos amigos'; add.setAttribute('aria-label','Remover '+name+' dos amigos'); add.classList.add('is-friend'); }
+    add.textContent = friendState === 'friend' ? '✓' : (friendState === 'pending' ? '…' : '+');
+    add.disabled = friendState === 'friend' || friendState === 'pending';
+    if (friendState === 'friend') add.title = 'Já está nos amigos';
     else if (friendState === 'pending') add.title = 'Pedido de amizade enviado';
     add.addEventListener('click', event => {
       event.preventDefault(); event.stopPropagation();
-      if (friendState === 'friend' && typeof window.lockRemoveFriend === 'function') window.lockRemoveFriend(socialId);
-      else window.lockSendFriendRequest(socialId, { name, photo });
+      window.lockSendFriendRequest(socialId, { name, photo });
     });
     row.append(state, add);
   } else row.append(state);
@@ -3261,7 +3260,7 @@ function activateViewerStream(nextStream, mode = 'screen') {
     $('previewLabel').textContent = mode === 'camera' ? 'Sua câmera' : 'Sua tela';
     const selfTile = $('selfSharePreviewTile');
     const selfVideo = $('selfSharePreview');
-    if (selfTile && selfVideo && vpeer) { selfTile.hidden = false; selfVideo.setAttribute('playsinline',''); selfVideo.setAttribute('webkit-playsinline',''); selfVideo.srcObject = stream; selfVideo.play().catch(() => {}); $('selfSharePreviewLabel').textContent = mode === 'camera' ? 'Você · sua câmera' : 'Você · sua tela'; }
+    if (selfTile && selfVideo && vpeer) { selfTile.hidden = false; selfVideo.srcObject = stream; selfVideo.play().catch(() => {}); $('selfSharePreviewLabel').textContent = mode === 'camera' ? 'Você · sua câmera' : 'Você · sua tela'; }
     say('info', mode === 'camera' ? 'Sua câmera está ativa na sala; a prévia aparece na grade.' : 'Sua tela está sendo compartilhada com a sala; a prévia aparece na grade.');
     say('homeMsg', mode === 'camera' ? 'Sua câmera está ativa na sala.' : 'Sua tela está sendo compartilhada com a sala.');
     refreshRemoteTileLayout();
@@ -3632,9 +3631,7 @@ function refreshRemoteTileLayout() {
   } else if (isHost && stream) {
     if ($('stage')) $('stage').hidden = false;
   } else if (!isHost && $('stage')) {
-    const hasCamera = !!($('remote') && $('remote').srcObject);
-    const hasScreenTile = !!(viewerTarget && Array.from(viewerTarget.children).some(child => !child.hidden));
-    $('stage').hidden = !(hasCamera || hasScreenTile);
+    $('stage').hidden = !($('remote') && $('remote').srcObject);
   }
 }
 
@@ -4967,18 +4964,6 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
 /* Na página inicial, amigos ficam disponíveis, mas ações de convite só aparecem dentro de uma sala ativa. */
 .app-shell[data-current-view="home"] #toolInvite,.app-shell[data-current-view="home"] #quickCopy,.app-shell[data-current-view="home"] #invitePeople,.app-shell[data-current-view="home"] #inviteBtn,.app-shell[data-current-view="home"] #footerInvite,.app-shell[data-current-view="home"] #copyInviteHome,.app-shell[data-current-view="home"] #moreBtn{display:none!important}
 
-
-/* LockCall v2.6: social actions and mobile share viewing fixes. */
-.participant-add-friend.is-friend{border-color:#76505a;background:#3b2029;color:#ffc1cb;font-size:19px}
-.lock-join-toast-avatar{display:block;flex:0 0 38px;width:38px;height:38px;overflow:hidden;border:1px solid #ffffff2a;border-radius:50%;background:#30404a;color:#fff;text-align:center;font-size:15px;font-weight:800;line-height:38px}
-.lock-join-toast-avatar img{display:block;width:100%;height:100%;object-fit:cover}
-@media(max-width:760px){
-  #watching,#lobby,#sharing{width:100%;max-width:100%;min-width:0}
-  #watching .remote-share-grid,#remoteGrid,.remote-share-grid{width:100%;max-width:100%;min-width:0;grid-template-columns:minmax(0,1fr)!important;gap:9px}
-  .remote-share-tile{width:100%;min-width:0;min-height:190px;height:auto;max-height:none;overflow:hidden}
-  .remote-share-tile video{width:100%;height:auto;min-height:190px;max-height:70vh;object-fit:contain;-webkit-transform:translateZ(0);transform:translateZ(0)}
-  #watching video,#remote video{max-width:100%}
-}
 </style>
 <script id="lock-social-v2-5">
 (() => {
@@ -5162,8 +5147,7 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
     removeJoinToast(id);
     const card=document.createElement('section'); card.className='lock-join-toast'; card.setAttribute('role','status');
     const head=document.createElement('div'); head.className='lock-join-toast-head';
-    const icon=document.createElement('span'); icon.className='lock-join-toast-avatar';
-    if(req.photo && /^(data:image\/|https:\/\/)/i.test(req.photo)){const img=document.createElement('img');img.src=req.photo;img.alt='';img.onerror=()=>{img.remove();icon.textContent=(req.name||'?').slice(0,1).toUpperCase();};icon.append(img);}else icon.textContent=(req.name||'?').slice(0,1).toUpperCase();
+    const icon=document.createElement('span'); icon.className='lock-join-toast-icon'; icon.textContent='↗';
     const copy=document.createElement('div'); copy.className='lock-join-toast-copy';
     const title=document.createElement('strong'); title.textContent=`${req.name||'Alguém'} quer entrar na sua sala`;
     const detail=document.createElement('span'); detail.textContent=`Sala ${req.roomCode} · Você decide se a pessoa pode entrar.`;
@@ -5190,8 +5174,7 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
     removeRoomInviteToast(id);
     const card=document.createElement('section'); card.className='lock-join-toast lock-room-invite-toast'; card.setAttribute('role','status');
     const head=document.createElement('div'); head.className='lock-join-toast-head';
-    const icon=document.createElement('span'); icon.className='lock-join-toast-avatar';
-    if(invite.photo && /^(data:image\/|https:\/\/)/i.test(invite.photo)){const img=document.createElement('img');img.src=invite.photo;img.alt='';img.onerror=()=>{img.remove();icon.textContent=(invite.name||'?').slice(0,1).toUpperCase();};icon.append(img);}else icon.textContent=(invite.name||'?').slice(0,1).toUpperCase();
+    const icon=document.createElement('span'); icon.className='lock-join-toast-icon'; icon.textContent='↗';
     const copy=document.createElement('div'); copy.className='lock-join-toast-copy';
     const title=document.createElement('strong'); title.textContent=`${invite.name||'Um amigo'} convidou você para a sala`;
     const detail=document.createElement('span'); detail.textContent=`Sala ${invite.roomCode} · Aceite para entrar automaticamente.`;
@@ -5278,15 +5261,9 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
     if(data.type==='friend-declined') {
       outgoingRequests=removeById(outgoingRequests,id); persist(); setMessage(`${String(data.name||'A pessoa').slice(0,32)} recusou o pedido de amizade.`, 'error'); render(); return;
     }
-    if(data.type==='friend-removed') {
-      friends=removeById(friends,id); socialPresence.delete(id); persist(); render();
-      setMessage(`${String(data.name||knownProfiles.get(id)?.name||'A pessoa').slice(0,32)} removeu você dos amigos.`); return;
-    }
     if(data.type==='room-invite') {
       if(data.expiresAt && Number(data.expiresAt)<Date.now()) return;
       if(!isFriend(id)) return;
-      // Somente o anfitrião pode emitir convites para a sala; convidados não redistribuem acesso.
-      if(normalizeId(data.hostUserId||'')!==id) return;
       const inviteCode=String(data.roomCode||'').replace(/[^A-Z0-9]/gi,'').toUpperCase();
       const hostUserId=normalizeId(data.hostUserId||'');
       if(!inviteCode||!validId(hostUserId)) return;
@@ -5348,14 +5325,6 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
   }
   window.lockSendFriendRequest=sendFriendRequest;
   window.lockFriendActionState=id=>isFriend(id)?'friend':(outgoingRequests.some(r=>r.id===normalizeId(id))?'pending':'add');
-  function removeFriend(id) {
-    id=normalizeId(id); if(!isFriend(id)) return;
-    const friend=findFriend(id); friends=removeById(friends,id); socialPresence.delete(id); persist();
-    sendSocial(id,{type:'friend-removed',name:localProfile().name},false);
-    setMessage(`${friend?.name||'Amigo'} removido da sua lista.`); render();
-    try { if(typeof renderParticipants==='function') renderParticipants(); } catch {}
-  }
-  window.lockRemoveFriend=removeFriend;
   function acceptFriend(id) {
     id=normalizeId(id); const request=incomingRequests.find(r=>r.id===id); if(!request) return;
     addFriend(id,request); incomingRequests=removeById(incomingRequests,id); persist();
@@ -5436,7 +5405,7 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
       const p=socialPresence.get(friend.id)||{online:false,inRoom:false};
       const meta=!p.online?'Offline':(p.inRoom?`Em uma sala · ${p.roomCode||'código indisponível'}`:'Online');
       const actions=[];
-      if(mine.inRoom&&mine.hostUserId===socialId&&validId(mine.hostUserId)) actions.push(makeAction('Convidar',()=>{
+      if(mine.inRoom&&validId(mine.hostUserId)) actions.push(makeAction('Convidar',()=>{
         const inviteId=socialId+'-'+Date.now().toString(36);
         const delivered=sendSocial(friend.id,{type:'room-invite',inviteId,roomCode:mine.roomCode,hostUserId:mine.hostUserId,fromName:localProfile().name,expiresAt:Date.now()+60000},true);
         const detail=delivered?'O amigo pode aceitar e entrará diretamente na sala.':'O convite foi colocado na fila até o amigo se reconectar.';
@@ -5451,13 +5420,11 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
       }
       renderPerson(friendsBox,friend,{meta,online:p.online,inRoom:p.online&&p.inRoom,actions});
     });
-    const inviteBox=byId('lockRoomInvites'); if(inviteBox){inviteBox.replaceChildren();incomingRoomInvites.forEach(invite=>renderPerson(inviteBox,invite,{meta:`Convite para a sala ${invite.roomCode}.`,actions:[makeAction('Entrar na sala',()=>acceptRoomInvite(invite.id),'primary'),makeAction('Ignorar',()=>{incomingRoomInvites.delete(invite.id);removeRoomInviteToast(invite.id);render();},'danger')]}));}
+    const inviteBox=byId('lockRoomInvites'); if(inviteBox){inviteBox.replaceChildren();if(!incomingRoomInvites.size)setEmpty(inviteBox,'Nenhum convite de sala.');incomingRoomInvites.forEach(invite=>renderPerson(inviteBox,invite,{meta:`Convite para a sala ${invite.roomCode}.`,actions:[makeAction('Entrar na sala',()=>acceptRoomInvite(invite.id),'primary'),makeAction('Ignorar',()=>{incomingRoomInvites.delete(invite.id);removeRoomInviteToast(invite.id);render();},'danger')]}));}
+    if(!incomingRequests.length)setEmpty(reqBox,'Nenhum pedido de amizade recebido.');
     incomingRequests.forEach(req=>renderPerson(reqBox,req,{meta:'Quer adicionar você?',actions:[makeAction('Aceitar',()=>acceptFriend(req.id),'primary'),makeAction('Recusar',()=>declineFriend(req.id),'danger')]}));
+    if(!incomingJoinRequests.size)setEmpty(joinBox,'Nenhum pedido para entrar.');
     incomingJoinRequests.forEach(req=>renderPerson(joinBox,req,{meta:`Quer entrar na sala ${req.roomCode}.`,actions:[makeAction('Aceitar',()=>answerJoinRequest(req.id,true),'primary'),makeAction('Recusar',()=>answerJoinRequest(req.id,false),'danger')]}));
-    const inviteSection=byId('lockRoomInviteSection'), joinSection=byId('lockJoinRequestSection'), friendRequestSection=byId('lockFriendRequestSection');
-    if(inviteSection)inviteSection.hidden=incomingRoomInvites.size===0;
-    if(joinSection)joinSection.hidden=incomingJoinRequests.size===0;
-    if(friendRequestSection)friendRequestSection.hidden=incomingRequests.length===0;
     const badge=(id,n)=>{const e=byId(id);if(e){e.textContent=String(n);e.hidden=!n;}};
     badge('lockFriendsBadge',incomingRequests.length+incomingJoinRequests.size+incomingRoomInvites.size);badge('lockJoinBadge',incomingJoinRequests.size);badge('lockFriendRequestBadge',incomingRequests.length);badge('lockRoomInviteBadge',incomingRoomInvites.size);
     if(byId('lockFriendsCount'))byId('lockFriendsCount').textContent=String(friends.length);
