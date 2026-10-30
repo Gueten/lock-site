@@ -3007,9 +3007,9 @@ function participantRow(initial, name, role, stateClass = 'green-dot', photo = '
       event.preventDefault(); event.stopPropagation();
       window.lockSendFriendRequest(socialId, { name, photo });
     });
-    row.append(add);
-  }
-  row.append(state);
+    row.append(state, add);
+  } else row.append(state);
+
   return row;
 }
 
@@ -4914,7 +4914,7 @@ body:has(.app-shell[data-current-view="home"]) .home-profile-top { display:flex;
 })();
 </script>
 
-<style id="lock-social-v2-4-style">
+<style id="lock-social-v2-5-style">
 .lock-sidebar-tabs{display:flex;flex:0 0 auto;gap:5px;padding:8px 10px;border-bottom:1px solid var(--panel-border,#30323d);background:var(--panel-bg,#171920)}
 .lock-sidebar-tab{display:flex;align-items:center;justify-content:center;gap:7px;flex:1;min-width:0;padding:8px 10px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted,#a0a5b5);font:700 12px/1.2 var(--text-font,Inter,system-ui,sans-serif);cursor:pointer}
 .lock-sidebar-tab:hover{background:#ffffff08;color:var(--text,#f4f5fb)}.lock-sidebar-tab.active{border-color:#187e68;background:#10352d;color:#e6fff6}
@@ -4930,7 +4930,7 @@ body:has(.app-shell[data-current-view="home"]) .home-profile-top { display:flex;
 .lock-social-status{margin:-5px 0 0;color:#8d98aa;font-size:10px;line-height:1.4}.lock-social-status[data-kind="error"]{color:#ff9caa}.lock-social-status[data-kind="success"]{color:#6ee7c5}
 .lock-social-section{display:flex;flex-direction:column;gap:7px;min-height:0}.lock-social-section h3{display:flex;align-items:center;gap:6px;margin:0;color:var(--muted,#a0a5b5);font-size:10px;letter-spacing:.07em;text-transform:uppercase}.lock-social-list{display:flex;flex-direction:column;gap:6px}.lock-social-empty{margin:0;padding:7px 0;color:#7e8496;font-size:11px;line-height:1.45}
 .lock-social-person{display:flex;align-items:center;gap:8px;min-width:0;padding:8px;border:1px solid #30333e;border-radius:10px;background:#1d1f28}.lock-social-avatar{display:grid;place-items:center;flex:0 0 31px;width:31px;height:31px;overflow:hidden;border:1px solid #ffffff16;border-radius:50%;background:#2e6d80;color:white;font-size:12px;font-weight:800}.lock-social-avatar img{width:100%;height:100%;object-fit:cover}.lock-social-person-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.lock-social-name{overflow:hidden;color:#e8eaf3;font-size:11px;font-weight:800;text-overflow:ellipsis;white-space:nowrap}.lock-social-meta{color:#8991a4;font-size:9px;line-height:1.35;overflow-wrap:anywhere}.lock-social-meta.online{color:#65dcb7}.lock-social-meta.in-room{color:#b7a9ff}.lock-social-actions{display:flex;flex:0 0 auto;flex-direction:column;gap:4px;align-items:stretch}.lock-social-action{max-width:104px;padding:6px 7px;border:1px solid #3b4050;border-radius:7px;background:#282b36;color:#f0f2f8;font-size:9px;font-weight:800;white-space:nowrap;cursor:pointer}.lock-social-action.primary{border-color:#0a9774;background:#087e63;color:#fff}.lock-social-action.danger{border-color:#7d3948;background:#3b2029;color:#ffbec8}.lock-social-action:disabled{opacity:.5;cursor:default}
-.participant-add-friend{display:grid;place-items:center;flex:0 0 auto;width:23px;height:23px;padding:0;border:1px solid #3c4150;border-radius:7px;background:#20232c;color:#7ae7c6;font-size:17px;font-weight:800;line-height:1;cursor:pointer}.participant-add-friend:hover{border-color:#0aa77f;background:#103a30}.participant-add-friend:disabled{opacity:.6;cursor:default}
+.participant-row{position:relative;overflow:visible;padding-right:8px}.participant-add-friend{position:absolute;z-index:3;top:-5px;right:-5px;display:grid;place-items:center;flex:0 0 auto;width:21px;height:21px;padding:0;border:1px solid #3c655b;border-radius:50%;background:#103a30;color:#8cf0d0;font-size:15px;font-weight:900;line-height:1;box-shadow:0 3px 9px #0008;cursor:pointer}.participant-add-friend:hover{border-color:#0aa77f;background:#103a30}.participant-add-friend:disabled{opacity:.6;cursor:default}
 .app-shell[data-current-view="home"] .right-panel .lock-sidebar-tabs{margin-bottom:0}
 .app-shell[data-current-view="home"] .right-panel[data-panel-view="friends"] .lock-friends-panel{display:flex!important}
 .app-shell[data-current-view="home"].chat-collapsed .right-panel{width:auto!important;min-width:0!important;padding:12px!important;overflow:hidden!important}
@@ -4942,26 +4942,30 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
 .lock-join-toast-head{display:flex;align-items:flex-start;gap:10px}.lock-join-toast-icon{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:#123b30;color:#6ce4c2;font-size:17px;font-weight:900}.lock-join-toast-copy{flex:1;min-width:0}.lock-join-toast-copy strong{display:block;color:#f2fff9;font-size:12px;line-height:1.35}.lock-join-toast-copy span{display:block;margin-top:3px;color:#aab9b6;font-size:10px;line-height:1.4}.lock-join-toast-close{flex:0 0 auto;width:25px;height:25px;border:0;border-radius:6px;background:#ffffff0c;color:#aebcb8;font-size:17px;line-height:1;cursor:pointer}.lock-join-toast-actions{display:flex;gap:7px;justify-content:flex-end}.lock-join-toast-actions button{min-width:82px;padding:7px 11px;border:1px solid #46534f;border-radius:7px;background:#272e2d;color:#e7efeb;font-size:10px;font-weight:800;cursor:pointer}.lock-join-toast-actions .accept{border-color:#0b9972;background:#087b5e;color:#fff}.lock-join-toast-progress{position:absolute;bottom:0;left:0;width:100%;height:3px;background:#2c3735}.lock-join-toast-progress:after{display:block;width:100%;height:100%;background:#4ad5af;content:"";transform-origin:left;animation:lockToastProgress 8s linear forwards}
 @keyframes lockToastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}@keyframes lockToastProgress{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 @media(max-width:560px){#lockJoinToastStack{right:12px;bottom:max(12px,env(safe-area-inset-bottom));width:calc(100vw - 24px)}.lock-join-toast{padding:11px 12px 14px}}
-/* Painel de amigos na página inicial: dock na direita em telas grandes. */
-.app-shell[data-current-view="home"] .center-panel{width:calc(100% - 316px)!important;max-width:none!important;margin:0!important}
+.lock-room-invite-toast{border-color:#405a83;background:#171b25}
+.lock-room-invite-toast .lock-join-toast-icon{background:#1d2c4a;color:#9fc4ff}
+.lock-room-invite-toast .lock-join-toast-progress:after{background:#80aaff}
+.lock-social-notice-toast{min-height:62px;justify-content:center;border-color:#3d5f55}
+/* Painel de amigos na página inicial: dock no canto esquerdo, oposto ao layout anterior. */
+.app-shell[data-current-view="home"] .center-panel{width:calc(100% - 316px)!important;max-width:none!important;margin:0 0 0 302px!important}
 .app-shell[data-current-view="home"] .home-state{width:min(100%,980px)!important;margin:0 auto!important}
-.app-shell[data-current-view="home"] .right-panel{display:flex!important;position:fixed!important;z-index:45!important;top:14px!important;right:14px!important;bottom:14px!important;width:286px!important;min-width:260px!important;max-width:calc(100vw - 28px)!important;height:auto!important;min-height:0!important;border:1px solid var(--line,#30323d)!important;border-radius:13px!important;box-shadow:0 12px 34px #0003!important;overflow:hidden!important}
+.app-shell[data-current-view="home"] .right-panel{display:flex!important;position:fixed!important;z-index:45!important;top:14px!important;left:14px!important;right:auto!important;bottom:14px!important;width:286px!important;min-width:260px!important;max-width:calc(100vw - 28px)!important;height:auto!important;min-height:0!important;border:1px solid var(--line,#30323d)!important;border-radius:13px!important;box-shadow:0 12px 34px #0003!important;overflow:hidden!important}
 .app-shell[data-current-view="home"] .right-panel .chat-heading,.app-shell[data-current-view="home"] .right-panel #chatMessages,.app-shell[data-current-view="home"] .right-panel #chatReplyBar,.app-shell[data-current-view="home"] .right-panel #chatExtras,.app-shell[data-current-view="home"] .right-panel #chatForm{display:none!important}
 .app-shell[data-current-view="home"] .right-panel .lock-sidebar-tabs{display:flex!important}
-#lockHomeFriendsLauncher{display:none;align-items:center;gap:7px;position:fixed;z-index:1500;top:12px;right:12px;padding:10px 13px;border:1px solid #187e68;border-radius:10px;background:#10352d;color:#e6fff6;font-size:12px;font-weight:800;box-shadow:0 8px 24px #0005;cursor:pointer}
+#lockHomeFriendsLauncher{display:none;align-items:center;gap:7px;position:fixed;z-index:1500;top:12px;left:12px;right:auto;padding:10px 13px;border:1px solid #187e68;border-radius:10px;background:#10352d;color:#e6fff6;font-size:12px;font-weight:800;box-shadow:0 8px 24px #0005;cursor:pointer}
 #lockHomeFriendsLauncher[hidden]{display:none!important}
 @media(max-width:760px){
  .app-shell[data-current-view="home"] .center-panel{width:100%!important;margin:0!important}
  .app-shell[data-current-view="home"] .home-state{width:100%!important}
  .app-shell[data-current-view="home"]:not(.home-friends-open) .right-panel{display:none!important}
- .app-shell[data-current-view="home"].home-friends-open .right-panel{display:flex!important;top:58px!important;right:10px!important;bottom:10px!important;width:min(340px,calc(100vw - 20px))!important;max-width:calc(100vw - 20px)!important;height:auto!important;box-shadow:0 16px 50px #0009!important}
+ .app-shell[data-current-view="home"].home-friends-open .right-panel{display:flex!important;top:58px!important;left:10px!important;right:auto!important;bottom:10px!important;width:min(340px,calc(100vw - 20px))!important;max-width:calc(100vw - 20px)!important;height:auto!important;box-shadow:0 16px 50px #0009!important}
  #lockHomeFriendsLauncher{display:inline-flex}
 }
 /* Na página inicial, amigos ficam disponíveis, mas ações de convite só aparecem dentro de uma sala ativa. */
 .app-shell[data-current-view="home"] #toolInvite,.app-shell[data-current-view="home"] #quickCopy,.app-shell[data-current-view="home"] #invitePeople,.app-shell[data-current-view="home"] #inviteBtn,.app-shell[data-current-view="home"] #footerInvite,.app-shell[data-current-view="home"] #copyInviteHome,.app-shell[data-current-view="home"] #moreBtn{display:none!important}
 
 </style>
-<script id="lock-social-v2-4">
+<script id="lock-social-v2-5">
 (() => {
   'use strict';
   const byId = id => document.getElementById(id);
@@ -4989,6 +4993,10 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
   let socialMessageKind = '';
   const joinToastTimers = new Map();
   const joinToastNodes = new Map();
+  const inviteToastTimers = new Map();
+  const inviteToastNodes = new Map();
+  const noticeToastTimers = new Map();
+  const noticeToastNodes = new Map();
 
   function getOrCreateId() {
     try {
@@ -5154,6 +5162,64 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
     card.append(head,actions,progress); getJoinToastStack().append(card); joinToastNodes.set(id,card);
     joinToastTimers.set(id,window.setTimeout(()=>removeJoinToast(id),8000));
   }
+  function removeRoomInviteToast(id) {
+    id=normalizeId(id);
+    const timer=inviteToastTimers.get(id); if(timer) window.clearTimeout(timer);
+    inviteToastTimers.delete(id);
+    const node=inviteToastNodes.get(id); if(node) node.remove();
+    inviteToastNodes.delete(id);
+  }
+  function showRoomInviteToast(invite) {
+    const id=normalizeId(invite?.id); if(!validId(id)) return;
+    removeRoomInviteToast(id);
+    const card=document.createElement('section'); card.className='lock-join-toast lock-room-invite-toast'; card.setAttribute('role','status');
+    const head=document.createElement('div'); head.className='lock-join-toast-head';
+    const icon=document.createElement('span'); icon.className='lock-join-toast-icon'; icon.textContent='↗';
+    const copy=document.createElement('div'); copy.className='lock-join-toast-copy';
+    const title=document.createElement('strong'); title.textContent=`${invite.name||'Um amigo'} convidou você para a sala`;
+    const detail=document.createElement('span'); detail.textContent=`Sala ${invite.roomCode} · Aceite para entrar automaticamente.`;
+    copy.append(title,detail);
+    const close=document.createElement('button'); close.type='button'; close.className='lock-join-toast-close'; close.setAttribute('aria-label','Fechar aviso'); close.textContent='×'; close.addEventListener('click',()=>removeRoomInviteToast(id));
+    head.append(icon,copy,close);
+    const actions=document.createElement('div'); actions.className='lock-join-toast-actions';
+    const decline=document.createElement('button'); decline.type='button'; decline.textContent='Agora não'; decline.addEventListener('click',()=>{incomingRoomInvites.delete(id);removeRoomInviteToast(id);render();});
+    const accept=document.createElement('button'); accept.type='button'; accept.className='accept'; accept.textContent='Entrar na sala'; accept.addEventListener('click',()=>acceptRoomInvite(id));
+    actions.append(decline,accept);
+    const progress=document.createElement('span'); progress.className='lock-join-toast-progress'; progress.setAttribute('aria-hidden','true');
+    card.append(head,actions,progress); getJoinToastStack().append(card); inviteToastNodes.set(id,card);
+    inviteToastTimers.set(id,window.setTimeout(()=>removeRoomInviteToast(id),8000));
+  }
+  function showSocialNotice(key,titleText,detailText) {
+    key=String(key||'notice');
+    const oldTimer=noticeToastTimers.get(key); if(oldTimer) window.clearTimeout(oldTimer);
+    noticeToastNodes.get(key)?.remove();
+    const card=document.createElement('section'); card.className='lock-join-toast lock-social-notice-toast'; card.setAttribute('role','status');
+    const head=document.createElement('div'); head.className='lock-join-toast-head';
+    const icon=document.createElement('span'); icon.className='lock-join-toast-icon'; icon.textContent='✓';
+    const copy=document.createElement('div'); copy.className='lock-join-toast-copy';
+    const title=document.createElement('strong'); title.textContent=String(titleText||'Lock');
+    const detail=document.createElement('span'); detail.textContent=String(detailText||'');
+    copy.append(title,detail); head.append(icon,copy);
+    card.append(head); getJoinToastStack().append(card); noticeToastNodes.set(key,card);
+    noticeToastTimers.set(key,window.setTimeout(()=>{card.remove();noticeToastNodes.delete(key);noticeToastTimers.delete(key);},6000));
+  }
+  function startInvitedRoom(code, inviterId) {
+    code=String(code||'').replace(/[^A-Z0-9]/gi,'').toUpperCase();
+    if(!code){setMessage('O convite contém um código de sala inválido.','error');return false;}
+    if((typeof peer!=='undefined'&&peer&&!peer.destroyed)||(typeof vpeer!=='undefined'&&vpeer&&!vpeer.destroyed)){
+      setMessage('Saia da sala atual antes de entrar na sala do convite.','error');
+      return false;
+    }
+    try {
+      history.replaceState(null,'',location.pathname+location.search+'#'+code);
+      startWatch(code);
+      if(typeof window.notifyLockSound==='function') window.notifyLockSound('share');
+      return true;
+    } catch {
+      setMessage('Não consegui abrir a sala. Use o código '+code+'.','error');
+      return false;
+    }
+  }
 
   function handleMessage(id, conn, data) {
     if(!data||typeof data!=='object') return;
@@ -5201,9 +5267,16 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
       const inviteCode=String(data.roomCode||'').replace(/[^A-Z0-9]/gi,'').toUpperCase();
       const hostUserId=normalizeId(data.hostUserId||'');
       if(!inviteCode||!validId(hostUserId)) return;
-      incomingRoomInvites.set(id,{id,name:String(data.fromName||knownProfiles.get(id)?.name||'Amigo').slice(0,32),photo:String(knownProfiles.get(id)?.photo||''),roomCode:inviteCode,hostUserId,invitedAt:Date.now()});
-      render();setSidebarView('friends');setMessage(`${String(data.fromName||'Um amigo').slice(0,32)} convidou você para uma sala.`, 'success');
+      const invite={id,name:String(data.fromName||knownProfiles.get(id)?.name||'Amigo').slice(0,32),photo:String(knownProfiles.get(id)?.photo||''),roomCode:inviteCode,hostUserId,inviteId:String(data.inviteId||''),invitedAt:Date.now(),expiresAt:Number(data.expiresAt)||Date.now()+60000};
+      incomingRoomInvites.set(id,invite);
+      render();showRoomInviteToast(invite);setMessage(`${String(data.fromName||'Um amigo').slice(0,32)} convidou você para uma sala.`, 'success');
       if(typeof window.notifyLockSound==='function')window.notifyLockSound('message');
+      return;
+    }
+    if(data.type==='room-invite-accepted') {
+      const profile=cleanProfile(data.profile||knownProfiles.get(id)||{},id);
+      setMessage(`${profile.name} aceitou seu convite e está entrando na sala.`, 'success');
+      showSocialNotice('invite-accepted-'+id, 'Convite aceito', `${profile.name} está entrando na sua sala.`);
       return;
     }
     if(data.type==='join-request') {
@@ -5275,18 +5348,26 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
     sentJoinRequests.set(id,{roomCode:p.roomCode,hostUserId:p.hostUserId,requestedAt});
     sendSocial(p.hostUserId,{type:'join-request',roomCode:p.roomCode,profile:localProfile(),expiresAt:requestedAt+60000},true);
     window.setTimeout(()=>{const current=sentJoinRequests.get(id);if(current&&current.requestedAt===requestedAt){sentJoinRequests.delete(id);setMessage('O pedido expirou sem resposta. Você pode pedir para entrar novamente.','error');render();}},61000);
-    setMessage(`Pedido enviado ao anfitrião da sala de ${friend.name}. Ele precisa aprovar sua entrada.`, 'success'); render();
+    setMessage(`Pedido enviado ao anfitrião da sala de ${friend.name}. Ele precisa aprovar sua entrada.`, 'success');
+    showSocialNotice('join-sent-'+id,'Pedido enviado',`Aguardando aprovação do anfitrião da sala de ${friend.name}.`); render();
   }
-  function requestRoomInvite(invite) {
+  function acceptRoomInvite(id) {
+    id=normalizeId(id);
+    const invite=incomingRoomInvites.get(id);
     if(!invite||!invite.roomCode||!validId(invite.hostUserId)) return;
-    if((typeof peer!=='undefined'&&peer&&!peer.destroyed)||(typeof vpeer!=='undefined'&&vpeer&&!vpeer.destroyed)){setMessage('Saia da sala atual antes de pedir para entrar em outra.','error');return;}
-    const requestedAt=Date.now();
-    sentJoinRequests.set(invite.id,{roomCode:invite.roomCode,hostUserId:invite.hostUserId,requestedAt});
-    sendSocial(invite.hostUserId,{type:'join-request',roomCode:invite.roomCode,profile:localProfile(),expiresAt:requestedAt+60000},true);
-    incomingRoomInvites.delete(invite.id);
-    window.setTimeout(()=>{const current=sentJoinRequests.get(invite.id);if(current&&current.requestedAt===requestedAt){sentJoinRequests.delete(invite.id);setMessage('O pedido expirou sem resposta. Você pode pedir para entrar novamente.','error');render();}},61000);
-    setMessage('Pedido enviado ao anfitrião. Você só entra depois que ele aprovar.','success');render();
+    if(invite.expiresAt && invite.expiresAt<Date.now()){
+      incomingRoomInvites.delete(id);removeRoomInviteToast(id);render();setMessage('Esse convite expirou. Peça para seu amigo enviar outro.','error');return;
+    }
+    const code=String(invite.roomCode).replace(/[^A-Z0-9]/gi,'').toUpperCase();
+    if((typeof peer!=='undefined'&&peer&&!peer.destroyed)||(typeof vpeer!=='undefined'&&vpeer&&!vpeer.destroyed)){
+      setMessage('Saia da sala atual antes de entrar na sala do convite.','error');return;
+    }
+    incomingRoomInvites.delete(id);removeRoomInviteToast(id);render();
+    sendSocial(id,{type:'room-invite-accepted',roomCode:code,inviteId:invite.inviteId,profile:localProfile()},false);
+    setMessage('Convite aceito! Entrando na sala…','success');
+    startInvitedRoom(code,id);
   }
+  function requestRoomInvite(invite) { if(invite?.id) acceptRoomInvite(invite.id); }
   function answerJoinRequest(id, allow) {
     const req=incomingJoinRequests.get(id); if(!req) return;
     if(req.expiresAt && req.expiresAt<Date.now()){incomingJoinRequests.delete(id);removeJoinToast(id);render();setMessage('Esse pedido expirou. Peça para a pessoa solicitar novamente.','error');return;}
@@ -5325,8 +5406,11 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
       const meta=!p.online?'Offline':(p.inRoom?`Em uma sala · ${p.roomCode||'código indisponível'}`:'Online');
       const actions=[];
       if(mine.inRoom&&validId(mine.hostUserId)) actions.push(makeAction('Convidar',()=>{
-        sendSocial(friend.id,{type:'room-invite',roomCode:mine.roomCode,hostUserId:mine.hostUserId,fromName:localProfile().name,expiresAt:Date.now()+60000},true);
-        setMessage(`Convite enviado para ${friend.name}. A entrada ainda depende da aprovação do anfitrião.`,'success');
+        const inviteId=socialId+'-'+Date.now().toString(36);
+        const delivered=sendSocial(friend.id,{type:'room-invite',inviteId,roomCode:mine.roomCode,hostUserId:mine.hostUserId,fromName:localProfile().name,expiresAt:Date.now()+60000},true);
+        const detail=delivered?'O amigo pode aceitar e entrará diretamente na sala.':'O convite foi colocado na fila até o amigo se reconectar.';
+        setMessage(`Convite enviado para ${friend.name}. ${detail}`,'success');
+        showSocialNotice('invite-sent-'+friend.id,'Convite enviado',`${friend.name} poderá aceitar e entrar diretamente na sala.`);
       },''));
       if(p.online && p.inRoom && validId(p.hostUserId)){
         const pending=sentJoinRequests.get(friend.id);
@@ -5336,7 +5420,7 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
       }
       renderPerson(friendsBox,friend,{meta,online:p.online,inRoom:p.online&&p.inRoom,actions});
     });
-    const inviteBox=byId('lockRoomInvites'); if(inviteBox){inviteBox.replaceChildren();if(!incomingRoomInvites.size)setEmpty(inviteBox,'Nenhum convite de sala.');incomingRoomInvites.forEach(invite=>renderPerson(inviteBox,invite,{meta:`Convite para a sala ${invite.roomCode}.`,actions:[makeAction('Pedir para entrar',()=>requestRoomInvite(invite),'primary'),makeAction('Ignorar',()=>{incomingRoomInvites.delete(invite.id);render();},'danger')]}));}
+    const inviteBox=byId('lockRoomInvites'); if(inviteBox){inviteBox.replaceChildren();if(!incomingRoomInvites.size)setEmpty(inviteBox,'Nenhum convite de sala.');incomingRoomInvites.forEach(invite=>renderPerson(inviteBox,invite,{meta:`Convite para a sala ${invite.roomCode}.`,actions:[makeAction('Entrar na sala',()=>acceptRoomInvite(invite.id),'primary'),makeAction('Ignorar',()=>{incomingRoomInvites.delete(invite.id);removeRoomInviteToast(invite.id);render();},'danger')]}));}
     if(!incomingRequests.length)setEmpty(reqBox,'Nenhum pedido de amizade recebido.');
     incomingRequests.forEach(req=>renderPerson(reqBox,req,{meta:'Quer adicionar você?',actions:[makeAction('Aceitar',()=>acceptFriend(req.id),'primary'),makeAction('Recusar',()=>declineFriend(req.id),'danger')]}));
     if(!incomingJoinRequests.size)setEmpty(joinBox,'Nenhum pedido para entrar.');
@@ -5422,7 +5506,7 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
       if(conn?.open)publishPresenceTo(friend.id,conn); else connectToFriend(friend.id);
     });
     for(const [id,request] of incomingJoinRequests){if(request.expiresAt && request.expiresAt<Date.now()){incomingJoinRequests.delete(id);removeJoinToast(id);}}
-    for(const [id,invite] of incomingRoomInvites){if(invite.invitedAt && Date.now()-invite.invitedAt>60000)incomingRoomInvites.delete(id);}
+    for(const [id,invite] of incomingRoomInvites){if((invite.expiresAt&&invite.expiresAt<Date.now())||(invite.invitedAt&&Date.now()-invite.invitedAt>60000)){incomingRoomInvites.delete(id);removeRoomInviteToast(id);}}
     // Pending friendship requests retry as the recipient comes online, as long as this page remains open.
     outgoingRequests.forEach(req=>{if(!socialConnections.get(req.id)?.open){queuePacket(req.id,{type:'friend-request',profile:localProfile()});connectToFriend(req.id);}});
     flushAll();
