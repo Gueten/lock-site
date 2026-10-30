@@ -1,3 +1,2 @@
 User-agent: *
 Allow: /
-Sitemap: https://gueten.github.io/lock-site/sitemap.xml

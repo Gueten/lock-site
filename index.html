@@ -349,6 +349,22 @@ body.light-theme .screen-share-warning small{color:#80575b}
 @media(max-width:560px){.screen-share-warning{padding:11px}.screen-share-warning-icon{flex-basis:21px;width:21px;height:21px}}
 </style>
 
+
+<style>
+.room-connection-notice{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0 13px;padding:12px 13px;border:1px solid rgba(238,76,89,.55);border-radius:11px;background:rgba(130,25,37,.2);color:#ffe0e2}
+.room-connection-notice[hidden]{display:none!important}
+.room-connection-notice-copy{min-width:0;display:flex;flex-direction:column;gap:4px}
+.room-connection-notice-copy strong{font-size:12px;font-weight:850;color:#ff858d}
+.room-connection-notice-copy p{margin:0;color:#f0c6c9;font-size:11px;line-height:1.5}
+#watchRetryButton{flex:0 0 auto;background:#8d2731;border-color:#bd4b56;color:#fff}
+#watchRetryButton:disabled{opacity:.55;cursor:wait}
+body.light-theme .room-connection-notice{background:#fff0f0;border-color:#e3a0a6;color:#71232a}
+body.light-theme .room-connection-notice-copy strong{color:#ae2833}
+body.light-theme .room-connection-notice-copy p{color:#803c43}
+body.light-theme #watchRetryButton{background:#b32c38;border-color:#b32c38;color:#fff}
+@media(max-width:560px){.room-connection-notice{align-items:stretch;flex-direction:column}.room-connection-notice-copy p{font-size:10px}#watchRetryButton{width:100%}}
+</style>
+
 </head>
 <body>
 <button id="homeProfileTop" class="home-profile-top" type="button" aria-label="Editar perfil" title="Editar perfil">
@@ -468,6 +484,10 @@ body.light-theme .screen-share-warning small{color:#80575b}
 
       <section id="watching" class="main-state watching-state" hidden>
         <div class="state-topline"><div><span class="live-pill waiting-pill"><i></i> SALA REMOTA</span><h1>Assistindo à transmissão</h1><p class="state-description">A tela compartilhada aparecerá abaixo.</p></div><button id="leaveBtn" class="btn danger-outline">Sair da sala</button></div>
+        <div id="watchConnectionNotice" class="room-connection-notice" hidden role="alert" aria-live="assertive">
+          <div class="room-connection-notice-copy"><strong>Não foi possível conectar ao canal</strong><p id="watchConnectionMessage">A conexão com a sala falhou. Isso é diferente da limitação de transmissão de tela.</p></div>
+          <button id="watchRetryButton" type="button" class="btn compact">Tentar novamente</button>
+        </div>
         <div id="watchShareWarning" class="screen-share-warning" data-screen-share-warning hidden role="alert">
           <span class="screen-share-warning-icon" aria-hidden="true">!</span>
           <div class="screen-share-warning-content">
@@ -2858,15 +2878,15 @@ const canCapture = !!(navigator.mediaDevices && navigator.mediaDevices.getDispla
 const isMobileBrowser = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
 const isAndroidBrowser = /Android/i.test(navigator.userAgent || '');
 const screenShareUnavailableMessage = isMobileBrowser
-  ? 'Este navegador não oferece captura de tela. Você continua podendo entrar na sala, assistir, conversar e usar o microfone.'
+  ? 'Seu navegador não permite transmitir a própria tela. Isso não impede assistir às telas de outras pessoas nem conversar normalmente no canal de voz, desde que você esteja conectado à sala.'
   : 'Este navegador não oferece captura de tela. Você continua podendo participar da sala; tente um Chrome ou Edge atualizado usando HTTPS.';
 const canUseCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 
 function showScreenShareWarning(reason = 'unsupported') {
   const unsupported = reason === 'unsupported';
   let copy = unsupported
-    ? 'Seu navegador não disponibiliza a captura de tela para este site. Isso não impede sua entrada na sala: você pode assistir, conversar e usar o microfone normalmente.'
-    : 'O navegador não conseguiu iniciar a captura. Confira as permissões de tela e tente novamente. Você continua conectado à sala.';
+    ? 'Seu navegador não permite transmitir a própria tela. Isso não impede assistir às telas compartilhadas por outras pessoas nem conversar normalmente pelo chat de voz. Para isso, a conexão com a sala precisa estar ativa.'
+    : 'A tentativa de transmitir sua própria tela falhou. Isso não impede assistir às telas dos outros nem conversar normalmente pelo chat de voz, desde que a conexão com a sala esteja ativa.';
   let suggestion = '';
   if (isAndroidBrowser) {
     suggestion = 'No Android, você pode tentar abrir o LockCall no Kiwi Browser:';
@@ -3239,7 +3259,7 @@ function activeRoomShareCount() {
 
 function refreshTools() {
   const audioTracks = stream ? stream.getAudioTracks() : [];
-  const inRoom = !!((peer && !peer.destroyed) || (vpeer && !vpeer.destroyed));
+  const inRoom = !!((peer && !peer.destroyed && peer.open) || (vpeer && !vpeer.destroyed && vconn && vconn.open));
   const atLimit = activeRoomShareCount() >= 3;
   $('toolAudio').disabled = !stream || audioTracks.length === 0;
   $('toolAudio').classList.toggle('tool-red', !audioTracks.some(track => track.enabled));
@@ -3271,8 +3291,8 @@ function refreshTools() {
 
 /* ---------- captura e compartilhamento ---------- */
 async function startShare() {
-  const inRoom = !!((peer && !peer.destroyed) || (vpeer && !vpeer.destroyed));
-  if (!inRoom) { say('homeMsg', 'Crie uma sala ou entre com um código antes de compartilhar.'); return; }
+  const inRoom = !!((peer && !peer.destroyed && peer.open) || (vpeer && !vpeer.destroyed && vconn && vconn.open));
+  if (!inRoom) { say('homeMsg', 'Conecte-se ao canal da sala antes de compartilhar. A captura de tela é opcional.'); return; }
   if (stream) {
     if (captureMode === 'screen') { if (vpeer && viewerShareCall) stopViewerShare('Você parou de compartilhar a tela.'); else stopShare('Você parou de compartilhar a tela.'); }
     else say('homeMsg', 'Desligue a câmera compartilhada antes de iniciar o compartilhamento de tela.');
@@ -3299,8 +3319,8 @@ async function startShare() {
 }
 
 async function startCamera() {
-  const inRoom = !!((peer && !peer.destroyed) || (vpeer && !vpeer.destroyed));
-  if (!inRoom) { say('homeMsg', 'Crie uma sala ou entre com um código antes de ligar a câmera.'); return; }
+  const inRoom = !!((peer && !peer.destroyed && peer.open) || (vpeer && !vpeer.destroyed && vconn && vconn.open));
+  if (!inRoom) { say('homeMsg', 'Conecte-se ao canal da sala antes de ligar a câmera.'); return; }
   if (stream) {
     if (captureMode === 'camera') { if (vpeer && viewerShareCall) stopViewerShare('Você desligou a câmera.'); else stopShare('Você desligou a câmera.'); }
     else say('homeMsg', 'Pare o compartilhamento de tela antes de ligar a câmera compartilhada.');
@@ -3830,6 +3850,27 @@ const setInfo = (message, live) => {
   say('info', message);
 };
 
+function hideWatchConnectionNotice() {
+  const notice = $('watchConnectionNotice');
+  if (notice) notice.hidden = true;
+  const retry = $('watchRetryButton');
+  if (retry) { retry.disabled = false; retry.textContent = 'Tentar novamente'; }
+}
+
+function showWatchConnectionNotice(message) {
+  const notice = $('watchConnectionNotice');
+  if (!notice) { setInfo(message, true); return; }
+  say('watchConnectionMessage', message || 'Não foi possível conectar ao canal da sala.');
+  notice.hidden = false;
+  const retry = $('watchRetryButton');
+  if (retry) { retry.disabled = false; retry.textContent = 'Tentar novamente'; }
+  setRoomStatus('Falha ao conectar ao canal', false);
+  const heading = $('watching').querySelector('.state-topline h1');
+  const description = $('watching').querySelector('.state-topline .state-description');
+  if (heading) heading.textContent = 'Conexão com a sala interrompida';
+  if (description) description.textContent = 'A transmissão de tela é opcional; primeiro é necessário conectar ao canal da sala.';
+}
+
 function startWatch(code) {
   if (peer && !peer.destroyed) {
     if (shareCode === code) say('homeMsg', 'Você já é o anfitrião desta sala nesta aba. Envie o convite para outra pessoa.');
@@ -3846,6 +3887,7 @@ function startWatch(code) {
   remoteShareTiles.forEach(entry => { try { entry.video.srcObject = null; entry.tile.remove(); } catch {} });
   remoteShareTiles.clear();
   viewerCode = code;
+  hideWatchConnectionNotice();
   window.lockSocialPublishPresence?.();
   vconn = null;
   chatHistory = [];
@@ -3863,26 +3905,40 @@ function startWatch(code) {
   refreshCount();
   renderShare();
   say('topCode', code);
-  setRoomStatus('Conectando à sala do anfitrião…', true);
+  setRoomStatus('Conectando à sala do anfitrião…', false);
   $('watching').querySelector('.state-topline h1').textContent = 'Conectando à sala…';
   $('watching').querySelector('.state-topline .state-description').textContent = 'Aguardando conexão com o anfitrião. Você ainda não criou uma sala.';
-  const currentPeer = vpeer = new Peer();
+  let currentPeer;
+  try {
+    currentPeer = vpeer = new Peer();
+  } catch (error) {
+    vpeer = null;
+    showWatchConnectionNotice('O navegador não conseguiu iniciar a conexão com o canal (' + String(error?.message || 'erro') + '). Isso não tem relação com a transmissão de tela. Tente um navegador atualizado.');
+    return;
+  }
   watchConnectionTimer = window.setTimeout(() => {
     if (vpeer === currentPeer && (!vconn || !vconn.open)) {
-      setInfo('Não foi possível conectar à sala. Confira o link e confirme que o anfitrião ainda está online.');
-      setRoomStatus('Falha ao entrar na sala', false);
+      showWatchConnectionNotice('Não foi possível conectar ao canal da sala. Isso não tem relação com a transmissão da sua tela. Confira se o anfitrião ainda está online e se sua internet está funcionando; depois tente novamente.');
     }
-  }, 14000);
+  }, 20000);
 
   currentPeer.on('open', () => {
     if (vpeer !== currentPeer) return;
-    const conn = vconn = currentPeer.connect(PREFIX + code, {
-      reliable: true,
-      metadata: { lockClientId: LOCK_CLIENT_ID, profile: safeProfileForNetwork(localProfileSnapshot()) }
-    });
+    let conn;
+    try {
+      conn = vconn = currentPeer.connect(PREFIX + code, {
+        reliable: true,
+        metadata: { lockClientId: LOCK_CLIENT_ID, profile: safeProfileForNetwork(localProfileSnapshot()) }
+      });
+    } catch (error) {
+      if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+      showWatchConnectionNotice('Não foi possível iniciar a conexão com o canal (' + String(error?.message || 'erro') + '). Isso é diferente da limitação de transmissão de tela.');
+      return;
+    }
     conn.on('open', () => {
       if (vconn !== conn) return;
       if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+      hideWatchConnectionNotice();
       refreshTools();
       const identity = safeProfileForNetwork(localProfileSnapshot());
       try { conn.send({ type: 'identity', profile: identity }); } catch {}
@@ -3895,13 +3951,17 @@ function startWatch(code) {
     conn.on('data', data => receiveFromHost(data));
     conn.on('close', () => {
       if (vconn !== conn) return;
-      setInfo('A conexão com a sala foi encerrada.');
-      window.setTimeout(() => { if (vconn === conn) leaveWatch(); }, 900);
+      if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+      refreshTools();
+      showWatchConnectionNotice('A conexão com o canal foi encerrada. Isso não é causado pela falta de transmissão de tela. Confira se o anfitrião continua na sala e tente novamente.');
     });
     conn.on('error', error => {
       if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
-      setInfo(error?.type === 'peer-unavailable' ? 'A sala do anfitrião não está disponível. Talvez tenha sido encerrada.' : 'A conexão caiu. Tente entrar novamente com o mesmo link.');
-      setRoomStatus('Desconectado da sala', false);
+      refreshTools();
+      const detail = error?.type === 'peer-unavailable'
+        ? 'A sala do anfitrião não está disponível. Confira se ele ainda está conectado.'
+        : 'A conexão de dados falhou (' + String(error?.type || 'erro desconhecido') + '). Confira a internet e tente novamente.';
+      showWatchConnectionNotice(detail + ' A limitação de transmissão de tela é independente deste problema.');
     });
   });
   currentPeer.on('call', call => {
@@ -3946,12 +4006,25 @@ function startWatch(code) {
       else if (!remoteShareTiles.size) { $('stage').hidden = true; setInfo('', false); }
     });
   });
+  currentPeer.on('disconnected', () => {
+    if (vpeer !== currentPeer) return;
+    setRoomStatus('Reconectando ao servidor de conexão…', false);
+    try { currentPeer.reconnect(); } catch (error) {
+      showWatchConnectionNotice('A conexão com o servidor caiu (' + String(error?.message || 'erro') + '). Tente novamente.');
+    }
+  });
+  currentPeer.on('close', () => {
+    if (vpeer === currentPeer) showWatchConnectionNotice('A conexão com o canal foi fechada. Tente entrar novamente.');
+  });
   currentPeer.on('error', error => {
+    if (vpeer !== currentPeer) return;
     if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
-    setInfo(error.type === 'peer-unavailable'
-      ? 'Não encontrei a sala do anfitrião. Confira o link e veja se ele ainda está online. Você não criou uma sala separada.'
-      : 'Erro de conexão (' + error.type + '). Tente novamente.');
-    if (error.type === 'peer-unavailable') setRoomStatus('Sala do anfitrião indisponível', false);
+    const detail = error?.type === 'peer-unavailable'
+      ? 'Não encontrei a sala do anfitrião. Confira o link e veja se ele ainda está online.'
+      : error?.type === 'browser-incompatible'
+        ? 'Este navegador não conseguiu iniciar a conexão WebRTC necessária para entrar no canal. Tente um navegador atualizado.'
+        : 'Falha no servidor de conexão (' + String(error?.type || 'erro desconhecido') + '). Confira a internet e tente novamente.';
+    showWatchConnectionNotice(detail + ' Isso é separado da permissão para transmitir a própria tela.');
   });
   if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {});
 }
@@ -4517,7 +4590,7 @@ function sendViewerVoice() {
 function refreshMicControl() {
   const button = $('toolMic');
   if (!button) return;
-  const inRoom = !!((peer && !peer.destroyed) || (vpeer && !vpeer.destroyed));
+  const inRoom = !!((peer && !peer.destroyed && peer.open) || (vpeer && !vpeer.destroyed && vconn && vconn.open));
   button.disabled = !inRoom || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia;
   const active = !!micStream;
   button.classList.toggle('tool-red', !active || micMuted);
@@ -4528,8 +4601,8 @@ function refreshMicControl() {
 }
 
 async function toggleVoice() {
-  if (!(peer && !peer.destroyed) && !(vpeer && !vpeer.destroyed)) {
-    say('homeMsg', 'Crie uma sala ou entre com um código antes de ligar a voz.');
+  if (!(peer && !peer.destroyed && peer.open) && !(vpeer && !vpeer.destroyed && vconn && vconn.open)) {
+    say('homeMsg', 'Você ainda não está conectado ao canal da sala. Aguarde a conexão ou use Tentar novamente.');
     return;
   }
   if (!micStream) {
@@ -4646,6 +4719,17 @@ document.addEventListener('click', event => {
   if (request) Promise.resolve(request.call(tile)).catch(() => {});
 });
 $('leaveBtn').addEventListener('click', leaveWatch);
+$('watchRetryButton').addEventListener('click', () => {
+  const code = viewerCode || clean(location.hash);
+  if (!code) { show('home'); say('homeMsg', 'Cole o link ou código da sala para entrar novamente.'); return; }
+  const retry = $('watchRetryButton');
+  retry.disabled = true;
+  retry.textContent = 'Conectando…';
+  if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+  if (vpeer) { try { vpeer.destroy(); } catch {} vpeer = null; }
+  vconn = null;
+  window.setTimeout(() => startWatch(code), 180);
+});
 $('toolExit').addEventListener('click', () => {
   if (peer && !peer.destroyed) leaveHostRoom();
   else if (vpeer) leaveWatch();
