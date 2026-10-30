@@ -475,6 +475,7 @@ body.popup .preview-wrap { margin-top: 8px; }
         <div class="lock-social-section lock-friends-list-section"><h3>Amigos <span id="lockFriendsCount">0</span></h3><div id="lockFriendList" class="lock-social-list"><p class="lock-social-empty">Ainda não há amigos adicionados.</p></div></div>
       </section>
       <div class="chat-heading"><div><h2>Chat</h2><span id="chatSubtitle">Mensagens da sala</span></div><div class="chat-heading-actions"><button class="mini-icon" id="toggleChat" title="Recolher chat" aria-label="Recolher chat">›</button></div></div>
+      <div id="chatTypingIndicator" class="chat-typing-indicator" hidden aria-live="polite"></div>
       <div id="chatMessages" class="chat-messages" aria-live="polite"><div class="chat-empty"><span class="chat-bubble-icon">✦</span><strong>Nenhuma mensagem ainda.</strong><span>As mensagens enviadas aqui aparecem para quem está na sala.</span></div></div>
       <div id="chatReplyBar" class="chat-reply-bar" hidden><span id="chatReplyLabel"></span><button type="button" id="cancelChatReply" aria-label="Cancelar resposta" title="Cancelar resposta">×</button></div>
       <div id="chatExtras" class="chat-extras" hidden>
@@ -2894,6 +2895,11 @@ let vconn = null;
 let viewerCode = '';
 let chatHistory = [];
 let lockActiveReplyTarget = null;
+const roomTypingUsers = new Map();
+let localTypingActive = false;
+let localTypingStopTimer = null;
+let localTypingLastSentAt = 0;
+let watchConnectionTimer = null;
 let roomStarted = false;
 let closingHostRoom = false;
 const ACTIVE_HOST_ROOM_KEY = 'lock-active-host-room-v1';
@@ -3094,6 +3100,10 @@ function applyRemoteRoster(packet) {
   }
   renderParticipants();
   refreshTools();
+  if (vpeer && remoteRoster.get('host')?.name) {
+    $('watching').querySelector('.state-topline h1').textContent = `Sala de ${remoteRoster.get('host').name}`;
+    $('watching').querySelector('.state-topline .state-description').textContent = 'Você está conectado à sala original do anfitrião.';
+  }
   window.lockSocialPublishPresence?.();
   remoteShareTiles.forEach((entry, owner) => { const label = entry.tile.querySelector('.remote-share-label'); if (label) label.textContent = displayNameForPeer(owner) + ((entry.mode === 'camera') ? ' · câmera' : ' · compartilhando tela'); });
 }
@@ -3185,6 +3195,8 @@ function refreshTools() {
   $('startShare').disabled = !canCapture || !inRoom || (!stream && atLimit) || (!!stream && !sharingScreen);
   $('startCamera').disabled = !canUseCamera || !inRoom || (!stream && atLimit) || (!!stream && !sharingCamera);
   $('toolExit').disabled = !inRoom;
+  const canInviteFromRoom = !!(peer && !peer.destroyed && peer.open && shareCode);
+  ['toolInvite','quickCopy','invitePeople','inviteBtn','footerInvite','copyInviteHome','moreBtn','openInvite','lobbyInviteBtn','lobbyCopyCode','lobbyCopyLink'].forEach(id => { const el=$(id); if(el) el.hidden = !canInviteFromRoom; });
   if (atLimit && !stream) {
     $('toolScreen').title = 'Limite de três transmissões atingido';
     $('toolCamera').title = 'Limite de três transmissões atingido';
@@ -3584,6 +3596,8 @@ function showRemoteShareTile(owner, incomingStream, mode = 'screen') {
     const video = document.createElement('video');
     video.autoplay = true;
     video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
     video.muted = !!roomSoundMuted;
     tile.classList.add('screen-tile');
     const fullscreen = document.createElement('button');
@@ -3603,7 +3617,12 @@ function showRemoteShareTile(owner, incomingStream, mode = 'screen') {
   entry.mode = mode;
   const label = entry.tile.querySelector('.remote-share-label'); if (label) label.textContent = displayNameForPeer(owner) + (mode === 'camera' ? ' · câmera' : ' · compartilhando tela');
   entry.video.srcObject = incomingStream;
-  entry.video.play().catch(() => {});
+  entry.video.muted = !!roomSoundMuted;
+  entry.video.play().catch(() => {
+    // Mobile browsers may block autoplay until the user interacts with the page.
+    entry.tile.classList.add('needs-play-tap');
+    entry.tile.addEventListener('click', () => entry.video.play().then(() => entry.tile.classList.remove('needs-play-tap')).catch(() => {}), { once: true });
+  });
   refreshRemoteTileLayout();
 }
 
@@ -3747,16 +3766,15 @@ function startWatch(code) {
     else say('homeMsg', 'Esta aba já está mantendo uma sala aberta. Use outro navegador ou dispositivo para entrar em outra sala.');
     return;
   }
-  try {
-    if (localStorage.getItem(ACTIVE_HOST_ROOM_KEY) === code) {
-      history.replaceState(null, '', location.pathname + location.search);
-      show('home');
-      say('homeMsg', 'Esta sala já está aberta como anfitrião em outra aba deste navegador. Você não foi adicionado novamente.');
-      return;
-    }
-  } catch {}
-  if (viewerCode === code && vpeer) return;
-  if (vpeer) vpeer.destroy();
+  // Do not trust a persisted host-room marker here: mobile browsers may preserve
+  // localStorage after a tab crash. Only a live host Peer blocks joining; duplicate
+  // tabs are rejected by the room's LOCK_CLIENT_ID check in serve().
+  if (viewerCode === code && vpeer && !vpeer.destroyed && vconn && vconn.open) return;
+  if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+  if (vpeer) { try { vpeer.destroy(); } catch {} }
+  remoteRoster.clear();
+  remoteShareTiles.forEach(entry => { try { entry.video.srcObject = null; entry.tile.remove(); } catch {} });
+  remoteShareTiles.clear();
   viewerCode = code;
   window.lockSocialPublishPresence?.();
   vconn = null;
@@ -3769,12 +3787,22 @@ function startWatch(code) {
   $('watching').querySelector('.state-topline .state-description').textContent = 'Converse, ligue a câmera ou compartilhe sua tela.';
   $('remote').srcObject = null;
   $('remote').muted = !!roomSoundMuted;
+  $('remote').setAttribute('playsinline', '');
+  $('remote').setAttribute('webkit-playsinline', '');
   refreshTools();
   refreshCount();
   renderShare();
   say('topCode', code);
-  setRoomStatus('Entrando na sala…', true);
+  setRoomStatus('Conectando à sala do anfitrião…', true);
+  $('watching').querySelector('.state-topline h1').textContent = 'Conectando à sala…';
+  $('watching').querySelector('.state-topline .state-description').textContent = 'Aguardando conexão com o anfitrião. Você ainda não criou uma sala.';
   const currentPeer = vpeer = new Peer();
+  watchConnectionTimer = window.setTimeout(() => {
+    if (vpeer === currentPeer && (!vconn || !vconn.open)) {
+      setInfo('Não foi possível conectar à sala. Confira o link e confirme que o anfitrião ainda está online.');
+      setRoomStatus('Falha ao entrar na sala', false);
+    }
+  }, 14000);
 
   currentPeer.on('open', () => {
     if (vpeer !== currentPeer) return;
@@ -3784,11 +3812,14 @@ function startWatch(code) {
     });
     conn.on('open', () => {
       if (vconn !== conn) return;
+      if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
       refreshTools();
       const identity = safeProfileForNetwork(localProfileSnapshot());
       try { conn.send({ type: 'identity', profile: identity }); } catch {}
       if (micStream) sendViewerVoice();
       setRoomStatus('Conectado à sala', true);
+      $('watching').querySelector('.state-topline h1').textContent = 'Você está na sala';
+      $('watching').querySelector('.state-topline .state-description').textContent = 'Conectado à sala do anfitrião. As transmissões e mensagens aparecem aqui.';
       refreshCount();
     });
     conn.on('data', data => receiveFromHost(data));
@@ -3797,7 +3828,11 @@ function startWatch(code) {
       setInfo('A conexão com a sala foi encerrada.');
       window.setTimeout(() => { if (vconn === conn) leaveWatch(); }, 900);
     });
-    conn.on('error', () => setInfo('A conexão caiu. Tente entrar novamente com o código.'));
+    conn.on('error', error => {
+      if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+      setInfo(error?.type === 'peer-unavailable' ? 'A sala do anfitrião não está disponível. Talvez tenha sido encerrada.' : 'A conexão caiu. Tente entrar novamente com o mesmo link.');
+      setRoomStatus('Desconectado da sala', false);
+    });
   });
   currentPeer.on('call', call => {
     const metadata = call.metadata || {};
@@ -3816,7 +3851,13 @@ function startWatch(code) {
         $('watching').querySelector('.state-topline h1').textContent = 'Assistindo à transmissão';
         $('watching').querySelector('.state-topline .state-description').textContent = 'A tela compartilhada está ao vivo.';
         if (video.srcObject !== incomingStream) video.srcObject = incomingStream;
-        video.play().catch(() => {});
+        video.muted = !!roomSoundMuted;
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
+        video.play().catch(() => {
+          say('info', 'Toque na transmissão para reproduzir neste celular.');
+          $('stage').addEventListener('pointerdown', () => video.play().catch(() => {}), { once: true });
+        });
         refreshTools();
         say('roomStatusText', 'Assistindo ao vivo');
       }
@@ -3836,15 +3877,18 @@ function startWatch(code) {
     });
   });
   currentPeer.on('error', error => {
+    if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
     setInfo(error.type === 'peer-unavailable'
-      ? 'Código não encontrado. Confira o código e veja se o anfitrião já começou a transmitir.'
-      : 'Erro de conexão (' + error.type + ').');
-    if (error.type === 'peer-unavailable') setRoomStatus('Sala não encontrada', false);
+      ? 'Não encontrei a sala do anfitrião. Confira o link e veja se ele ainda está online. Você não criou uma sala separada.'
+      : 'Erro de conexão (' + error.type + '). Tente novamente.');
+    if (error.type === 'peer-unavailable') setRoomStatus('Sala do anfitrião indisponível', false);
   });
   if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {});
 }
 
 function leaveWatch() {
+  if (watchConnectionTimer) { clearTimeout(watchConnectionTimer); watchConnectionTimer = null; }
+  sendLocalTypingState(false);
   stopLocalVoice();
   if (viewerShareCall || (vpeer && stream && !peer)) stopViewerShare('', true);
   const currentPeer = vpeer;
@@ -3886,6 +3930,10 @@ function route() {
 
 /* ---------- chat P2P ---------- */
 function resetChatDisplay() {
+  roomTypingUsers.forEach(entry => { if (entry.timer) clearTimeout(entry.timer); });
+  roomTypingUsers.clear();
+  renderChatTypingIndicator();
+  sendLocalTypingState(false);
   $('chatMessages').replaceChildren();
   const empty = document.createElement('div');
   empty.className = 'chat-empty';
@@ -3898,6 +3946,63 @@ function resetChatDisplay() {
   detail.textContent = 'As mensagens enviadas aqui aparecem para quem está na sala.';
   empty.append(icon, title, detail);
   $('chatMessages').append(empty);
+}
+
+function renderChatTypingIndicator() {
+  const indicator = $('chatTypingIndicator');
+  if (!indicator) return;
+  const names = Array.from(roomTypingUsers.values()).map(entry => entry.name).filter(Boolean);
+  if (!names.length) { indicator.hidden = true; indicator.textContent = ''; return; }
+  indicator.hidden = false;
+  if (names.length === 1) indicator.textContent = `${names[0]} está digitando…`;
+  else if (names.length === 2) indicator.textContent = `${names[0]} e ${names[1]} estão digitando…`;
+  else indicator.textContent = `${names[0]}, ${names[1]} e mais ${names.length - 2} estão digitando…`;
+}
+
+function setRoomTyping(userId, name, active) {
+  const id = String(userId || '').slice(0, 100);
+  if (!id || id === 'self') return;
+  const previous = roomTypingUsers.get(id);
+  if (previous?.timer) clearTimeout(previous.timer);
+  if (!active) roomTypingUsers.delete(id);
+  else {
+    const timer = window.setTimeout(() => { roomTypingUsers.delete(id); renderChatTypingIndicator(); }, 3200);
+    roomTypingUsers.set(id, { name: String(name || 'Alguém').slice(0, 32), timer });
+  }
+  renderChatTypingIndicator();
+}
+
+function sendLocalTypingState(active) {
+  const isRoomActive = !!((peer && !peer.destroyed && peer.open) || (vpeer && !vpeer.destroyed && vconn && vconn.open));
+  if (!isRoomActive) return;
+  const now = Date.now();
+  if (active) {
+    if (!localTypingActive || now - localTypingLastSentAt > 1000) {
+      const profile = localProfileSnapshot();
+      const packet = { type: 'typing', active: true, id: peer && !peer.destroyed ? 'host' : vpeer.id, name: profile.name || 'Alguém' };
+      if (peer && !peer.destroyed) connections.forEach(conn => { if (conn.open) { try { conn.send(packet); } catch {} } });
+      else if (vconn?.open) { try { vconn.send({ type: 'typing', active: true }); } catch {} }
+      localTypingLastSentAt = now;
+    }
+    localTypingActive = true;
+    if (localTypingStopTimer) clearTimeout(localTypingStopTimer);
+    localTypingStopTimer = window.setTimeout(() => sendLocalTypingState(false), 1900);
+    return;
+  }
+  if (!localTypingActive) return;
+  localTypingActive = false;
+  if (localTypingStopTimer) clearTimeout(localTypingStopTimer);
+  localTypingStopTimer = null;
+  const profile = localProfileSnapshot();
+  const packet = { type: 'typing', active: false, id: peer && !peer.destroyed ? 'host' : (vpeer?.id || 'self'), name: profile.name || 'Alguém' };
+  if (peer && !peer.destroyed) connections.forEach(conn => { if (conn.open) { try { conn.send(packet); } catch {} } });
+  else if (vconn?.open) { try { vconn.send({ type: 'typing', active: false }); } catch {} }
+}
+
+function handleChatTypingInput() {
+  const input = $('chatInput');
+  if (!input || !input.value.trim()) { sendLocalTypingState(false); return; }
+  sendLocalTypingState(true);
 }
 
 function addChatMessage(message, displayName = null, persist = true) {
@@ -3995,6 +4100,14 @@ function appendLockChatText(target, value) {
 }
 function receiveFromViewer(data, sourceConn) {
   if (!data || typeof data !== 'object') return;
+  if (data.type === 'typing') {
+    if (!sourceConn || !connections.has(sourceConn.peer)) return;
+    const profile = participantProfiles.get(sourceConn.peer) || {};
+    const packet = { type: 'typing', id: sourceConn.peer, name: profile.name || 'Participante', active: !!data.active };
+    setRoomTyping(sourceConn.peer, packet.name, packet.active);
+    connections.forEach(conn => { if (conn !== sourceConn && conn.open) { try { conn.send(packet); } catch {} } });
+    return;
+  }
   if (data.type === 'identity') {
     if (!sourceConn || !connections.has(sourceConn.peer)) return;
     participantProfiles.set(sourceConn.peer, safeProfileForNetwork(data.profile || {}));
@@ -4003,8 +4116,9 @@ function receiveFromViewer(data, sourceConn) {
   }
   if (data.type !== 'chat' || typeof data.text !== 'string') return;
   const savedProfile = sourceConn ? participantProfiles.get(sourceConn.peer) : null;
-  const packet = { type: 'chat', id: String(data.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2))), text: data.text.slice(0, 500), name: String(savedProfile?.name || data.name || 'Participante').slice(0, 32), photo: String(savedProfile?.photo || data.photo || '').slice(0, 600000), replyTo: data.replyTo && typeof data.replyTo === 'object' ? { id: String(data.replyTo.id || '').slice(0,100), name: String(data.replyTo.name || '').slice(0,40), text: String(data.replyTo.text || '').slice(0,180) } : null, time: data.time || clock() };
+  const packet = { type: 'chat', id: String(data.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2))), senderId: sourceConn?.peer || '', text: data.text.slice(0, 500), name: String(savedProfile?.name || data.name || 'Participante').slice(0, 32), photo: String(savedProfile?.photo || data.photo || '').slice(0, 600000), replyTo: data.replyTo && typeof data.replyTo === 'object' ? { id: String(data.replyTo.id || '').slice(0,100), name: String(data.replyTo.name || '').slice(0,40), text: String(data.replyTo.text || '').slice(0,180) } : null, time: data.time || clock() };
   if (!packet.text.trim()) return;
+  if (sourceConn?.peer) setRoomTyping(sourceConn.peer, packet.name, false);
   addChatMessage(packet);
   connections.forEach(conn => {
     if (conn !== sourceConn && conn.open) {
@@ -4015,6 +4129,7 @@ function receiveFromViewer(data, sourceConn) {
 
 function receiveFromHost(data) {
   if (!data || typeof data !== 'object') return;
+  if (data.type === 'typing') { setRoomTyping(data.id || 'host', data.name || 'Participante', !!data.active); return; }
   if (data.type === 'room-closed') {
     say('info', 'O anfitrião encerrou a sala. Você será desconectado.');
     window.setTimeout(() => { if (vpeer) leaveWatch(); }, 350);
@@ -4035,6 +4150,7 @@ function receiveFromHost(data) {
     return;
   }
   if (data.type === 'chat' && typeof data.text === 'string') {
+    if (data.senderId) setRoomTyping(data.senderId, data.name || 'Participante', false);
     addChatMessage({ type: 'chat', id: data.id, text: data.text.slice(0, 500), name: String(data.name || 'Participante').slice(0, 32), photo: String(data.photo || '').slice(0,600000), replyTo: data.replyTo || null, time: data.time || clock() });
   }
 }
@@ -4050,7 +4166,8 @@ function sendChat(event) {
     name: String(window.lockReplyTarget.name || '').slice(0,40),
     text: String(window.lockReplyTarget.text || '').slice(0,180)
   } : null;
-  const packet = { type: 'chat', id: crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2), text, name: profile.name || 'Participante', photo: String(profile.photo || '').slice(0,600000), replyTo, time: clock() };
+  const packet = { type: 'chat', id: crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2), senderId: peer && !peer.destroyed ? 'host' : (vpeer?.id || ''), text, name: profile.name || 'Participante', photo: String(profile.photo || '').slice(0,600000), replyTo, time: clock() };
+  sendLocalTypingState(false);
   if (peer && !peer.destroyed) {
     addChatMessage(packet, 'Você');
     connections.forEach(conn => { if (conn.open) { try { conn.send(packet); } catch {} } });
@@ -4070,6 +4187,7 @@ function isConnectedToRoom() {
   return !!((peer && !peer.destroyed && peer.open && shareCode) || (vpeer && !vpeer.destroyed && vpeer.open && viewerCode));
 }
 function openInviteModal() {
+  if (vpeer && !peer) { say('homeMsg', 'Somente o anfitrião pode convidar pessoas para esta sala.'); return; }
   if (!isConnectedToRoom()) { say('homeMsg', 'Crie ou entre em uma sala antes de convidar alguém.'); return; }
   renderShare();
   $('inviteStatus').textContent = currentRoomCode()
@@ -4100,6 +4218,8 @@ function openExternal(url) {
 }
 
 function requirePublicInvite() {
+  if (vpeer && !peer) { say('homeMsg', 'Somente o anfitrião pode convidar pessoas para esta sala.'); return false; }
+  if (!peer || peer.destroyed || !shareCode) { openInviteModal(); return false; }
   if (!currentRoomCode()) { openInviteModal(); return false; }
   if (!getShareLink()) {
     openInviteModal();
@@ -4201,7 +4321,8 @@ function saveBase() {
   say('inviteStatus', 'O convite usa o link fixo do site e o código da sala.');
 }
 
-let roomSoundMuted = false;
+const lockCoarsePointer = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+let roomSoundMuted = lockCoarsePointer;
 function applyRoomSoundState() {
   const muted = !!roomSoundMuted;
   const mainVideo = $('remote'); if (mainVideo) mainVideo.muted = muted;
@@ -4476,6 +4597,8 @@ $('watchBtn').addEventListener('click', () => {
 $('codeIn').addEventListener('keydown', event => { if (event.key === 'Enter') $('watchBtn').click(); });
 $('baseIn').addEventListener('keydown', event => { if (event.key === 'Enter') saveBase(); });
 $('chatInput').addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); $('chatForm').requestSubmit(); } });
+$('chatInput').addEventListener('input', handleChatTypingInput);
+$('chatInput').addEventListener('blur', () => sendLocalTypingState(false));
 addEventListener('pagehide', () => {
   try { if (peer && shareCode && localStorage.getItem(ACTIVE_HOST_ROOM_KEY) === shareCode) localStorage.removeItem(ACTIVE_HOST_ROOM_KEY); } catch {}
   if (micStream) micStream.getTracks().forEach(track => track.stop());
@@ -5290,6 +5413,8 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
       const inviteCode=String(data.roomCode||'').replace(/[^A-Z0-9]/gi,'').toUpperCase();
       const hostUserId=normalizeId(data.hostUserId||'');
       if(!inviteCode||!validId(hostUserId)) return;
+      const mine=currentPresence();
+      if(mine.inRoom && mine.roomCode===inviteCode) return;
       const invite={id,name:String(data.fromName||knownProfiles.get(id)?.name||'Amigo').slice(0,32),photo:String(knownProfiles.get(id)?.photo||''),roomCode:inviteCode,hostUserId,inviteId:String(data.inviteId||''),invitedAt:Date.now(),expiresAt:Number(data.expiresAt)||Date.now()+60000};
       incomingRoomInvites.set(id,invite);
       render();showRoomInviteToast(invite);setMessage(`${String(data.fromName||'Um amigo').slice(0,32)} convidou você para uma sala.`, 'success');
@@ -5434,16 +5559,21 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
     if(!friends.length)setEmpty(friendsBox,'Ainda não há amigos adicionados. Entre numa sala e use o + ao lado do nome de alguém.');
     friends.forEach(friend=>{
       const p=socialPresence.get(friend.id)||{online:false,inRoom:false};
-      const meta=!p.online?'Offline':(p.inRoom?`Em uma sala · ${p.roomCode||'código indisponível'}`:'Online');
+      const listedInCurrentRoom=!!(mine.inRoom && (
+        (typeof peer!=='undefined' && peer && !peer.destroyed && Array.from(connections.values()).some(conn => participantProfiles.get(conn.peer)?.socialId===friend.id)) ||
+        (typeof vpeer!=='undefined' && vpeer && !vpeer.destroyed && Array.from(remoteRoster.values()).some(person => person?.socialId===friend.id))
+      ));
+      const sameRoom=!!(mine.inRoom && (listedInCurrentRoom || (p.inRoom && p.roomCode && p.roomCode===mine.roomCode)));
+      const meta=!p.online?(sameRoom?'Na sua sala':'Offline'):(sameRoom?'Na sua sala':(p.inRoom?'Em uma sala':'Online'));
       const actions=[];
-      if(mine.inRoom&&mine.hostUserId===socialId&&validId(mine.hostUserId)) actions.push(makeAction('Convidar',()=>{
+      if(!sameRoom&&mine.inRoom&&mine.hostUserId===socialId&&validId(mine.hostUserId)&&!p.inRoom) actions.push(makeAction('Convidar',()=>{
         const inviteId=socialId+'-'+Date.now().toString(36);
         const delivered=sendSocial(friend.id,{type:'room-invite',inviteId,roomCode:mine.roomCode,hostUserId:mine.hostUserId,fromName:localProfile().name,expiresAt:Date.now()+60000},true);
         const detail=delivered?'O amigo pode aceitar e entrará diretamente na sala.':'O convite foi colocado na fila até o amigo se reconectar.';
         setMessage(`Convite enviado para ${friend.name}. ${detail}`,'success');
         showSocialNotice('invite-sent-'+friend.id,'Convite enviado',`${friend.name} poderá aceitar e entrar diretamente na sala.`);
       },''));
-      if(p.online && p.inRoom && validId(p.hostUserId)){
+      if(!sameRoom && p.online && p.inRoom && validId(p.hostUserId)){
         const pending=sentJoinRequests.get(friend.id);
         const action=makeAction(pending&&pending.roomCode===p.roomCode?'Pedido enviado':'Pedir para entrar',()=>requestToJoin(friend),'primary');
         action.disabled=!!(pending&&pending.roomCode===p.roomCode);
@@ -5549,6 +5679,20 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
   window.addEventListener('pagehide',()=>{try{if(socialPeer)socialPeer.destroy();}catch{}});
 })();
 </script>
+
+
+<style id="lockcall-v2-7">
+.chat-typing-indicator{min-height:18px;padding:0 14px 3px;color:#8e98aa;font-size:11px;font-style:italic;line-height:18px}
+.chat-typing-indicator[hidden]{display:none!important}
+.remote-share-tile.needs-play-tap:after{content:'Toque para reproduzir';position:absolute;left:10px;top:10px;padding:6px 9px;border-radius:7px;background:#111c;color:#fff;font-size:11px;pointer-events:none}
+.remote-share-tile{position:relative}
+@media(max-width:760px){
+  #watching .state-topline h1{font-size:20px}
+  #watching .state-topline .state-description{font-size:12px;line-height:1.45}
+  .remote-share-tile video{display:block!important;width:100%!important;height:auto!important;min-height:200px!important;max-height:72vh!important;object-fit:contain!important;background:#08090d}
+  .chat-typing-indicator{padding-left:10px}
+}
+</style>
 
 </body>
 </html>
