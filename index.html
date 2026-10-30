@@ -421,7 +421,7 @@ body.popup .preview-wrap { margin-top: 8px; }
         <div class="lobby-placeholder"><div class="screen-outline"><span></span><i></i></div><div><h2>Aguardando compartilhamento</h2><p>Você continua conectado à sala. Criar a sala não liga sua tela nem pede permissão para capturar nada.</p></div></div><div id="lobbyPeopleGrid" class="call-people-grid"></div>
         <div class="lobby-actions"><button id="startShare" class="btn primary action-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M8 21h8m-4-4v4"/></svg>Compartilhar tela</button><button id="startCamera" class="btn action-btn secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3z"/></svg>Compartilhar câmera</button><button id="lobbyInviteBtn" class="btn action-btn secondary">Compartilhar convite</button></div>
         <label class="check"><input type="checkbox" id="withAudio" checked> Incluir áudio quando disponível</label>
-        <p id="noShare" class="note" hidden>Este navegador não consegue capturar a tela. Abra o Lock em um computador para transmitir; pelo celular você pode assistir.</p>
+        <p id="noShare" class="note" hidden>Este navegador não oferece captura de tela para sites. Você ainda pode assistir à sala e compartilhar a câmera.</p>
         <div class="layout-toolbar"><span>Ajustar telas</span><button type="button" class="btn compact selected" data-screen-layout="grid">Grade</button><button type="button" class="btn compact" data-screen-layout="focus">Foco</button></div>
         <div id="lobbyRemoteGrid" class="remote-share-grid" hidden></div>
         <div class="share-info-card lobby-share-info"><div class="share-info-heading"><div><span class="field-label">CÓDIGO DA SALA</span><div id="lobbyCodeOut" class="code">------</div></div><button id="lobbyCopyCode" class="btn compact">Copiar código</button></div>
@@ -2819,6 +2819,10 @@ const PREFIX = 'lock-room-';
 const ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const isExt = /-extension:$/.test(location.protocol);
 const canCapture = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+const isMobileBrowser = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+const screenShareUnavailableMessage = isMobileBrowser
+  ? 'Este navegador de celular não libera a captura da tela para sites. A câmera funciona; para transmitir a tela será necessário um aplicativo nativo do Lock.'
+  : 'Este navegador não oferece captura de tela. Abra o Lock em um navegador compatível e use HTTPS.';
 const canUseCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 const selfUrl = 'https://gueten.github.io/lock-site/';
 const LOCK_BASE = 'https://gueten.github.io/lock-site/';
@@ -3196,7 +3200,7 @@ async function startShare() {
     return;
   }
   if (activeRoomShareCount() >= 3) return say('homeMsg', 'A sala já atingiu o limite de três transmissões simultâneas. Espere uma terminar.');
-  if (!canCapture) return say('homeMsg', 'Este navegador não permite compartilhar a tela. Abra o Lock em um computador compatível.');
+  if (!canCapture) return say('homeMsg', screenShareUnavailableMessage);
   say('homeMsg', '');
   const prefs = window.lockGetSettings ? window.lockGetSettings() : {};
   const resolution = ({ '720': [1280,720], '1080': [1920,1080], '1440': [2560,1440] })[prefs.resolution] || null;
@@ -4059,7 +4063,11 @@ function sendChat(event) {
   input.focus();
 }
 /* ---------- convite e opções de envio ---------- */
+function isConnectedToRoom() {
+  return !!((peer && !peer.destroyed && peer.open && shareCode) || (vpeer && !vpeer.destroyed && vpeer.open && viewerCode));
+}
 function openInviteModal() {
+  if (!isConnectedToRoom()) { say('homeMsg', 'Crie ou entre em uma sala antes de convidar alguém.'); return; }
   renderShare();
   $('inviteStatus').textContent = currentRoomCode()
     ? (getShareLink() ? 'O convite inclui o link clicável do site e o código desta sala.' : 'O código já existe, mas falta configurar o endereço público do site. Configure uma vez para gerar links que abrem para outras pessoas.')
@@ -4375,6 +4383,7 @@ document.querySelectorAll('[data-screen-layout]').forEach(button => button.addEv
   document.querySelectorAll('[data-screen-layout]').forEach(item => item.classList.toggle('selected', item.dataset.screenLayout === button.dataset.screenLayout));
 }));
 $('noShare').hidden = canCapture;
+if (!canCapture) { $('noShare').textContent = screenShareUnavailableMessage; $('startShare').title = screenShareUnavailableMessage; $('toolScreen').title = screenShareUnavailableMessage; }
 $('startShare').addEventListener('click', startShare);
 $('startCamera').addEventListener('click', startCamera);
 $('stopBtn').addEventListener('click', () => stopShare(''));
@@ -4905,7 +4914,7 @@ body:has(.app-shell[data-current-view="home"]) .home-profile-top { display:flex;
 })();
 </script>
 
-<style id="lock-social-v2-3-style">
+<style id="lock-social-v2-4-style">
 .lock-sidebar-tabs{display:flex;flex:0 0 auto;gap:5px;padding:8px 10px;border-bottom:1px solid var(--panel-border,#30323d);background:var(--panel-bg,#171920)}
 .lock-sidebar-tab{display:flex;align-items:center;justify-content:center;gap:7px;flex:1;min-width:0;padding:8px 10px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted,#a0a5b5);font:700 12px/1.2 var(--text-font,Inter,system-ui,sans-serif);cursor:pointer}
 .lock-sidebar-tab:hover{background:#ffffff08;color:var(--text,#f4f5fb)}.lock-sidebar-tab.active{border-color:#187e68;background:#10352d;color:#e6fff6}
@@ -4927,8 +4936,32 @@ body:has(.app-shell[data-current-view="home"]) .home-profile-top { display:flex;
 .app-shell[data-current-view="home"].chat-collapsed .right-panel{width:auto!important;min-width:0!important;padding:12px!important;overflow:hidden!important}
 @media(max-width:560px){.lock-friends-head{align-items:flex-start}.lock-friends-head h2{font-size:15px}.lock-social-person{padding:7px}.lock-social-action{max-width:86px;font-size:8px}.lock-own-code strong{font-size:11px}}
 body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}body.light-theme .lock-social-name{color:#252838}body.light-theme .lock-social-meta{color:#737a8d}body.light-theme .lock-sidebar-tab{color:#60677b}body.light-theme .lock-sidebar-tab.active{background:#d9f7ed;color:#075e48;border-color:#72cdb3}body.light-theme .lock-own-code{background:#f2f7f7;border-color:#dbe6e7}body.light-theme .lock-own-code span{color:#727b8e}body.light-theme .lock-copy-code,body.light-theme .lock-social-action{background:#f0f1f6;color:#242737;border-color:#d5d9e3}
+/* Toasts de pedidos para entrar: canto inferior, com fechamento automático em 8 s. */
+#lockJoinToastStack{position:fixed;z-index:2000;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));display:flex;flex-direction:column-reverse;gap:9px;width:min(360px,calc(100vw - 24px));pointer-events:none}
+.lock-join-toast{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:10px;padding:13px 14px 15px;border:1px solid #3a665b;border-radius:13px;background:#171e22;color:#eefaf6;box-shadow:0 14px 48px #0008;pointer-events:auto;animation:lockToastIn .18s ease-out both}
+.lock-join-toast-head{display:flex;align-items:flex-start;gap:10px}.lock-join-toast-icon{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:#123b30;color:#6ce4c2;font-size:17px;font-weight:900}.lock-join-toast-copy{flex:1;min-width:0}.lock-join-toast-copy strong{display:block;color:#f2fff9;font-size:12px;line-height:1.35}.lock-join-toast-copy span{display:block;margin-top:3px;color:#aab9b6;font-size:10px;line-height:1.4}.lock-join-toast-close{flex:0 0 auto;width:25px;height:25px;border:0;border-radius:6px;background:#ffffff0c;color:#aebcb8;font-size:17px;line-height:1;cursor:pointer}.lock-join-toast-actions{display:flex;gap:7px;justify-content:flex-end}.lock-join-toast-actions button{min-width:82px;padding:7px 11px;border:1px solid #46534f;border-radius:7px;background:#272e2d;color:#e7efeb;font-size:10px;font-weight:800;cursor:pointer}.lock-join-toast-actions .accept{border-color:#0b9972;background:#087b5e;color:#fff}.lock-join-toast-progress{position:absolute;bottom:0;left:0;width:100%;height:3px;background:#2c3735}.lock-join-toast-progress:after{display:block;width:100%;height:100%;background:#4ad5af;content:"";transform-origin:left;animation:lockToastProgress 8s linear forwards}
+@keyframes lockToastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}@keyframes lockToastProgress{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@media(max-width:560px){#lockJoinToastStack{right:12px;bottom:max(12px,env(safe-area-inset-bottom));width:calc(100vw - 24px)}.lock-join-toast{padding:11px 12px 14px}}
+/* Painel de amigos na página inicial: dock na direita em telas grandes. */
+.app-shell[data-current-view="home"] .center-panel{width:calc(100% - 316px)!important;max-width:none!important;margin:0!important}
+.app-shell[data-current-view="home"] .home-state{width:min(100%,980px)!important;margin:0 auto!important}
+.app-shell[data-current-view="home"] .right-panel{display:flex!important;position:fixed!important;z-index:45!important;top:14px!important;right:14px!important;bottom:14px!important;width:286px!important;min-width:260px!important;max-width:calc(100vw - 28px)!important;height:auto!important;min-height:0!important;border:1px solid var(--line,#30323d)!important;border-radius:13px!important;box-shadow:0 12px 34px #0003!important;overflow:hidden!important}
+.app-shell[data-current-view="home"] .right-panel .chat-heading,.app-shell[data-current-view="home"] .right-panel #chatMessages,.app-shell[data-current-view="home"] .right-panel #chatReplyBar,.app-shell[data-current-view="home"] .right-panel #chatExtras,.app-shell[data-current-view="home"] .right-panel #chatForm{display:none!important}
+.app-shell[data-current-view="home"] .right-panel .lock-sidebar-tabs{display:flex!important}
+#lockHomeFriendsLauncher{display:none;align-items:center;gap:7px;position:fixed;z-index:1500;top:12px;right:12px;padding:10px 13px;border:1px solid #187e68;border-radius:10px;background:#10352d;color:#e6fff6;font-size:12px;font-weight:800;box-shadow:0 8px 24px #0005;cursor:pointer}
+#lockHomeFriendsLauncher[hidden]{display:none!important}
+@media(max-width:760px){
+ .app-shell[data-current-view="home"] .center-panel{width:100%!important;margin:0!important}
+ .app-shell[data-current-view="home"] .home-state{width:100%!important}
+ .app-shell[data-current-view="home"]:not(.home-friends-open) .right-panel{display:none!important}
+ .app-shell[data-current-view="home"].home-friends-open .right-panel{display:flex!important;top:58px!important;right:10px!important;bottom:10px!important;width:min(340px,calc(100vw - 20px))!important;max-width:calc(100vw - 20px)!important;height:auto!important;box-shadow:0 16px 50px #0009!important}
+ #lockHomeFriendsLauncher{display:inline-flex}
+}
+/* Na página inicial, amigos ficam disponíveis, mas ações de convite só aparecem dentro de uma sala ativa. */
+.app-shell[data-current-view="home"] #toolInvite,.app-shell[data-current-view="home"] #quickCopy,.app-shell[data-current-view="home"] #invitePeople,.app-shell[data-current-view="home"] #inviteBtn,.app-shell[data-current-view="home"] #footerInvite,.app-shell[data-current-view="home"] #copyInviteHome,.app-shell[data-current-view="home"] #moreBtn{display:none!important}
+
 </style>
-<script id="lock-social-v2-3">
+<script id="lock-social-v2-4">
 (() => {
   'use strict';
   const byId = id => document.getElementById(id);
@@ -4954,6 +4987,8 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
   let outgoingRequests = loadArray(OUTGOING_KEY).filter(x => x && validId(x.id) && x.id !== socialId);
   let socialMessage = '';
   let socialMessageKind = '';
+  const joinToastTimers = new Map();
+  const joinToastNodes = new Map();
 
   function getOrCreateId() {
     try {
@@ -5087,6 +5122,39 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
       return conn;
     } catch { connecting.delete(id); return null; }
   }
+  function getJoinToastStack() {
+    let stack=byId('lockJoinToastStack');
+    if(!stack){stack=document.createElement('div');stack.id='lockJoinToastStack';stack.setAttribute('aria-live','polite');stack.setAttribute('aria-label','Solicitações para entrar');document.body.append(stack);}
+    return stack;
+  }
+  function removeJoinToast(id) {
+    id=normalizeId(id);
+    const timer=joinToastTimers.get(id); if(timer) window.clearTimeout(timer);
+    joinToastTimers.delete(id);
+    const node=joinToastNodes.get(id); if(node) node.remove();
+    joinToastNodes.delete(id);
+  }
+  function showJoinRequestToast(req) {
+    const id=normalizeId(req?.id); if(!validId(id)) return;
+    removeJoinToast(id);
+    const card=document.createElement('section'); card.className='lock-join-toast'; card.setAttribute('role','status');
+    const head=document.createElement('div'); head.className='lock-join-toast-head';
+    const icon=document.createElement('span'); icon.className='lock-join-toast-icon'; icon.textContent='↗';
+    const copy=document.createElement('div'); copy.className='lock-join-toast-copy';
+    const title=document.createElement('strong'); title.textContent=`${req.name||'Alguém'} quer entrar na sua sala`;
+    const detail=document.createElement('span'); detail.textContent=`Sala ${req.roomCode} · Você decide se a pessoa pode entrar.`;
+    copy.append(title,detail);
+    const close=document.createElement('button'); close.type='button'; close.className='lock-join-toast-close'; close.setAttribute('aria-label','Fechar aviso'); close.textContent='×'; close.addEventListener('click',()=>removeJoinToast(id));
+    head.append(icon,copy,close);
+    const actions=document.createElement('div'); actions.className='lock-join-toast-actions';
+    const decline=document.createElement('button'); decline.type='button'; decline.textContent='Recusar'; decline.addEventListener('click',()=>{answerJoinRequest(id,false);removeJoinToast(id);});
+    const accept=document.createElement('button'); accept.type='button'; accept.className='accept'; accept.textContent='Aceitar'; accept.addEventListener('click',()=>{answerJoinRequest(id,true);removeJoinToast(id);});
+    actions.append(decline,accept);
+    const progress=document.createElement('span'); progress.className='lock-join-toast-progress'; progress.setAttribute('aria-hidden','true');
+    card.append(head,actions,progress); getJoinToastStack().append(card); joinToastNodes.set(id,card);
+    joinToastTimers.set(id,window.setTimeout(()=>removeJoinToast(id),8000));
+  }
+
   function handleMessage(id, conn, data) {
     if(!data||typeof data!=='object') return;
     if(data.type==='social-hello') {
@@ -5143,8 +5211,9 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
       if(!activeRoom) {sendOnConnection(conn,{type:'join-rejected',reason:'Esta sala não está mais disponível.'});return;}
       if(data.expiresAt && Number(data.expiresAt)<Date.now()){sendOnConnection(conn,{type:'join-rejected',reason:'Esse pedido expirou. Peça para entrar novamente.'});return;}
       const reqProfile=cleanProfile(data.profile||{},id);
-      incomingJoinRequests.set(id,{id,...reqProfile,roomCode:String(data.roomCode||''),conn,requestedAt:Date.now(),expiresAt:Number(data.expiresAt)||Date.now()+60000});
-      render(); setSidebarView('friends');
+      const incomingRequest={id,...reqProfile,roomCode:String(data.roomCode||''),conn,requestedAt:Date.now(),expiresAt:Number(data.expiresAt)||Date.now()+60000};
+      incomingJoinRequests.set(id,incomingRequest);
+      render(); showJoinRequestToast(incomingRequest);
       setMessage(`${reqProfile.name} pediu para entrar na sua sala.`, 'success');
       if(typeof window.notifyLockSound==='function') window.notifyLockSound('message');
       return;
@@ -5220,13 +5289,13 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
   }
   function answerJoinRequest(id, allow) {
     const req=incomingJoinRequests.get(id); if(!req) return;
-    if(req.expiresAt && req.expiresAt<Date.now()){incomingJoinRequests.delete(id);render();setMessage('Esse pedido expirou. Peça para a pessoa solicitar novamente.','error');return;}
+    if(req.expiresAt && req.expiresAt<Date.now()){incomingJoinRequests.delete(id);removeJoinToast(id);render();setMessage('Esse pedido expirou. Peça para a pessoa solicitar novamente.','error');return;}
     const active=!!(typeof peer!=='undefined'&&peer&&!peer.destroyed&&peer.open&&shareCode===req.roomCode&&!closingHostRoom);
     if(allow&&!active){sendOnConnection(req.conn,{type:'join-rejected',reason:'A sala foi encerrada antes da aprovação.'});incomingJoinRequests.delete(id);render();setMessage('A sala não está mais ativa.','error');return;}
     const response=allow?{type:'join-approved',roomCode:req.roomCode,expiresAt:Date.now()+60000}:{type:'join-rejected',reason:'O anfitrião recusou seu pedido.',expiresAt:Date.now()+60000};
     const ok=sendOnConnection(req.conn,response);
     if(!ok) sendSocial(id,response,true);
-    incomingJoinRequests.delete(id); render();
+    incomingJoinRequests.delete(id); removeJoinToast(id); render();
     setMessage(allow?`Pedido de ${req.name} aprovado.`:`Pedido de ${req.name} recusado.`,allow?'success':'');
   }
   function makeAction(label, callback, cls='') {
@@ -5289,6 +5358,16 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
     byId('lockFriendsTab').setAttribute('aria-selected',String(view==='friends'));
     byId('lockChatTab').setAttribute('aria-selected',String(view==='chat'));
   }
+  const homeFriendsLauncher=document.createElement('button');
+  homeFriendsLauncher.id='lockHomeFriendsLauncher'; homeFriendsLauncher.type='button'; homeFriendsLauncher.textContent='♙ Amigos'; homeFriendsLauncher.setAttribute('aria-label','Abrir lista de amigos');
+  homeFriendsLauncher.addEventListener('click',()=>{
+    const app=document.querySelector('.app-shell'); if(!app)return;
+    const opening=!app.classList.contains('home-friends-open');
+    app.classList.toggle('home-friends-open',opening);
+    homeFriendsLauncher.textContent=opening?'× Fechar':'♙ Amigos';
+    if(opening)setSidebarView('friends');
+  });
+  document.body.append(homeFriendsLauncher);
   window.lockSocialPublishPresence=publishPresence;
   byId('lockFriendsTab')?.addEventListener('click',()=>setSidebarView('friends'));
   byId('lockChatTab')?.addEventListener('click',()=>setSidebarView('chat'));
@@ -5323,9 +5402,14 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
   }
   byId('lockFriendsTab')?.setAttribute('title','Mostrar amigos, pedidos de amizade e pedidos para entrar');
   byId('lockMyFriendCode')?.setAttribute('title','Compartilhe este código para receber pedidos de amizade');
-  // Home opens on Friends; calls open on Chat. If a join request arrives, it switches back to Friends.
+  // Home opens on Friends; calls open on Chat. Join requests use a temporary toast and remain in Friends until answered or expired.
   const app=document.querySelector('.app-shell');
-  const chooseDefaultView=()=>setSidebarView(app?.dataset.currentView==='home'?'friends':'chat');
+  const chooseDefaultView=()=>{
+    const isHome=app?.dataset.currentView==='home';
+    homeFriendsLauncher.hidden=!isHome;
+    if(!isHome){app?.classList.remove('home-friends-open');homeFriendsLauncher.textContent='♙ Amigos';}
+    setSidebarView(isHome?'friends':'chat');
+  };
   if(app && typeof MutationObserver==='function')new MutationObserver(records=>{if(records.some(r=>r.attributeName==='data-current-view')){chooseDefaultView();publishPresence();}}).observe(app,{attributes:true,attributeFilter:['data-current-view']});
   chooseDefaultView();render();
   try { if (typeof renderParticipants === 'function') renderParticipants(); } catch {}
@@ -5337,7 +5421,7 @@ body.light-theme .lock-social-person{background:#f7f8fb;border-color:#dfe3eb}bod
       const conn=socialConnections.get(friend.id);
       if(conn?.open)publishPresenceTo(friend.id,conn); else connectToFriend(friend.id);
     });
-    for(const [id,request] of incomingJoinRequests){if(request.expiresAt && request.expiresAt<Date.now())incomingJoinRequests.delete(id);}
+    for(const [id,request] of incomingJoinRequests){if(request.expiresAt && request.expiresAt<Date.now()){incomingJoinRequests.delete(id);removeJoinToast(id);}}
     for(const [id,invite] of incomingRoomInvites){if(invite.invitedAt && Date.now()-invite.invitedAt>60000)incomingRoomInvites.delete(id);}
     // Pending friendship requests retry as the recipient comes online, as long as this page remains open.
     outgoingRequests.forEach(req=>{if(!socialConnections.get(req.id)?.open){queuePacket(req.id,{type:'friend-request',profile:localProfile()});connectToFriend(req.id);}});
